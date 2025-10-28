@@ -1,5 +1,8 @@
 /* Import Pico.css */
 @import url("https://unpkg.com/@picocss/pico@latest/css/pico.min.css");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Variables et réglages de base */
 :root {
@@ -7,6 +10,10 @@
   --pico-border-radius: 0.6rem;
   --pico-spacing: 1rem;
 }
+
+
+/* Optionnel : réglages de base */
+html, body, #root { height: 100%; }
 
 html, body {
   height: 100%;
