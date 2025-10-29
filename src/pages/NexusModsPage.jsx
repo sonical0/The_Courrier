@@ -41,19 +41,30 @@ export default function NexusModsPage() {
                   <img src={m.picture} alt={m.name} className="card-img-top" />
                 )}
                 <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{m.name}</h5>
+                  <h5 className="card-title">{m.name || `${m.domain}/${m.id}`}</h5>
+
+                  {m.summary && (
+                    <p className="card-text small text-muted mb-2">{m.summary}</p>
+                  )}
+
                   <div className="small text-muted mb-2">
                     Version {m.version || "?"} · {m.author || "Auteur inconnu"}
                   </div>
+
                   <div className="mt-auto d-flex justify-content-between align-items-center">
-                    <a href={m.url} target="_blank" rel="noreferrer" className="btn btn-primary">
+                    <a
+                      href={m.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`btn btn-primary ${m.url ? "" : "disabled"}`}
+                    >
                       Ouvrir sur Nexus
                     </a>
                     <span className="badge bg-light text-dark">
                       {m.updatedAt
                         ? new Date(
                             Number(m.updatedAt) *
-                              (String(m.updatedAt).length > 10 ? 1 : 1000)
+                            (String(m.updatedAt).length > 10 ? 1 : 1000)
                           ).toLocaleString()
                         : "?"}
                     </span>

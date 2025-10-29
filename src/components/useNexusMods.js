@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 
-function pickUpdatedAt(m) {
-  return (
-    m?.updated_time ||
-    m?.updated_timestamp ||
-    m?.last_update ||
-    m?.last_updated ||
-    m?.uploaded_time ||
-    0
-  );
+// tolérant aux formats timestamp/ISO/numérique
+function toEpoch(val) {
+  if (!val) return 0;
+  if (typeof val === "number") return val;
+  if (typeof val === "string") {
+    // nombre encodé en string
+    const n = Number(val);
+    if (!Number.isNaN(n) && n > 0) return n;
+    // date ISO
+    const t = Date.parse(val);
+    if (!Number.isNaN(t)) return Math.floor(t / 1000);
+  }
+  return 0;
 }
 
 export default function useNexusMods() {
@@ -20,32 +24,52 @@ export default function useNexusMods() {
     setLoading(true);
     setError(null);
     try {
-      // appel au proxy serveur local qui injecte la clé
       const res = await fetch(`/api/nexus/tracked`, {
-        headers: {
-          Accept: "application/json",
-        },
+        headers: { Accept: "application/json" },
       });
-
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
       }
-
       const data = await res.json();
 
-      const normalized = (Array.isArray(data) ? data : []).map((m) => ({
-        id: m.mod_id ?? m.modId ?? m.id,
-        name: m.name,
-        version: m.version ?? m.mod_version,
-        domain: m.domain_name ?? m.domain ?? m.game?.domain_name,
-        gameId: m.game_id ?? m.game?.id,
-        gameName: m.game_name ?? m.game?.name,
-        author: m.author ?? m.user?.name,
-        updatedAt: pickUpdatedAt(m),
-        url: m.url ?? m.mod_page_url,
-        picture: m.picture_url ?? m.thumbnail_url,
-      }));
+      const normalized = (Array.isArray(data) ? data : []).map((m) => {
+        const id =
+          m.mod_id ?? m.modId ?? m.id;
+        const domain =
+          m.domain_name ?? m.domain ?? m.game?.domain_name;
+        const name =
+          m.name ?? m.mod_name ?? m.title ?? `${domain || "?"} / ${id || "?"}`;
+        const url =
+          m.url ??
+          m.mod_page_url ??
+          (domain && id ? `https://www.nexusmods.com/${domain}/mods/${id}` : undefined);
+
+        const updatedAt =
+          toEpoch(
+            m.updated_time ??
+              m.updated_timestamp ??
+              m.last_update ??
+              m.last_updated ??
+              m.uploaded_time ??
+              m.latest_file_update ??
+              m.created_time
+          );
+
+        return {
+          id,
+          name,
+          version: m.version ?? m.mod_version ?? m.latest_version,
+          domain,
+          gameId: m.game_id ?? m.game?.id,
+          gameName: m.game_name ?? m.game?.name,
+          author: m.author ?? m.user?.name ?? m.uploader?.name,
+          updatedAt,
+          url,
+          picture: m.picture_url ?? m.thumbnail_url ?? m.content_preview_link,
+          summary: m.summary ?? m.short_description ?? "",
+        };
+      });
 
       setMods(normalized);
     } catch (e) {
@@ -86,7 +110,7 @@ export default function useNexusMods() {
         String(m.gameId) === String(gameKey) ||
         m.gameName === gameKey
     );
-    return filtered.sort((a, b) => Number(pickUpdatedAt(b)) - Number(pickUpdatedAt(a)));
+    return filtered.sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt));
   }
 
   return { loading, error, games, modsForGame, refresh: fetchTracked };
