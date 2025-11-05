@@ -125,5 +125,23 @@ export default function useNexusMods() {
     return filtered.sort((a, b) => Number(b.updatedAt) - Number(a.updatedAt));
   }
 
-  return { loading, error, games, modsForGame, refresh: fetchTracked };
+  const untrackMod = useCallback(async (domain, modId) => {
+    try {
+      const res = await fetch(`/api/nexus/tracked/${domain}/${modId}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
+      }
+      // Rafraîchit la liste après suppression
+      await fetchTracked();
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message || String(e) };
+    }
+  }, [fetchTracked]);
+
+  return { loading, error, games, modsForGame, refresh: fetchTracked, untrackMod };
 }

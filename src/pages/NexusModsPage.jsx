@@ -35,10 +35,25 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
 }
 
 export default function NexusModsPage() {
-  const { loading, error, games, modsForGame, refresh } = useNexusMods();
+  const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods();
   const [gameKey, setGameKey] = useState("");
+  const [untracking, setUntracking] = useState(null); // modId en cours de suppression
 
   const mods = useMemo(() => (gameKey ? modsForGame(gameKey) : []), [gameKey, modsForGame]);
+
+  const handleUntrack = async (domain, modId, modName) => {
+    if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
+      return;
+    }
+    
+    setUntracking(modId);
+    const result = await untrackMod(domain, modId);
+    setUntracking(null);
+    
+    if (!result.success) {
+      alert(`Erreur lors de la suppression : ${result.error}`);
+    }
+  };
 
   if (loading) return <p className="text-center mt-5">Chargement Nexus…</p>;
   if (error) return <p className="text-center mt-5 text-danger">Erreur: {error}</p>;
@@ -46,6 +61,8 @@ export default function NexusModsPage() {
 
   return (
     <div className="container mt-4">
+      <h2 className="mb-4">Mods Suivis par Jeu</h2>
+      
       <div className="d-flex align-items-end justify-content-between mb-3">
         <div style={{ minWidth: 320 }}>
           <label className="form-label">Jeu</label>
@@ -122,23 +139,32 @@ export default function NexusModsPage() {
                     </div>
                   )}
 
-                  <div className="mt-auto d-flex justify-content-between align-items-center">
-                    <a
-                      href={m.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`btn btn-primary ${m.url ? "" : "disabled"}`}
+                  <div className="mt-auto">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <a
+                        href={m.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`btn btn-primary btn-sm ${m.url ? "" : "disabled"}`}
+                      >
+                        Ouvrir sur Nexus
+                      </a>
+                      <span className="badge bg-light text-dark">
+                        {m.updatedAt
+                          ? new Date(
+                              Number(m.updatedAt) *
+                              (String(m.updatedAt).length > 10 ? 1 : 1000)
+                            ).toLocaleString()
+                          : "?"}
+                      </span>
+                    </div>
+                    <button
+                      className="btn btn-outline-danger btn-sm w-100"
+                      onClick={() => handleUntrack(m.domain, m.id, m.name)}
+                      disabled={untracking === m.id}
                     >
-                      Ouvrir sur Nexus
-                    </a>
-                    <span className="badge bg-light text-dark">
-                      {m.updatedAt
-                        ? new Date(
-                            Number(m.updatedAt) *
-                            (String(m.updatedAt).length > 10 ? 1 : 1000)
-                          ).toLocaleString()
-                        : "?"}
-                    </span>
+                      {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
+                    </button>
                   </div>
                 </div>
               </div>

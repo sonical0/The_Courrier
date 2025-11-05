@@ -241,6 +241,42 @@ app.get("/api/nexus/tracked", async (_req, res) => {
   }
 });
 
+/**
+ * Retire un mod de la liste des mods suivis
+ */
+app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
+  if (!ensureKey(res)) return;
+  
+  const { domain, modId } = req.params;
+  
+  try {
+    const response = await fetch(
+      `https://api.nexusmods.com/v1/user/tracked_mods.json?domain_name=${domain}`,
+      {
+        method: "DELETE",
+        headers: {
+          ...nexusHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ mod_id: parseInt(modId, 10) }),
+      }
+    );
+    
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}${text ? " — " + text : ""}`);
+    }
+    
+    // Invalide le cache
+    CACHE.delete(kTracked);
+    CACHE.delete(kMod(domain, modId));
+    
+    res.json({ success: true, message: "Mod retiré de la liste suivie" });
+  } catch (e) {
+    res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
 // ---------- Static (prod) ----------
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientBuild = path.join(__dirname, "build");
