@@ -1,6 +1,39 @@
 import { useMemo, useState } from "react";
 import useNexusMods from "../components/useNexusMods";
 
+// Helpers pour nettoyer et aplatir les changelogs (mêmes règles que BootstrapPage)
+function decodeEntities(str) {
+  if (!str) return "";
+  return str
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+}
+
+function htmlToPlainText(html) {
+  if (!html) return "";
+  const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
+  const noTags = withBreaks.replace(/<[^>]+>/g, "");
+  return decodeEntities(noTags);
+}
+
+function flattenChangeLines(changelogEntry, maxLines = 6) {
+  const lines = [];
+  if (!changelogEntry || !Array.isArray(changelogEntry.changes)) return lines;
+  for (const raw of changelogEntry.changes) {
+    const txt = htmlToPlainText(String(raw || ""));
+    const parts = txt.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+    for (const p of parts) {
+      lines.push(p);
+      if (lines.length >= maxLines) return lines;
+    }
+  }
+  return lines;
+}
+
 export default function NexusModsPage() {
   const { loading, error, games, modsForGame, refresh } = useNexusMods();
   const [gameKey, setGameKey] = useState("");
@@ -47,9 +80,47 @@ export default function NexusModsPage() {
                     <p className="card-text small text-muted mb-2">{m.summary}</p>
                   )}
 
-                  <div className="small text-muted mb-2">
-                    Version {m.version || "?"} · {m.author || "Auteur inconnu"}
+                  <div className="mb-2 d-flex align-items-center gap-2 flex-wrap">
+                    {m.previousVersion && m.previousVersion !== m.version && (
+                      <span className="badge bg-secondary"><s>{m.previousVersion}</s></span>
+                    )}
+                    <span className="badge bg-success">Version {m.version || "?"}</span>
+                    <span className="small text-muted">· {m.author || "Auteur inconnu"}</span>
                   </div>
+
+                  {m.changelog && m.changelog.length > 0 && (
+                    <div className="mb-3">
+                      <small className="fw-bold d-block mb-1">Changelog :</small>
+                      <div className="small" style={{ maxHeight: "100px", overflowY: "auto" }}>
+                        {(() => {
+                          const lines = flattenChangeLines(m.changelog[0], 6);
+                          if (!lines.length)
+                            return (
+                              <p className="mb-0 text-muted fst-italic">Aucun détail disponible</p>
+                            );
+                          const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
+                          return (
+                            <ul className="mb-0 ps-3">
+                              {lines.map((ln, i) => (
+                                <li key={i}>{ln}</li>
+                              ))}
+                              {hasMore && <li className="text-muted fst-italic">…</li>}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                      {m.changelogUrl && (
+                        <a
+                          href={m.changelogUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="small text-decoration-none"
+                        >
+                          Voir le changelog complet →
+                        </a>
+                      )}
+                    </div>
+                  )}
 
                   <div className="mt-auto d-flex justify-content-between align-items-center">
                     <a

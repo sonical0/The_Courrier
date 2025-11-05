@@ -1,10 +1,46 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import useNexusMods from "../components/useNexusMods";
+
+// Utils d'affichage pour nettoyer les textes HTML des changelogs
+function decodeEntities(str) {
+  if (!str) return "";
+  return str
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/gi, "'");
+}
+
+function htmlToPlainText(html) {
+  if (!html) return "";
+  // remplace les <br> par des sauts de ligne, supprime le reste des balises
+  const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
+  const noTags = withBreaks.replace(/<[^>]+>/g, "");
+  return decodeEntities(noTags);
+}
+
+function flattenChangeLines(changelogEntry, maxLines = 6) {
+  // changelogEntry = { version, changes: string[] }
+  const lines = [];
+  if (!changelogEntry || !Array.isArray(changelogEntry.changes)) return lines;
+  for (const raw of changelogEntry.changes) {
+    const txt = htmlToPlainText(String(raw || ""));
+    const parts = txt.split(/\n+/).map((s) => s.trim()).filter(Boolean);
+    for (const p of parts) {
+      lines.push(p);
+      if (lines.length >= maxLines) return lines;
+    }
+  }
+  return lines;
+}
 
 export default function BootstrapPage() {
   const { loading, error, games, modsForGame, refresh } = useNexusMods();
+  const [period, setPeriod] = useState(7); // en jours
 
-  const cutoff = Math.floor(Date.now() / 1000) - 30 * 24 * 3600; // 30 jours
+  const cutoff = Math.floor(Date.now() / 1000) - period * 24 * 3600;
 
   // Regroupe par jeu uniquement les mods mis à jour < 30 jours
   const grouped = useMemo(() => {
@@ -29,16 +65,57 @@ export default function BootstrapPage() {
     return out;
   }, [games, modsForGame, cutoff]);
 
+  const periodLabel = () => {
+    if (period === 7) return "7 derniers jours";
+    if (period === 15) return "15 derniers jours";
+    if (period === 30) return "30 derniers jours";
+    if (period === 365) return "année passée";
+    return `${period} derniers jours`;
+  };
+
   if (loading) return <p className="text-center mt-5">Chargement…</p>;
   if (error) return <p className="text-center mt-5 text-danger">Erreur: {error}</p>;
 
   return (
     <div className="container mt-4">
       <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="m-0">Actualités des Mods · 30 derniers jours</h2>
+        <h2 className="m-0">Actualités des Mods · {periodLabel()}</h2>
         <button className="btn btn-outline-secondary" onClick={refresh}>
           Rafraîchir
         </button>
+      </div>
+
+      <div className="mb-4">
+        <div className="btn-group" role="group" aria-label="Filtres de période">
+          <button
+            type="button"
+            className={`btn ${period === 7 ? "btn-primary" : "btn-outline-primary"}`}
+            onClick={() => setPeriod(7)}
+          >
+            7 jours
+          </button>
+          <button
+            type="button"
+            className={`btn ${period === 15 ? "btn-primary" : "btn-outline-primary"}`}
+            onClick={() => setPeriod(15)}
+          >
+            15 jours
+          </button>
+          <button
+            type="button"
+            className={`btn ${period === 30 ? "btn-primary" : "btn-outline-primary"}`}
+            onClick={() => setPeriod(30)}
+          >
+            30 jours
+          </button>
+          <button
+            type="button"
+            className={`btn ${period === 365 ? "btn-primary" : "btn-outline-primary"}`}
+            onClick={() => setPeriod(365)}
+          >
+            Année passée
+          </button>
+        </div>
       </div>
 
       {!grouped.length && (
@@ -67,12 +144,17 @@ export default function BootstrapPage() {
                     </div>
 
                     <div className="mb-2">
-                      <span className="badge bg-primary">
+                      {m.previousVersion && m.previousVersion !== m.version && (
+                        <span className="badge bg-secondary me-1">
+                          <s>{m.previousVersion}</s>
+                        </span>
+                      )}
+                      <span className="badge bg-success">
                         Version {m.version || "?"}
                       </span>
                     </div>
 
-                    <p className="small text-muted mb-3">
+                    <p className="small text-muted mb-2">
                       Mise à jour le{" "}
                       {m.updatedAt
                         ? new Date(
@@ -81,6 +163,40 @@ export default function BootstrapPage() {
                           ).toLocaleString()
                         : "?"}
                     </p>
+
+                    {m.changelog && m.changelog.length > 0 && (
+                      <div className="mb-3">
+                        <small className="fw-bold d-block mb-1">Changelog :</small>
+                        <div className="small" style={{ maxHeight: "100px", overflowY: "auto" }}>
+                          {(() => {
+                            const lines = flattenChangeLines(m.changelog[0], 6);
+                            if (!lines.length)
+                              return (
+                                <p className="mb-0 text-muted fst-italic">Aucun détail disponible</p>
+                              );
+                            const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
+                            return (
+                              <ul className="mb-0 ps-3">
+                                {lines.map((ln, i) => (
+                                  <li key={i}>{ln}</li>
+                                ))}
+                                {hasMore && <li className="text-muted fst-italic">…</li>}
+                              </ul>
+                            );
+                          })()}
+                        </div>
+                        {m.changelogUrl && (
+                          <a
+                            href={m.changelogUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="small text-decoration-none"
+                          >
+                            Voir le changelog complet →
+                          </a>
+                        )}
+                      </div>
+                    )}
 
                     <div className="mt-auto d-flex justify-content-between align-items-center">
                       <a

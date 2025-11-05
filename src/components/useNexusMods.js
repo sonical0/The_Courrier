@@ -68,6 +68,18 @@ export default function useNexusMods() {
           url,
           picture: m.picture_url ?? m.thumbnail_url ?? m.content_preview_link,
           summary: m.summary ?? m.short_description ?? "",
+          // ajouts enrichissement serveur
+          previousVersion: m.previousVersion ?? m.previous_version ?? null,
+          changelog: Array.isArray(m.changelog)
+            ? m.changelog
+            : m.changelog
+            ? [m.changelog]
+            : [],
+          changelogUrl:
+            m.changelogUrl ||
+            (domain && id
+              ? `https://www.nexusmods.com/${domain}/mods/${id}?tab=logs`
+              : undefined),
         };
       });
 

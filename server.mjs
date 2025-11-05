@@ -166,9 +166,34 @@ app.get("/api/nexus/tracked", async (_req, res) => {
           { headers: nexusHeaders() }
         );
 
+        // Récupération du changelog
+        let changelog = [];
+        let previousVersion = null;
+        try {
+          const changelogData = await fetchJson(
+            `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}/changelogs.json`,
+            { headers: nexusHeaders() }
+          );
+          // Prendre les 3 dernières versions du changelog
+          if (changelogData && typeof changelogData === 'object') {
+            const versions = Object.keys(changelogData).sort().reverse();
+            changelog = versions.slice(0, 3).map(version => ({
+              version,
+              changes: changelogData[version]
+            }));
+            // La version précédente est la deuxième dans la liste
+            if (versions.length > 1) {
+              previousVersion = versions[1];
+            }
+          }
+        } catch {
+          // Changelog non disponible
+        }
+
         const merged = {
           name: m.name || details.name || details.title,
           version: m.version || details.version || details.mod_version || details.latest_version,
+          previousVersion: previousVersion,
           author: m.author || details.user?.name || details.uploader?.name,
           picture:
             m.picture ||
@@ -190,6 +215,8 @@ app.get("/api/nexus/tracked", async (_req, res) => {
             details.mod_page_url ||
             `https://www.nexusmods.com/${m.domain}/mods/${m.id}`,
           summary: details.summary || details.short_description || "",
+          changelog: changelog,
+          changelogUrl: `https://www.nexusmods.com/${m.domain}/mods/${m.id}?tab=logs`,
         };
 
         cacheSet(ck, merged, TTL.mod);
