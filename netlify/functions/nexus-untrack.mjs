@@ -1,10 +1,10 @@
 // netlify/functions/nexus-untrack.mjs
 import fetch from "node-fetch";
 
-const nexusHeaders = () => {
-  const appName = (process.env.NEXUS_APP_NAME || "demo-app").trim();
-  const user = (process.env.NEXUS_USERNAME || "unknown").trim();
-  const key = (process.env.NEXUS_API_KEY || "").trim();
+const nexusHeaders = (username, apiKey) => {
+  const appName = (process.env.NEXUS_APP_NAME || "The Courrier").trim();
+  const user = username || (process.env.NEXUS_USERNAME || "unknown").trim();
+  const key = apiKey || (process.env.NEXUS_API_KEY || "").trim();
   return {
     apikey: key,
     "Application-Name": appName,
@@ -16,7 +16,7 @@ const nexusHeaders = () => {
 export const handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Headers": "Content-Type, X-Nexus-Username, X-Nexus-ApiKey",
     "Access-Control-Allow-Methods": "DELETE, OPTIONS",
   };
 
@@ -32,12 +32,15 @@ export const handler = async (event) => {
     };
   }
 
-  const key = (process.env.NEXUS_API_KEY || "").trim();
-  if (!key) {
+  // Récupérer les credentials depuis les headers ou les variables d'environnement
+  const username = event.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
+  const apiKey = event.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
+
+  if (!apiKey || !apiKey.trim()) {
     return {
-      statusCode: 500,
+      statusCode: 401,
       headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({ error: "Missing NEXUS_API_KEY environment variable" }),
+      body: JSON.stringify({ error: "Missing Nexus API credentials. Please configure your username and API key." }),
     };
   }
 
@@ -60,7 +63,7 @@ export const handler = async (event) => {
       {
         method: "DELETE",
         headers: {
-          ...nexusHeaders(),
+          ...nexusHeaders(username, apiKey),
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ mod_id: parseInt(modId, 10) }),

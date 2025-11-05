@@ -15,7 +15,7 @@ function toEpoch(val) {
   return 0;
 }
 
-export default function useNexusMods() {
+export default function useNexusMods(credentials = null) {
   const [mods, setMods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,11 +24,16 @@ export default function useNexusMods() {
     setLoading(true);
     setError(null);
     try {
+      // Préparer les headers avec les credentials si disponibles
+      const headers = { Accept: "application/json" };
+      if (credentials?.username && credentials?.apiKey) {
+        headers["X-Nexus-Username"] = credentials.username;
+        headers["X-Nexus-ApiKey"] = credentials.apiKey;
+      }
+
       // En dev, utilise le proxy de package.json (Create React App)
       // En prod (Netlify/Vercel), utilise les serverless functions
-      const res = await fetch(`/api/nexus/tracked`, {
-        headers: { Accept: "application/json" },
-      });
+      const res = await fetch(`/api/nexus/tracked`, { headers });
       if (!res.ok) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
@@ -93,7 +98,7 @@ export default function useNexusMods() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [credentials]);
 
   useEffect(() => {
     fetchTracked();
@@ -130,11 +135,18 @@ export default function useNexusMods() {
 
   const untrackMod = useCallback(async (domain, modId) => {
     try {
+      // Préparer les headers avec les credentials si disponibles
+      const headers = { Accept: "application/json" };
+      if (credentials?.username && credentials?.apiKey) {
+        headers["X-Nexus-Username"] = credentials.username;
+        headers["X-Nexus-ApiKey"] = credentials.apiKey;
+      }
+
       // En dev, utilise le proxy de package.json (Create React App)
       // En prod (Netlify/Vercel), utilise les serverless functions
       const res = await fetch(`/api/nexus/tracked/${domain}/${modId}`, {
         method: "DELETE",
-        headers: { Accept: "application/json" },
+        headers,
       });
       if (!res.ok) {
         const text = await res.text();
@@ -146,7 +158,7 @@ export default function useNexusMods() {
     } catch (e) {
       return { success: false, error: e.message || String(e) };
     }
-  }, [fetchTracked]);
+  }, [fetchTracked, credentials]);
 
   return { loading, error, games, modsForGame, refresh: fetchTracked, untrackMod };
 }

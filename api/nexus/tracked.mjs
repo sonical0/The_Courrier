@@ -21,10 +21,10 @@ const cacheGet = (k) => {
 };
 const cacheSet = (k, v, ttl) => CACHE.set(k, { val: v, exp: now() + ttl });
 
-const nexusHeaders = () => {
-  const appName = (process.env.NEXUS_APP_NAME || "demo-app").trim();
-  const user = (process.env.NEXUS_USERNAME || "unknown").trim();
-  const key = (process.env.NEXUS_API_KEY || "").trim();
+const nexusHeaders = (username, apiKey) => {
+  const appName = (process.env.NEXUS_APP_NAME || "The Courrier").trim();
+  const user = username || (process.env.NEXUS_USERNAME || "unknown").trim();
+  const key = apiKey || (process.env.NEXUS_API_KEY || "").trim();
   return {
     apikey: key,
     "Application-Name": appName,
@@ -78,15 +78,18 @@ export default async function handler(req, res) {
   // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Nexus-Username, X-Nexus-ApiKey");
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
 
-  const key = (process.env.NEXUS_API_KEY || "").trim();
-  if (!key) {
-    return res.status(500).json({ error: "Missing NEXUS_API_KEY environment variable" });
+  // Récupérer les credentials depuis les headers ou les variables d'environnement
+  const username = req.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
+  const apiKey = req.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
+
+  if (!apiKey || !apiKey.trim()) {
+    return res.status(401).json({ error: "Missing Nexus API credentials. Please configure your username and API key." });
   }
 
   // Check cache
@@ -99,7 +102,7 @@ export default async function handler(req, res) {
     // Fetch tracked mods
     const tracked = await fetchJson(
       "https://api.nexusmods.com/v1/user/tracked_mods.json",
-      { headers: nexusHeaders() }
+      { headers: nexusHeaders(username, apiKey) }
     );
 
     const rows = (Array.isArray(tracked) ? tracked : []).map((m) => {
@@ -134,7 +137,7 @@ export default async function handler(req, res) {
       try {
         const details = await fetchJson(
           `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}.json`,
-          { headers: nexusHeaders() }
+          { headers: nexusHeaders(username, apiKey) }
         );
 
         let changelog = [];
@@ -142,7 +145,7 @@ export default async function handler(req, res) {
         try {
           const changelogData = await fetchJson(
             `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}/changelogs.json`,
-            { headers: nexusHeaders() }
+            { headers: nexusHeaders(username, apiKey) }
           );
           if (changelogData && typeof changelogData === 'object') {
             const versions = Object.keys(changelogData).sort().reverse();

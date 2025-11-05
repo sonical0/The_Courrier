@@ -10,6 +10,7 @@ dotenv.config();
 
 const app = express();
 app.use(cors());
+app.use(express.json());
 
 // ---------- Cache ----------
 const CACHE = new Map();
@@ -33,10 +34,10 @@ const cacheGet = (k) => {
 const cacheSet = (k, v, ttl) => CACHE.set(k, { val: v, exp: now() + ttl });
 
 // ---------- Nexus headers ----------
-const nexusHeaders = () => {
-  const appName = (process.env.NEXUS_APP_NAME || "demo-app").trim();
-  const user = (process.env.NEXUS_USERNAME || "unknown").trim();
-  const key = (process.env.NEXUS_API_KEY || "").trim();
+const nexusHeaders = (username, apiKey) => {
+  const appName = (process.env.NEXUS_APP_NAME || "The Courrier").trim();
+  const user = username || (process.env.NEXUS_USERNAME || "unknown").trim();
+  const key = apiKey || (process.env.NEXUS_API_KEY || "").trim();
   return {
     apikey: key,
     "Application-Name": appName,
@@ -45,10 +46,16 @@ const nexusHeaders = () => {
   };
 };
 
-const ensureKey = (res) => {
-  const key = (process.env.NEXUS_API_KEY || "").trim();
-  if (!key) {
-    res.status(500).json({ error: "Missing NEXUS_API_KEY in .env" });
+const getCredentials = (req) => {
+  const username = req.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
+  const apiKey = req.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
+  return { username, apiKey };
+};
+
+const ensureKey = (req, res) => {
+  const { apiKey } = getCredentials(req);
+  if (!apiKey || !apiKey.trim()) {
+    res.status(401).json({ error: "Missing Nexus API credentials. Please configure your username and API key." });
     return false;
   }
   return true;
@@ -98,11 +105,12 @@ async function withPool(items, limit, fn) {
 }
 
 // ---------- Routes ----------
-app.get("/api/nexus/validate", async (_req, res) => {
-  if (!ensureKey(res)) return;
+app.get("/api/nexus/validate", async (req, res) => {
+  if (!ensureKey(req, res)) return;
+  const { username, apiKey } = getCredentials(req);
   try {
     const data = await fetchJson("https://api.nexusmods.com/v1/users/validate.json", {
-      headers: nexusHeaders(),
+      headers: nexusHeaders(username, apiKey),
     });
     res.json(data);
   } catch (e) {
@@ -114,8 +122,9 @@ app.get("/api/nexus/validate", async (_req, res) => {
  * Enrichit les mods trackés avec les infos détaillées:
  * name, version, author, picture_url, updated_timestamp, url
  */
-app.get("/api/nexus/tracked", async (_req, res) => {
-  if (!ensureKey(res)) return;
+app.get("/api/nexus/tracked", async (req, res) => {
+  if (!ensureKey(req, res)) return;
+  const { username, apiKey } = getCredentials(req);
 
   // 1) cache global court pour la liste brute
   const hit = cacheGet(kTracked);
@@ -125,7 +134,7 @@ app.get("/api/nexus/tracked", async (_req, res) => {
     // 2) récup liste des mods suivis
     const tracked = await fetchJson(
       "https://api.nexusmods.com/v1/user/tracked_mods.json",
-      { headers: nexusHeaders() }
+      { headers: nexusHeaders(username, apiKey) }
     );
 
     // 3) normalise id/domain et prépare la liste à enrichir
@@ -163,7 +172,7 @@ app.get("/api/nexus/tracked", async (_req, res) => {
       try {
         const details = await fetchJson(
           `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}.json`,
-          { headers: nexusHeaders() }
+          { headers: nexusHeaders(username, apiKey) }
         );
 
         // Récupération du changelog
@@ -172,7 +181,7 @@ app.get("/api/nexus/tracked", async (_req, res) => {
         try {
           const changelogData = await fetchJson(
             `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}/changelogs.json`,
-            { headers: nexusHeaders() }
+            { headers: nexusHeaders(username, apiKey) }
           );
           // Prendre les 3 dernières versions du changelog
           if (changelogData && typeof changelogData === 'object') {
@@ -246,7 +255,8 @@ app.get("/api/nexus/tracked", async (_req, res) => {
  * Retire un mod de la liste des mods suivis
  */
 app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
-  if (!ensureKey(res)) return;
+  if (!ensureKey(req, res)) return;
+  const { username, apiKey } = getCredentials(req);
   
   const { domain, modId } = req.params;
   
@@ -256,7 +266,7 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
       {
         method: "DELETE",
         headers: {
-          ...nexusHeaders(),
+          ...nexusHeaders(username, apiKey),
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ mod_id: parseInt(modId, 10) }),
