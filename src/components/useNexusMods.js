@@ -45,16 +45,16 @@ export default function useNexusMods() {
           m.mod_page_url ??
           (domain && id ? `https://www.nexusmods.com/${domain}/mods/${id}` : undefined);
 
-        const updatedAt =
-          toEpoch(
-            m.updated_time ??
-              m.updated_timestamp ??
-              m.last_update ??
-              m.last_updated ??
-              m.uploaded_time ??
-              m.latest_file_update ??
-              m.created_time
-          );
+        const updatedAt = toEpoch(
+          m.updated_time ??
+            m.updated_timestamp ??
+            m.last_update ??
+            m.last_updated ??
+            m.uploaded_time ??
+            m.latest_file_update ??
+            m.created_time ??
+            m.updatedAt
+        );
 
         return {
           id,

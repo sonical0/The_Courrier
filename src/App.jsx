@@ -7,7 +7,7 @@ export default function App() {
   return (
     <Router>
       <nav className="p-3 bg-light d-flex justify-content-around">
-        <Link to="/">Bootstrap</Link>
+        <Link to="/">Actus Mods</Link>
         <Link to="/tailwind">Tailwind</Link>
         <Link to="/nexus-mods">Nexus Mods</Link>
       </nav>
