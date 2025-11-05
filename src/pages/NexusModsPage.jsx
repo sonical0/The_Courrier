@@ -102,7 +102,21 @@ export default function NexusModsPage() {
                       <span className="badge bg-secondary"><s>{m.previousVersion}</s></span>
                     )}
                     <span className="badge bg-success">Version {m.version || "?"}</span>
-                    <span className="small text-muted">· {m.author || "Auteur inconnu"}</span>
+                    <span className="small text-muted">
+                      · par{" "}
+                      {m.author ? (
+                        <a
+                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-decoration-none text-primary"
+                        >
+                          {m.author}
+                        </a>
+                      ) : (
+                        "Auteur inconnu"
+                      )}
+                    </span>
                   </div>
 
                   {m.changelog && m.changelog.length > 0 && (

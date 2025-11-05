@@ -24,6 +24,8 @@ export default function useNexusMods() {
     setLoading(true);
     setError(null);
     try {
+      // En dev, utilise le proxy de package.json (Create React App)
+      // En prod (Netlify/Vercel), utilise les serverless functions
       const res = await fetch(`/api/nexus/tracked`, {
         headers: { Accept: "application/json" },
       });
@@ -64,6 +66,7 @@ export default function useNexusMods() {
           gameId: m.game_id ?? m.game?.id,
           gameName: m.game_name ?? m.game?.name,
           author: m.author ?? m.user?.name ?? m.uploader?.name,
+          authorId: m.authorId ?? m.author_id ?? m.user?.member_id ?? m.uploader?.member_id,
           updatedAt,
           url,
           picture: m.picture_url ?? m.thumbnail_url ?? m.content_preview_link,
@@ -127,6 +130,8 @@ export default function useNexusMods() {
 
   const untrackMod = useCallback(async (domain, modId) => {
     try {
+      // En dev, utilise le proxy de package.json (Create React App)
+      // En prod (Netlify/Vercel), utilise les serverless functions
       const res = await fetch(`/api/nexus/tracked/${domain}/${modId}`, {
         method: "DELETE",
         headers: { Accept: "application/json" },

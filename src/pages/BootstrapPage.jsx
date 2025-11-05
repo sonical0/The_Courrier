@@ -140,7 +140,19 @@ export default function BootstrapPage() {
                   <div className="card-body d-flex flex-column">
                     <h5 className="card-title mb-1">{m.name || `${m.domain}/${m.id}`}</h5>
                     <div className="small text-muted mb-2">
-                      {m.author || "Auteur inconnu"}
+                      par{" "}
+                      {m.author ? (
+                        <a
+                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-decoration-none text-primary"
+                        >
+                          {m.author}
+                        </a>
+                      ) : (
+                        "Auteur inconnu"
+                      )}
                     </div>
 
                     <div className="mb-2">
