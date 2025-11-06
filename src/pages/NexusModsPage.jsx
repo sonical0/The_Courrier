@@ -34,18 +34,63 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
   return lines;
 }
 
-export default function NexusModsPage() {
-  const { loading, error, games, modsForGame, refresh } = useNexusMods();
+export default function NexusModsPage({ credentials }) {
+  const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
   const [gameKey, setGameKey] = useState("");
+  const [untracking, setUntracking] = useState(null); // modId en cours de suppression
 
   const mods = useMemo(() => (gameKey ? modsForGame(gameKey) : []), [gameKey, modsForGame]);
 
+  const handleUntrack = async (domain, modId, modName) => {
+    if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
+      return;
+    }
+    
+    setUntracking(modId);
+    const result = await untrackMod(domain, modId);
+    setUntracking(null);
+    
+    if (!result.success) {
+      alert(`Erreur lors de la suppression : ${result.error}`);
+    }
+  };
+
   if (loading) return <p className="text-center mt-5">Chargement Nexus…</p>;
-  if (error) return <p className="text-center mt-5 text-danger">Erreur: {error}</p>;
+  
+  if (error) {
+    // Si l'erreur est liée aux credentials manquants
+    if (error.includes("credentials") || error.includes("401")) {
+      return (
+        <div className="container mt-5">
+          <div className="alert alert-warning" role="alert">
+            <h4 className="alert-heading">⚠️ Configuration requise</h4>
+            <p>
+              Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
+            </p>
+            <hr />
+            <p className="mb-0">
+              Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger" role="alert">
+          <h4 className="alert-heading">❌ Erreur</h4>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+  
   if (!games.length) return <p className="text-center mt-5">Aucun mod suivi trouvé</p>;
 
   return (
     <div className="container mt-4">
+      <h2 className="mb-4">Mods Suivis par Jeu</h2>
+      
       <div className="d-flex align-items-end justify-content-between mb-3">
         <div style={{ minWidth: 320 }}>
           <label className="form-label">Jeu</label>
@@ -85,7 +130,21 @@ export default function NexusModsPage() {
                       <span className="badge bg-secondary"><s>{m.previousVersion}</s></span>
                     )}
                     <span className="badge bg-success">Version {m.version || "?"}</span>
-                    <span className="small text-muted">· {m.author || "Auteur inconnu"}</span>
+                    <span className="small text-muted">
+                      · par{" "}
+                      {m.author ? (
+                        <a
+                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-decoration-none text-primary"
+                        >
+                          {m.author}
+                        </a>
+                      ) : (
+                        "Auteur inconnu"
+                      )}
+                    </span>
                   </div>
 
                   {m.changelog && m.changelog.length > 0 && (
@@ -122,23 +181,32 @@ export default function NexusModsPage() {
                     </div>
                   )}
 
-                  <div className="mt-auto d-flex justify-content-between align-items-center">
-                    <a
-                      href={m.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`btn btn-primary ${m.url ? "" : "disabled"}`}
+                  <div className="mt-auto">
+                    <div className="d-flex justify-content-between align-items-center mb-2">
+                      <a
+                        href={m.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`btn btn-primary btn-sm ${m.url ? "" : "disabled"}`}
+                      >
+                        Ouvrir sur Nexus
+                      </a>
+                      <span className="badge bg-light text-dark">
+                        {m.updatedAt
+                          ? new Date(
+                              Number(m.updatedAt) *
+                              (String(m.updatedAt).length > 10 ? 1 : 1000)
+                            ).toLocaleString()
+                          : "?"}
+                      </span>
+                    </div>
+                    <button
+                      className="btn btn-outline-danger btn-sm w-100"
+                      onClick={() => handleUntrack(m.domain, m.id, m.name)}
+                      disabled={untracking === m.id}
                     >
-                      Ouvrir sur Nexus
-                    </a>
-                    <span className="badge bg-light text-dark">
-                      {m.updatedAt
-                        ? new Date(
-                            Number(m.updatedAt) *
-                            (String(m.updatedAt).length > 10 ? 1 : 1000)
-                          ).toLocaleString()
-                        : "?"}
-                    </span>
+                      {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
+                    </button>
                   </div>
                 </div>
               </div>

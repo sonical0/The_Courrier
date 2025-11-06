@@ -36,8 +36,8 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
   return lines;
 }
 
-export default function BootstrapPage() {
-  const { loading, error, games, modsForGame, refresh } = useNexusMods();
+export default function BootstrapPage({ credentials }) {
+  const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
   const [period, setPeriod] = useState(7); // en jours
 
   const cutoff = Math.floor(Date.now() / 1000) - period * 24 * 3600;
@@ -74,7 +74,34 @@ export default function BootstrapPage() {
   };
 
   if (loading) return <p className="text-center mt-5">Chargement…</p>;
-  if (error) return <p className="text-center mt-5 text-danger">Erreur: {error}</p>;
+  
+  if (error) {
+    // Si l'erreur est liée aux credentials manquants
+    if (error.includes("credentials") || error.includes("401")) {
+      return (
+        <div className="container mt-5">
+          <div className="alert alert-warning" role="alert">
+            <h4 className="alert-heading">⚠️ Configuration requise</h4>
+            <p>
+              Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
+            </p>
+            <hr />
+            <p className="mb-0">
+              Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
+            </p>
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger" role="alert">
+          <h4 className="alert-heading">❌ Erreur</h4>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
@@ -140,7 +167,19 @@ export default function BootstrapPage() {
                   <div className="card-body d-flex flex-column">
                     <h5 className="card-title mb-1">{m.name || `${m.domain}/${m.id}`}</h5>
                     <div className="small text-muted mb-2">
-                      {m.author || "Auteur inconnu"}
+                      par{" "}
+                      {m.author ? (
+                        <a
+                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-decoration-none text-primary"
+                        >
+                          {m.author}
+                        </a>
+                      ) : (
+                        "Auteur inconnu"
+                      )}
                     </div>
 
                     <div className="mb-2">

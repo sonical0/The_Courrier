@@ -1,20 +1,8 @@
-// server.mjs
-import express from "express";
+// netlify/functions/nexus-tracked.mjs
 import fetch from "node-fetch";
-import cors from "cors";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 
-dotenv.config();
-
-const app = express();
-app.use(cors());
-app.use(express.json());
-
-// ---------- Cache ----------
+// Cache simple en mémoire (persistent durant la durée de vie de la fonction)
 const CACHE = new Map();
-// TTL route validate court, mods plus long
 const TTL = {
   tracked: 60_000,
   mod: 10 * 60_000,
@@ -33,7 +21,6 @@ const cacheGet = (k) => {
 };
 const cacheSet = (k, v, ttl) => CACHE.set(k, { val: v, exp: now() + ttl });
 
-// ---------- Nexus headers ----------
 const nexusHeaders = (username, apiKey) => {
   const appName = (process.env.NEXUS_APP_NAME || "The Courrier").trim();
   const user = username || (process.env.NEXUS_USERNAME || "unknown").trim();
@@ -46,22 +33,6 @@ const nexusHeaders = (username, apiKey) => {
   };
 };
 
-const getCredentials = (req) => {
-  const username = req.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
-  const apiKey = req.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
-  return { username, apiKey };
-};
-
-const ensureKey = (req, res) => {
-  const { apiKey } = getCredentials(req);
-  if (!apiKey || !apiKey.trim()) {
-    res.status(401).json({ error: "Missing Nexus API credentials. Please configure your username and API key." });
-    return false;
-  }
-  return true;
-};
-
-// ---------- Utils ----------
 async function fetchJson(url, { headers }) {
   const r = await fetch(url, { headers });
   const txt = await r.text();
@@ -88,7 +59,6 @@ const toEpoch = (v) => {
   return 0;
 };
 
-// Pool de promesses simple pour limiter la concurrence
 async function withPool(items, limit, fn) {
   const ret = [];
   let i = 0;
@@ -104,66 +74,70 @@ async function withPool(items, limit, fn) {
   return ret;
 }
 
-// ---------- Routes ----------
-app.get("/api/nexus/validate", async (req, res) => {
-  if (!ensureKey(req, res)) return;
-  const { username, apiKey } = getCredentials(req);
-  try {
-    const data = await fetchJson("https://api.nexusmods.com/v1/users/validate.json", {
-      headers: nexusHeaders(username, apiKey),
-    });
-    res.json(data);
-  } catch (e) {
-    res.status(500).json({ error: String(e.message || e) });
+export const handler = async (event) => {
+  const headers = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "Content-Type, X-Nexus-Username, X-Nexus-ApiKey",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+  };
+
+  if (event.httpMethod === "OPTIONS") {
+    return { statusCode: 204, headers, body: "" };
   }
-});
 
-/**
- * Enrichit les mods trackés avec les infos détaillées:
- * name, version, author, picture_url, updated_timestamp, url
- */
-app.get("/api/nexus/tracked", async (req, res) => {
-  if (!ensureKey(req, res)) return;
-  const { username, apiKey } = getCredentials(req);
+  // Récupérer les credentials depuis les headers ou les variables d'environnement
+  const username = event.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
+  const apiKey = event.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
 
-  // 1) cache global court pour la liste brute
+  if (!apiKey || !apiKey.trim()) {
+    return {
+      statusCode: 401,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ error: "Missing Nexus API credentials. Please configure your username and API key." }),
+    };
+  }
+
+  // Check cache
   const hit = cacheGet(kTracked);
-  if (hit) return res.json(hit);
+  if (hit) {
+    return {
+      statusCode: 200,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(hit),
+    };
+  }
 
   try {
-    // 2) récup liste des mods suivis
+    // Fetch tracked mods
     const tracked = await fetchJson(
       "https://api.nexusmods.com/v1/user/tracked_mods.json",
       { headers: nexusHeaders(username, apiKey) }
     );
 
-    // 3) normalise id/domain et prépare la liste à enrichir
     const rows = (Array.isArray(tracked) ? tracked : []).map((m) => {
       const id = m.mod_id ?? m.modId ?? m.id;
       const domain = m.domain_name ?? m.domain ?? m.game?.domain_name;
       return {
         id,
         domain,
-        // champs éventuellement déjà fournis par l’API tracked
         name: m.name ?? m.mod_name ?? m.title,
         version: m.version ?? m.mod_version,
         author: m.author ?? m.user?.name,
         picture: m.picture_url ?? m.thumbnail_url,
-        updatedAt:
-          toEpoch(
-            m.updated_time ??
-              m.updated_timestamp ??
-              m.last_update ??
-              m.last_updated ??
-              m.uploaded_time
-          ),
+        updatedAt: toEpoch(
+          m.updated_time ??
+            m.updated_timestamp ??
+            m.last_update ??
+            m.last_updated ??
+            m.uploaded_time
+        ),
         url: m.url ?? m.mod_page_url,
         gameId: m.game_id ?? m.game?.id,
         gameName: m.game_name ?? m.game?.name,
       };
     }).filter((m) => m.id && m.domain);
 
-    // 4) enrichissement par appel /games/{domain}/mods/{id} avec pool=4 + cache par mod
+    // Enrich with details
     const enriched = await withPool(rows, 4, async (m) => {
       const ck = kMod(m.domain, m.id);
       const modCache = cacheGet(ck);
@@ -175,7 +149,6 @@ app.get("/api/nexus/tracked", async (req, res) => {
           { headers: nexusHeaders(username, apiKey) }
         );
 
-        // Récupération du changelog
         let changelog = [];
         let previousVersion = null;
         try {
@@ -183,14 +156,12 @@ app.get("/api/nexus/tracked", async (req, res) => {
             `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}/changelogs.json`,
             { headers: nexusHeaders(username, apiKey) }
           );
-          // Prendre les 3 dernières versions du changelog
           if (changelogData && typeof changelogData === 'object') {
             const versions = Object.keys(changelogData).sort().reverse();
             changelog = versions.slice(0, 3).map(version => ({
               version,
               changes: changelogData[version]
             }));
-            // La version précédente est la deuxième dans la liste
             if (versions.length > 1) {
               previousVersion = versions[1];
             }
@@ -232,7 +203,6 @@ app.get("/api/nexus/tracked", async (req, res) => {
         cacheSet(ck, merged, TTL.mod);
         return { ...m, ...merged };
       } catch {
-        // en cas d’échec d’enrichissement, on garde la base + URL reconstruite
         return {
           ...m,
           url: m.url || `https://www.nexusmods.com/${m.domain}/mods/${m.id}`,
@@ -240,69 +210,20 @@ app.get("/api/nexus/tracked", async (req, res) => {
       }
     });
 
-    // 5) tri par date décroissante
     enriched.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
-    // 6) cache 60s et renvoi
     cacheSet(kTracked, enriched, TTL.tracked);
-    res.json(enriched);
-  } catch (e) {
-    res.status(500).json({ error: String(e.message || e) });
-  }
-});
 
-/**
- * Retire un mod de la liste des mods suivis
- */
-app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
-  if (!ensureKey(req, res)) return;
-  const { username, apiKey } = getCredentials(req);
-  
-  const { domain, modId } = req.params;
-  
-  try {
-    const response = await fetch(
-      `https://api.nexusmods.com/v1/user/tracked_mods.json?domain_name=${domain}`,
-      {
-        method: "DELETE",
-        headers: {
-          ...nexusHeaders(username, apiKey),
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ mod_id: parseInt(modId, 10) }),
-      }
-    );
-    
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(`HTTP ${response.status}${text ? " — " + text : ""}`);
-    }
-    
-    // Invalide le cache
-    CACHE.delete(kTracked);
-    CACHE.delete(kMod(domain, modId));
-    
-    res.json({ success: true, message: "Mod retiré de la liste suivie" });
-  } catch (e) {
-    res.status(500).json({ error: String(e.message || e) });
+    return {
+      statusCode: 200,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(enriched),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({ error: error.message || String(error) }),
+    };
   }
-});
-
-// ---------- Static (prod) ----------
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const clientBuild = path.join(__dirname, "build");
-app.use(express.static(clientBuild));
-app.get("*", (_req, res) => {
-  try {
-    res.sendFile(path.join(clientBuild, "index.html"));
-  } catch {
-    res.status(404).send("Not Found");
-  }
-});
-
-// ---------- Start ----------
-const port = Number(process.env.PORT || 4000);
-const masked = (process.env.NEXUS_API_KEY || "").trim().slice(0, 4).padEnd(12, "*");
-app.listen(port, () => {
-  console.log(`Proxy server listening on port ${port} — key:${masked}`);
-});
+};
