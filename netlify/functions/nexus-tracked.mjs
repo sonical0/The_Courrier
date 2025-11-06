@@ -6,10 +6,12 @@ const CACHE = new Map();
 const TTL = {
   tracked: 60_000,
   mod: 10 * 60_000,
+  game: 24 * 60 * 60_000, // 24h pour les infos de jeux
 };
 const now = () => Date.now();
 const kTracked = "tracked";
 const kMod = (domain, id) => `mod:${domain}:${id}`;
+const kGame = (domain) => `game:${domain}`;
 
 const cacheGet = (k) => {
   const e = CACHE.get(k);
@@ -72,6 +74,37 @@ async function withPool(items, limit, fn) {
     });
   await Promise.all(workers);
   return ret;
+}
+
+// Fonction pour récupérer les infos d'un jeu
+async function getGameInfo(domain, username, apiKey) {
+  const ck = kGame(domain);
+  const cached = cacheGet(ck);
+  if (cached) return cached;
+
+  try {
+    const gameInfo = await fetchJson(
+      `https://api.nexusmods.com/v1/games/${domain}.json`,
+      { headers: nexusHeaders(username, apiKey) }
+    );
+    const info = {
+      id: gameInfo.id,
+      name: gameInfo.name,
+      domain: gameInfo.domain_name || domain,
+    };
+    cacheSet(ck, info, TTL.game);
+    return info;
+  } catch (error) {
+    // En cas d'erreur, retourner des infos basiques
+    const fallback = {
+      id: null,
+      name: domain,
+      domain: domain,
+    };
+    // Cache court pour éviter de retaper en erreur
+    cacheSet(ck, fallback, 5 * 60_000);
+    return fallback;
+  }
 }
 
 export const handler = async (event) => {
@@ -212,12 +245,28 @@ export const handler = async (event) => {
 
     enriched.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
-    cacheSet(kTracked, enriched, TTL.tracked);
+    // Enrichir avec les informations des jeux
+    const uniqueDomains = [...new Set(enriched.map(m => m.domain).filter(Boolean))];
+    const gamesInfo = await Promise.all(
+      uniqueDomains.map(domain => getGameInfo(domain, username, apiKey))
+    );
+    const gamesMap = new Map(gamesInfo.map(g => [g.domain, g]));
+
+    const enrichedWithGames = enriched.map(m => {
+      const gameInfo = gamesMap.get(m.domain);
+      return {
+        ...m,
+        gameId: m.gameId || gameInfo?.id,
+        gameName: gameInfo?.name || m.gameName,
+      };
+    });
+
+    cacheSet(kTracked, enrichedWithGames, TTL.tracked);
 
     return {
       statusCode: 200,
       headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify(enriched),
+      body: JSON.stringify(enrichedWithGames),
     };
   } catch (error) {
     return {
