@@ -5,10 +5,12 @@ import TailwindPage from "./pages/TailwindPage";
 import NexusModsPage from "./pages/NexusModsPage.jsx";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
+import useTheme from "./components/useTheme";
 
 export default function App() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
   const [showModal, setShowModal] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const handleSaveCredentials = (username, apiKey) => {
     if (saveCredentials(username, apiKey)) {
@@ -29,48 +31,90 @@ export default function App() {
 
   return (
     <Router>
-      <nav className="p-3 bg-light d-flex justify-content-between align-items-center">
-        <div className="d-flex gap-3">
-          <Link to="/">Actus Mods</Link>
-          <Link to="/tailwind">Tailwind</Link>
-          <Link to="/nexus-mods">Nexus Mods</Link>
-        </div>
-        <div className="d-flex gap-2 align-items-center">
-          {hasCredentials && (
-            <span className="badge bg-success">
-              ✓ {credentials?.username}
-            </span>
-          )}
-          <button
-            className="btn btn-sm btn-outline-primary"
-            onClick={() => setShowModal(true)}
-            title={hasCredentials ? "Modifier les identifiants" : "Configurer les identifiants"}
-          >
-            ⚙️ Config
-          </button>
-          {hasCredentials && (
-            <button
-              className="btn btn-sm btn-outline-danger"
-              onClick={handleClearCredentials}
-              title="Supprimer les identifiants"
-            >
-              🗑️
-            </button>
-          )}
-        </div>
-      </nav>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
+        {/* Header inspiré de PicoCSS */}
+        <header className="bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-700">
+          <div className="container mx-auto px-4">
+            <nav className="flex items-center justify-between py-4">
+              <div className="flex items-center gap-6">
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                  The Courrier
+                </h1>
+                <div className="flex gap-4">
+                  <Link 
+                    to="/" 
+                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                  >
+                    Actus Mods
+                  </Link>
+                  <Link 
+                    to="/tailwind" 
+                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                  >
+                    Tailwind
+                  </Link>
+                  <Link 
+                    to="/nexus-mods" 
+                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                  >
+                    Nexus Mods
+                  </Link>
+                </div>
+              </div>
+              
+              <div className="flex gap-3 items-center">
+                {hasCredentials && (
+                  <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm font-medium">
+                    ✓ {credentials?.username}
+                  </span>
+                )}
+                
+                {/* Bouton Jour/Nuit */}
+                <button
+                  onClick={toggleTheme}
+                  className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors font-medium"
+                  title={theme === 'light' ? 'Passer en mode nuit' : 'Passer en mode jour'}
+                >
+                  {theme === 'light' ? '🌙 Nuit' : '☀️ Jour'}
+                </button>
 
-      <CredentialsModal
-        show={showModal || shouldShowModal}
-        onSave={handleSaveCredentials}
-        onCancel={showModal ? () => setShowModal(false) : undefined}
-      />
+                <button
+                  className="px-4 py-2 rounded-lg bg-pico-primary hover:bg-pico-primary-hover text-white transition-colors font-medium"
+                  onClick={() => setShowModal(true)}
+                  title={hasCredentials ? "Modifier les identifiants" : "Configurer les identifiants"}
+                >
+                  ⚙️ Config
+                </button>
+                
+                {hasCredentials && (
+                  <button
+                    className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors font-medium"
+                    onClick={handleClearCredentials}
+                    title="Supprimer les identifiants"
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
+            </nav>
+          </div>
+        </header>
 
-      <Routes>
-        <Route path="/" element={<BootstrapPage credentials={credentials} />} />
-        <Route path="/tailwind" element={<TailwindPage />} />
-        <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
-      </Routes>
+        <CredentialsModal
+          show={showModal || shouldShowModal}
+          onSave={handleSaveCredentials}
+          onCancel={showModal ? () => setShowModal(false) : undefined}
+        />
+
+        <main>
+          <Routes>
+            <Route path="/" element={<BootstrapPage credentials={credentials} />} />
+            <Route path="/tailwind" element={<TailwindPage />} />
+            <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
+          </Routes>
+        </main>
+      </div>
     </Router>
   );
 }
+

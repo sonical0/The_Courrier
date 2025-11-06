@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 /**
- * Modal Bootstrap pour saisir les credentials Nexus Mods
+ * Modal Tailwind pour saisir les credentials Nexus Mods
  */
 export default function CredentialsModal({ show, onSave, onCancel }) {
   const [username, setUsername] = useState("");
@@ -31,114 +31,120 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
     <>
       {/* Backdrop */}
       <div
-        className="modal-backdrop fade show"
-        style={{ zIndex: 1040 }}
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onCancel}
       />
 
       {/* Modal */}
       <div
-        className="modal fade show d-block"
-        tabIndex="-1"
-        style={{ zIndex: 1050 }}
+        className="fixed inset-0 z-50 flex items-center justify-center p-4"
         onClick={(e) => e.target === e.currentTarget && onCancel?.()}
       >
-        <div className="modal-dialog modal-dialog-centered">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">Configuration Nexus Mods</h5>
+  <div className="bg-slate-50 dark:bg-slate-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-xl">
+            <h5 className="text-xl font-bold text-slate-900 dark:text-white">
+              Configuration Nexus Mods
+            </h5>
+            {onCancel && (
+              <button
+                type="button"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                onClick={onCancel}
+                aria-label="Close"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit}>
+            {/* Body */}
+            <div className="p-6 space-y-4 bg-slate-50 dark:bg-slate-900">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Pour utiliser cette application, vous devez fournir vos identifiants
+                Nexus Mods. Ces informations seront stockées localement dans votre
+                navigateur et ne seront jamais partagées.
+              </p>
+
+              {error && (
+                <div className="p-3 bg-red-100 dark:bg-red-900/30 border border-red-400 dark:border-red-700 rounded-lg text-red-800 dark:text-red-300 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div>
+                <label htmlFor="nexus-username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Nom d'utilisateur Nexus Mods
+                </label>
+                <input
+                  type="text"
+                  className="pico-input"
+                  id="nexus-username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="VotreNomDUtilisateur"
+                  autoComplete="username"
+                />
+                <small className="block mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Votre nom d'utilisateur sur nexusmods.com
+                </small>
+              </div>
+
+              <div>
+                <label htmlFor="nexus-apikey" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Clé API Nexus Mods
+                </label>
+                <input
+                  type="password"
+                  className="pico-input"
+                  id="nexus-apikey"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="votre-clé-api-privée"
+                  autoComplete="off"
+                />
+                <small className="block mt-1 text-xs text-slate-500 dark:text-slate-400">
+                  Vous pouvez obtenir votre clé API sur{" "}
+                  <a
+                    href="https://www.nexusmods.com/users/myaccount?tab=api"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-pico-primary hover:underline"
+                  >
+                    votre page de paramètres Nexus Mods
+                  </a>
+                </small>
+              </div>
+
+              <div className="p-3 bg-blue-50 dark:bg-slate-800 border border-blue-200 dark:border-slate-700 rounded-lg text-sm text-slate-700 dark:text-slate-300">
+                <strong className="text-blue-800 dark:text-blue-200">🔒 Sécurité :</strong> Vos identifiants sont stockés uniquement
+                dans votre navigateur (localStorage) et ne transitent que vers les
+                serveurs de Nexus Mods.
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex gap-3 justify-end p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-xl">
               {onCancel && (
                 <button
                   type="button"
-                  className="btn-close"
+                  className="pico-btn-outline"
                   onClick={onCancel}
-                  aria-label="Close"
-                />
-              )}
-            </div>
-
-            <form onSubmit={handleSubmit}>
-              <div className="modal-body">
-                <p className="text-muted small mb-3">
-                  Pour utiliser cette application, vous devez fournir vos identifiants
-                  Nexus Mods. Ces informations seront stockées localement dans votre
-                  navigateur et ne seront jamais partagées.
-                </p>
-
-                {error && (
-                  <div className="alert alert-danger py-2" role="alert">
-                    {error}
-                  </div>
-                )}
-
-                <div className="mb-3">
-                  <label htmlFor="nexus-username" className="form-label">
-                    Nom d'utilisateur Nexus Mods
-                  </label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="nexus-username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="VotreNomDUtilisateur"
-                    autoComplete="username"
-                  />
-                  <small className="form-text text-muted">
-                    Votre nom d'utilisateur sur nexusmods.com
-                  </small>
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="nexus-apikey" className="form-label">
-                    Clé API Nexus Mods
-                  </label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="nexus-apikey"
-                    value={apiKey}
-                    onChange={(e) => setApiKey(e.target.value)}
-                    placeholder="votre-clé-api-privée"
-                    autoComplete="off"
-                  />
-                  <small className="form-text text-muted">
-                    Vous pouvez obtenir votre clé API sur{" "}
-                    <a
-                      href="https://www.nexusmods.com/users/myaccount?tab=api"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      votre page de paramètres Nexus Mods
-                    </a>
-                  </small>
-                </div>
-
-                <div className="alert alert-info py-2 small" role="alert">
-                  <strong>🔒 Sécurité :</strong> Vos identifiants sont stockés uniquement
-                  dans votre navigateur (localStorage) et ne transitent que vers les
-                  serveurs de Nexus Mods.
-                </div>
-              </div>
-
-              <div className="modal-footer">
-                {onCancel && (
-                  <button
-                    type="button"
-                    className="btn btn-secondary"
-                    onClick={onCancel}
-                  >
-                    Annuler
-                  </button>
-                )}
-                <button type="submit" className="btn btn-primary">
-                  Enregistrer
+                >
+                  Annuler
                 </button>
-              </div>
-            </form>
-          </div>
+              )}
+              <button type="submit" className="pico-btn-primary">
+                Enregistrer
+              </button>
+            </div>
+          </form>
         </div>
       </div>
     </>
   );
 }
+

@@ -42,7 +42,7 @@ export default function BootstrapPage({ credentials }) {
 
   const cutoff = Math.floor(Date.now() / 1000) - period * 24 * 3600;
 
-  // Regroupe par jeu uniquement les mods mis à jour < 30 jours
+  // Regroupe par jeu uniquement les mods mis à jour < période sélectionnée
   const grouped = useMemo(() => {
     const out = [];
     for (const g of games) {
@@ -73,20 +73,28 @@ export default function BootstrapPage({ credentials }) {
     return `${period} derniers jours`;
   };
 
-  if (loading) return <p className="text-center mt-5">Chargement…</p>;
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-slate-600 dark:text-slate-400">Chargement…</p>
+      </div>
+    );
+  }
   
   if (error) {
     // Si l'erreur est liée aux credentials manquants
     if (error.includes("credentials") || error.includes("401")) {
       return (
-        <div className="container mt-5">
-          <div className="alert alert-warning" role="alert">
-            <h4 className="alert-heading">⚠️ Configuration requise</h4>
-            <p>
+        <div className="container mx-auto px-4 py-8">
+          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
+            <h4 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+              ⚠️ Configuration requise
+            </h4>
+            <p className="text-slate-700 dark:text-slate-300 mb-3">
               Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
             </p>
-            <hr />
-            <p className="mb-0">
+            <hr className="my-3 border-slate-200 dark:border-slate-700" />
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
             </p>
           </div>
@@ -94,160 +102,170 @@ export default function BootstrapPage({ credentials }) {
       );
     }
     return (
-      <div className="container mt-5">
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">❌ Erreur</h4>
-          <p>{error}</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="pico-card p-6 border-red-500 dark:border-red-600">
+          <h4 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">❌ Erreur</h4>
+          <p className="text-slate-700 dark:text-slate-300">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mt-4">
-      <div className="d-flex align-items-center justify-content-between mb-3">
-        <h2 className="m-0">Actualités des Mods · {periodLabel()}</h2>
-        <button className="btn btn-outline-secondary" onClick={refresh}>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
+          Actualités des Mods · {periodLabel()}
+        </h2>
+        <button 
+          className="pico-btn-outline w-fit"
+          onClick={refresh}
+        >
           Rafraîchir
         </button>
       </div>
 
-      <div className="mb-4">
-        <div className="btn-group" role="group" aria-label="Filtres de période">
-          <button
-            type="button"
-            className={`btn ${period === 7 ? "btn-primary" : "btn-outline-primary"}`}
-            onClick={() => setPeriod(7)}
-          >
-            7 jours
-          </button>
-          <button
-            type="button"
-            className={`btn ${period === 15 ? "btn-primary" : "btn-outline-primary"}`}
-            onClick={() => setPeriod(15)}
-          >
-            15 jours
-          </button>
-          <button
-            type="button"
-            className={`btn ${period === 30 ? "btn-primary" : "btn-outline-primary"}`}
-            onClick={() => setPeriod(30)}
-          >
-            30 jours
-          </button>
-          <button
-            type="button"
-            className={`btn ${period === 365 ? "btn-primary" : "btn-outline-primary"}`}
-            onClick={() => setPeriod(365)}
-          >
-            Année passée
-          </button>
-        </div>
+      <div className="mb-6 flex gap-2 flex-wrap">
+        <button
+          type="button"
+          className={period === 7 ? "pico-btn-primary" : "pico-btn-outline"}
+          onClick={() => setPeriod(7)}
+        >
+          7 jours
+        </button>
+        <button
+          type="button"
+          className={period === 15 ? "pico-btn-primary" : "pico-btn-outline"}
+          onClick={() => setPeriod(15)}
+        >
+          15 jours
+        </button>
+        <button
+          type="button"
+          className={period === 30 ? "pico-btn-primary" : "pico-btn-outline"}
+          onClick={() => setPeriod(30)}
+        >
+          30 jours
+        </button>
+        <button
+          type="button"
+          className={period === 365 ? "pico-btn-primary" : "pico-btn-outline"}
+          onClick={() => setPeriod(365)}
+        >
+          Année passée
+        </button>
       </div>
 
       {!grouped.length && (
-        <p className="text-muted">Aucune mise à jour récente trouvée.</p>
+        <p className="text-slate-500 dark:text-slate-400">Aucune mise à jour récente trouvée.</p>
       )}
 
       {grouped.map(({ gameLabel, mods }) => (
-        <section className="mb-4" key={gameLabel}>
-          <h4 className="mb-3">{gameLabel}</h4>
-          <div className="row g-3">
+        <section className="mb-8" key={gameLabel}>
+          <h4 className="text-2xl font-semibold text-slate-800 dark:text-white mb-4">{gameLabel}</h4>
+          
+          {/* Grid responsive: 3 colonnes desktop, 2 tablette, 1 mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mods.map((m) => (
-              <div className="col-12 col-md-6 col-lg-4" key={`${m.domain}-${m.id}`}>
-                <div className="card h-100 shadow-sm">
-                  {m.picture && (
-                    <img
-                      src={m.picture}
-                      alt={m.name}
-                      className="card-img-top"
-                      style={{ objectFit: "cover", height: 160 }}
-                    />
-                  )}
-                  <div className="card-body d-flex flex-column">
-                    <h5 className="card-title mb-1">{m.name || `${m.domain}/${m.id}`}</h5>
-                    <div className="small text-muted mb-2">
-                      par{" "}
-                      {m.author ? (
-                        <a
-                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-decoration-none text-primary"
-                        >
-                          {m.author}
-                        </a>
-                      ) : (
-                        "Auteur inconnu"
-                      )}
-                    </div>
-
-                    <div className="mb-2">
-                      {m.previousVersion && m.previousVersion !== m.version && (
-                        <span className="badge bg-secondary me-1">
-                          <s>{m.previousVersion}</s>
-                        </span>
-                      )}
-                      <span className="badge bg-success">
-                        Version {m.version || "?"}
-                      </span>
-                    </div>
-
-                    <p className="small text-muted mb-2">
-                      Mise à jour le{" "}
-                      {m.updatedAt
-                        ? new Date(
-                            Number(m.updatedAt) *
-                            (String(m.updatedAt).length > 10 ? 1 : 1000)
-                          ).toLocaleString()
-                        : "?"}
-                    </p>
-
-                    {m.changelog && m.changelog.length > 0 && (
-                      <div className="mb-3">
-                        <small className="fw-bold d-block mb-1">Changelog :</small>
-                        <div className="small" style={{ maxHeight: "100px", overflowY: "auto" }}>
-                          {(() => {
-                            const lines = flattenChangeLines(m.changelog[0], 6);
-                            if (!lines.length)
-                              return (
-                                <p className="mb-0 text-muted fst-italic">Aucun détail disponible</p>
-                              );
-                            const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
-                            return (
-                              <ul className="mb-0 ps-3">
-                                {lines.map((ln, i) => (
-                                  <li key={i}>{ln}</li>
-                                ))}
-                                {hasMore && <li className="text-muted fst-italic">…</li>}
-                              </ul>
-                            );
-                          })()}
-                        </div>
-                        {m.changelogUrl && (
-                          <a
-                            href={m.changelogUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="small text-decoration-none"
-                          >
-                            Voir le changelog complet →
-                          </a>
-                        )}
-                      </div>
-                    )}
-
-                    <div className="mt-auto d-flex justify-content-between align-items-center">
+              <div className="pico-card" key={`${m.domain}-${m.id}`}>
+                {m.picture && (
+                  <img
+                    src={m.picture}
+                    alt={m.name}
+                    className="w-full h-40 object-cover"
+                  />
+                )}
+                <div className="p-5 flex flex-col h-full">
+                  <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
+                    {m.name || `${m.domain}/${m.id}`}
+                  </h5>
+                  <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                    par{" "}
+                    {m.author ? (
                       <a
-                        href={m.url}
+                        href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
                         target="_blank"
                         rel="noreferrer"
-                        className={`btn btn-sm btn-primary ${m.url ? "" : "disabled"}`}
+                        className="text-pico-primary hover:underline"
                       >
-                        Ouvrir sur Nexus
+                        {m.author}
                       </a>
-                      <span className="text-muted small">#{m.id}</span>
+                    ) : (
+                      "Auteur inconnu"
+                    )}
+                  </div>
+
+                  <div className="mb-3 flex gap-2 flex-wrap">
+                    {m.previousVersion && m.previousVersion !== m.version && (
+                      <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">
+                        {m.previousVersion}
+                      </span>
+                    )}
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-sm font-medium">
+                      Version {m.version || "?"}
+                    </span>
+                  </div>
+
+                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
+                    Mise à jour le{" "}
+                    {m.updatedAt
+                      ? new Date(
+                          Number(m.updatedAt) *
+                          (String(m.updatedAt).length > 10 ? 1 : 1000)
+                        ).toLocaleString()
+                      : "?"}
+                  </p>
+
+                  {m.changelog && m.changelog.length > 0 && (
+                    <div className="mb-4">
+                      <small className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                        Changelog :
+                      </small>
+                      <div className="text-sm max-h-24 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-2 rounded">
+                        {(() => {
+                          const lines = flattenChangeLines(m.changelog[0], 6);
+                          if (!lines.length)
+                            return (
+                              <p className="mb-0 text-slate-500 dark:text-slate-400 italic">
+                                Aucun détail disponible
+                              </p>
+                            );
+                          const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
+                          return (
+                            <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
+                              {lines.map((ln, i) => (
+                                <li key={i}>{ln}</li>
+                              ))}
+                              {hasMore && <li className="text-slate-500 dark:text-slate-400 italic">…</li>}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                      {m.changelogUrl && (
+                        <a
+                          href={m.changelogUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm text-pico-primary hover:underline inline-block mt-1"
+                        >
+                          Voir le changelog complet →
+                        </a>
+                      )}
                     </div>
+                  )}
+
+                  <div className="mt-auto flex justify-between items-center">
+                    <a
+                      href={m.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`pico-btn-primary text-sm ${m.url ? "" : "opacity-50 pointer-events-none"}`}
+                    >
+                      Ouvrir sur Nexus
+                    </a>
+                    <span className="text-slate-500 dark:text-slate-400 text-sm">
+                      #{m.id}
+                    </span>
                   </div>
                 </div>
               </div>
