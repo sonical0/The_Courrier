@@ -1,12 +1,14 @@
-/* src/index.css — Pico + palette Discord + rails latéraux */
-/* Import Pico.css */
+/* src/index.css — Pico + Tailwind + thème Discord */
+
+/* Frameworks */
 @import url("https://unpkg.com/@picocss/pico@latest/css/pico.min.css");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Palette Discord Dark */
+/* Palette Discord Dark (variables Pico) */
 :root{
+  --pico-background-color:#2b2d31;
   --pico-color:#f2f3f5;
   --pico-muted-color:#b5bac1;
   --pico-card-background-color:#313338;
@@ -17,18 +19,23 @@
   --pico-primary-background:#5865f2;
 }
 
+/* Base */
 html,body,#root{height:100%}
 body{margin:0;background:var(--pico-background-color);color:var(--pico-color)}
 
-/* Header (Pico + teinte) */
+/* Header */
 header nav{
   background:#211e22;
   border-bottom:1px solid var(--pico-border-color);
 }
 
-/* Bandes latérales (rails) au-delà du conteneur */
+/* Rails latéraux (désactivés au desktop pour coller aux bords) */
 .page-rails{position:relative}
 @media (min-width:1200px){
+  .page-rails::before,
+  .page-rails::after{display:none}
+}
+@media (max-width:1199.98px){
   .page-rails::before,
   .page-rails::after{
     content:"";
@@ -38,13 +45,10 @@ header nav{
     pointer-events:none;
   }
   .page-rails::before{left:0}
-  .page-rails::after{
-    right:0;
-    transform:scaleX(-1);
-  }
+  .page-rails::after{right:0;transform:scaleX(-1)}
 }
 
-/* Carte (utilisée avec utilitaires Tailwind) */
+/* Cartes de jeu */
 .game-card{
   background:var(--pico-card-background-color);
   border:1px solid var(--pico-border-color);
