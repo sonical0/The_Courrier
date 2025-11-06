@@ -1,4 +1,3 @@
-````markdown
 # The Courrier 📰
 
 > **WebApp de veille technologique pour les mods Nexus Mods**
@@ -549,4 +548,3 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 - [Vercel](https://vercel.com) - Plateforme de déploiement
 - [Netlify](https://netlify.com) - Plateforme de déploiement
 
-````
