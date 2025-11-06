@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import useNexusMods from "../components/useNexusMods";
 
-// Helpers pour nettoyer et aplatir les changelogs (mêmes règles que BootstrapPage)
+// Helpers pour nettoyer et aplatir les changelogs (mêmes règles que ActuUpdatePage)
 function decodeEntities(str) {
   if (!str) return "";
   return str

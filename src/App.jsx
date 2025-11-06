@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import BootstrapPage from "./pages/BootstrapPage";
-import TailwindPage from "./pages/TailwindPage";
+import ActuUpdatePage from "./pages/ActuUpdatePage";
 import NexusModsPage from "./pages/NexusModsPage.jsx";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
@@ -55,12 +54,6 @@ export default function App() {
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
                   >
                     Actus Mods
-                  </Link>
-                  <Link 
-                    to="/tailwind" 
-                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
-                  >
-                    Tailwind
                   </Link>
                   <Link 
                     to="/nexus-mods" 
@@ -122,8 +115,7 @@ export default function App() {
             </div>
           ) : (
             <Routes>
-              <Route path="/" element={<BootstrapPage credentials={credentials} />} />
-              <Route path="/tailwind" element={<TailwindPage />} />
+              <Route path="/" element={<ActuUpdatePage credentials={credentials} />} />
               <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
             </Routes>
           )}

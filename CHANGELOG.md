@@ -180,7 +180,7 @@ src/
 docs/
   CREDENTIALS_CONFIG.md        # Documentation complète
   EXAMPLES.js                  # Exemples d'utilisation
-  CHANGELOG_CREDENTIALS.md     # Ce fichier
+  CHANGELOG.md                 # Ce fichier (historique complet)
 ```
 
 ### 🔄 Fichiers Modifiés

@@ -36,7 +36,7 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
   return lines;
 }
 
-export default function BootstrapPage({ credentials }) {
+export default function ActuUpdatePage({ credentials }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
   const [period, setPeriod] = useState(7); // en jours
 

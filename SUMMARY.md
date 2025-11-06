@@ -58,7 +58,7 @@ Toutes les fonctions serverless ont été mises à jour :
 
 1. **`CREDENTIALS_CONFIG.md`** - Guide complet du système
 2. **`TESTING_GUIDE.md`** - Procédures de test
-3. **`CHANGELOG_CREDENTIALS.md`** - Historique des changements
+3. **`CHANGELOG.md`** - Historique complet des changements
 4. **`EXAMPLES.js`** - Exemples d'utilisation des hooks
 5. **`README.md`** - Mise à jour avec section démarrage rapide
 
@@ -178,7 +178,7 @@ The_Courrier/
 │       └── nexus-validate.mjs
 ├── CREDENTIALS_CONFIG.md                 # 🆕 Nouveau
 ├── TESTING_GUIDE.md                      # 🆕 Nouveau
-├── CHANGELOG_CREDENTIALS.md              # 🆕 Nouveau
+├── CHANGELOG.md                          # 🆕 Nouveau
 ├── EXAMPLES.js                           # 🆕 Nouveau
 ├── SUMMARY.md                            # 🆕 Ce fichier
 └── README.md                             # ✏️ Modifié
