@@ -1,66 +1,35 @@
-# 🎉 Implémentation Réussie - Configuration des Identifiants Nexus Mods
+# 🎉 The Courrier - Guide d'Utilisation et d'Implémentation
 
-## ✅ Résumé de l'Implémentation
+## 📖 Vue d'ensemble
 
-Votre application **The Courrier** dispose maintenant d'un système complet permettant aux utilisateurs de configurer leurs propres identifiants Nexus Mods de manière locale et sécurisée.
+**The Courrier** est une application React permettant de suivre les mises à jour de vos mods préférés sur Nexus Mods. Ce document vous guide dans l'utilisation et l'implémentation du système.
 
-## 📦 Ce qui a été créé
+> 💡 **Note :** Pour l'historique technique détaillé des changements, consultez [CHANGELOG.md](./CHANGELOG.md)
 
-### Nouveaux Composants React
+## 🎯 Fonctionnalités Principales
 
-1. **`CredentialsModal.jsx`**
-   - Modal Bootstrap élégant pour la saisie des credentials
-   - Validation des champs
-   - Messages d'erreur clairs
-   - Lien vers la page d'API Nexus Mods
+### Pour les Utilisateurs
+- 🔐 **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods
+- 📰 **Actualités des mods** : Page dédiée aux mises à jour récentes (24h, 7j, 30j)
+- 🎮 **Affichage enrichi** : Vrais noms de jeux et icônes officielles Nexus
+- 📋 **Gestion des suivis** : Ajoutez/retirez des mods de votre liste
+- 🌓 **Thème adaptatif** : Mode clair/sombre automatique
 
-2. **`useNexusCredentials.js`**
-   - Hook personnalisé pour gérer le localStorage
-   - Fonctions : save, clear, hasCredentials
-   - Gestion automatique du loading state
+### Pour les Développeurs
+- ✅ **Déploiement simplifié** : Aucun secret à configurer
+- ✅ **Multi-plateforme** : Compatible Vercel et Netlify
+- ✅ **Cache intelligent** : Optimisation des appels API
+- ✅ **Architecture propre** : Hooks React réutilisables
 
-### Modifications des Composants Existants
+## 📚 Documentation Complémentaire
 
-1. **`App.jsx`**
-   - Intégration du système de credentials
-   - Navbar enrichie avec badge utilisateur et boutons de gestion
-   - Affichage automatique du modal si pas de credentials
+Ce guide se concentre sur l'utilisation pratique. Pour plus de détails :
 
-2. **`useNexusMods.js`**
-   - Accepte les credentials en paramètre
-   - Envoie les credentials via headers HTTP personnalisés
-   - Gestion des credentials pour toutes les requêtes API
-
-3. **`BootstrapPage.jsx` & `NexusModsPage.jsx`**
-   - Reçoivent les credentials depuis App
-   - Gestion d'erreur améliorée avec messages clairs
-   - Redirection vers la configuration si credentials manquants
-
-### Modifications Backend
-
-Toutes les fonctions serverless ont été mises à jour :
-
-1. **Vercel Functions**
-   - `api/nexus/tracked.mjs`
-   - `api/nexus/untrack.mjs`
-
-2. **Netlify Functions**
-   - `netlify/functions/nexus-tracked.mjs`
-   - `netlify/functions/nexus-untrack.mjs`
-
-**Changements :**
-- Lecture des credentials depuis les headers HTTP (`X-Nexus-Username`, `X-Nexus-ApiKey`)
-- Fallback vers les variables d'environnement (rétrocompatibilité)
-- Headers CORS mis à jour pour autoriser les headers personnalisés
-- Messages d'erreur plus clairs (401 au lieu de 500)
-
-### Documentation
-
-1. **`CREDENTIALS_CONFIG.md`** - Guide complet du système
-2. **`TESTING_GUIDE.md`** - Procédures de test
-3. **`CHANGELOG.md`** - Historique complet des changements
-4. **`EXAMPLES.js`** - Exemples d'utilisation des hooks
-5. **`README.md`** - Mise à jour avec section démarrage rapide
+- **[CHANGELOG.md](./CHANGELOG.md)** - Historique technique des versions
+- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration avancée des credentials
+- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test complets
+- **[EXAMPLES.js](./EXAMPLES.js)** - Exemples de code pour développeurs
+- **[README.md](./README.md)** - Documentation technique du projet
 
 ## 🚀 Comment l'utiliser
 
@@ -89,32 +58,62 @@ Toutes les fonctions serverless ont été mises à jour :
 
 ### Développement Local
 
-Aucune configuration requise ! Les utilisateurs configurent leurs propres credentials.
 
-```bash
-npm start
-# L'application démarre sur http://localhost:3000
-# La popup de configuration s'affiche au premier lancement
-```
+## 🚀 Déploiement (Vercel & Netlify)
 
-### Déploiement sur Vercel/Netlify
+**The Courrier** est conçu pour être déployé facilement sur Vercel ou Netlify, sans configuration complexe.
 
-**Option 1 : Laisser les utilisateurs configurer (recommandé)**
-```bash
-# Aucune variable d'environnement à configurer
-# Déployez simplement l'application
-vercel deploy
-# ou
-netlify deploy
-```
+### Déploiement sur Vercel
 
-**Option 2 : Configurer des credentials par défaut**
-```bash
-# Variables d'environnement (optionnelles)
-NEXUS_APP_NAME=The Courrier
-NEXUS_USERNAME=votre_username
-NEXUS_API_KEY=votre_api_key
-```
+1. **Importer le projet**  
+   - Créez un compte sur [vercel.com](https://vercel.com)  
+   - Importez le repo GitHub
+
+2. **Build automatique**  
+   - Vercel détecte l'app React  
+   - Build command : `npm run build`  
+   - Output directory : `build`
+
+3. **Fonctions serverless**  
+   - Dossier : `/api/nexus/`  
+   - Les endpoints sont automatiquement exposés
+
+4. **Variables d'environnement (optionnelles)**  
+   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`  
+   - Par défaut, chaque utilisateur configure ses propres credentials dans l'interface
+
+5. **Déployer**  
+   - Cliquez sur "Deploy"  
+   - Accédez à votre app sur `https://your-app-name.vercel.app`
+
+---
+
+### Déploiement sur Netlify
+
+1. **Importer le projet**  
+   - Créez un compte sur [netlify.com](https://netlify.com)  
+   - Importez le repo GitHub
+
+2. **Build automatique**  
+   - Netlify détecte le build via `netlify.toml`  
+   - Build command : `npm run build`  
+   - Publish directory : `build`  
+   - Functions directory : `netlify/functions`
+
+3. **Variables d'environnement (optionnelles)**  
+   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`  
+   - Par défaut, chaque utilisateur configure ses propres credentials dans l'interface
+
+4. **Déployer**  
+   - Cliquez sur "Deploy site"  
+   - Accédez à votre app sur `https://your-app-name.netlify.app`
+
+---
+
+**Points clés :**
+- Les credentials Nexus sont gérés côté client (localStorage) pour chaque utilisateur
+- Les fonctions serverless sont compatibles Vercel et Netlify sans modification
+- Consultez [DEPLOYMENT.md](./DEPLOYMENT.md) pour les instructions détaillées et les cas avancés
 
 ## 🎯 Avantages du Système
 
@@ -153,126 +152,120 @@ Voir [TESTING_GUIDE.md](./TESTING_GUIDE.md) pour tous les scénarios de test.
 
 ## 📁 Structure des Fichiers
 
+Pour une vue d'ensemble de l'architecture :
+
 ```
 The_Courrier/
 ├── src/
-│   ├── App.jsx                           # ✏️ Modifié
+│   ├── App.jsx                           # Point d'entrée de l'application
 │   ├── components/
-│   │   ├── CredentialsModal.jsx          # 🆕 Nouveau
-│   │   ├── useNexusCredentials.js        # 🆕 Nouveau
-│   │   ├── useNexusMods.js               # ✏️ Modifié
-│   │   └── useWeather.js
+│   │   ├── CredentialsModal.jsx          # Modal de configuration des identifiants
+│   │   ├── useNexusCredentials.js        # Hook de gestion localStorage
+│   │   ├── useNexusMods.js               # Hook d'interaction avec l'API Nexus
+│   │   └── useTheme.js                   # Hook de gestion du thème
 │   └── pages/
-│       ├── BootstrapPage.jsx             # ✏️ Modifié
-│       ├── NexusModsPage.jsx             # ✏️ Modifié
-│       └── TailwindPage.jsx
-├── api/
-│   └── nexus/
-│       ├── tracked.mjs                   # ✏️ Modifié
-│       ├── untrack.mjs                   # ✏️ Modifié
-│       └── validate.mjs
-├── netlify/
-│   └── functions/
-│       ├── nexus-tracked.mjs             # ✏️ Modifié
-│       ├── nexus-untrack.mjs             # ✏️ Modifié
-│       └── nexus-validate.mjs
-├── CREDENTIALS_CONFIG.md                 # 🆕 Nouveau
-├── TESTING_GUIDE.md                      # 🆕 Nouveau
-├── CHANGELOG.md                          # 🆕 Nouveau
-├── EXAMPLES.js                           # 🆕 Nouveau
-├── SUMMARY.md                            # 🆕 Ce fichier
-└── README.md                             # ✏️ Modifié
+│       ├── ActuUpdatePage.jsx            # Page des mises à jour récentes
+│       └── NexusModsPage.jsx             # Page de gestion des mods suivis
+├── api/nexus/                            # Fonctions serverless Vercel
+├── netlify/functions/                    # Fonctions serverless Netlify
+└── Documentation/                        # Voir section "Documentation Complémentaire"
 ```
+
+> 📝 **Changements récents :** Voir [CHANGELOG.md](./CHANGELOG.md) pour la liste complète des fichiers créés, modifiés et supprimés.
 
 ## 🔮 Prochaines Étapes Possibles
 
-### Court terme
-- [ ] Tester en développement local
-- [ ] Tester sur Vercel/Netlify
-- [ ] Valider avec de vrais credentials Nexus Mods
-- [ ] Collecter les retours utilisateurs
+Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implémentées.
 
-### Moyen terme
-- [ ] Ajouter des tests unitaires
-- [ ] Implémenter le chiffrement des credentials
-- [ ] Ajouter une validation de la clé API en temps réel
-- [ ] Support de multiples comptes
+### Améliorations Fonctionnelles
 
-### Long terme
+- [ ] Tests unitaires et d'intégration
+- [ ] Validation de la clé API en temps réel
+- [ ] Support de multiples comptes Nexus
 - [ ] Extension à d'autres plateformes (Steam, GOG)
 - [ ] Système de notifications pour les updates
 - [ ] Import/Export de configuration
-- [ ] Mode hors-ligne avec cache
+- [ ] Mode hors-ligne avec cache persistant
+
+### Optimisations Techniques
+
+- [ ] Chiffrement des credentials en localStorage
+- [ ] Compression des données de cache
+- [ ] Service Worker pour le mode hors-ligne
+- [ ] Analytics anonymes d'utilisation
 
 ## 💡 Conseils et Bonnes Pratiques
 
-### Pour les utilisateurs
-- Obtenez votre API key sur Nexus Mods (nécessite un compte)
+### Interface Utilisateur
+
+- Obtenez votre API key sur [Nexus Mods](https://www.nexusmods.com/users/myaccount?tab=api)
 - Ne partagez jamais votre clé API avec d'autres personnes
 - Si vous changez de navigateur, reconfigurez vos credentials
+- Les credentials sont stockés localement et ne quittent jamais votre navigateur
 
-### Pour les développeurs
-- Testez d'abord en local avant de déployer
-- Vérifiez les logs des fonctions serverless en production
-- Surveillez les erreurs 401/403 qui indiquent des problèmes de credentials
-- Gardez la rétrocompatibilité avec les variables d'environnement
+### Développement et Déploiement
 
-### Pour le déploiement
-- HTTPS est obligatoire en production
-- Vérifiez que les headers CORS sont correctement configurés
-- Testez avec plusieurs utilisateurs différents
-- Documentez le processus pour les nouveaux utilisateurs
+- Testez d'abord en local avant de déployer en production
+- Vérifiez les logs des fonctions serverless pour diagnostiquer les erreurs
+- Surveillez les erreurs 401/403 (problèmes d'authentification)
+- HTTPS est obligatoire en production pour la sécurité
+- Les headers CORS sont pré-configurés pour Vercel et Netlify
 
-## 🐛 Problèmes Connus et Solutions
+## 🐛 Dépannage Rapide
 
-### Problème : La popup ne s'affiche pas
-**Solution** : Vider le cache du navigateur et localStorage
+**La popup ne s'affiche pas**  
+→ Vider le cache du navigateur et localStorage
 
-### Problème : Erreur 401 même avec credentials valides
-**Solution** : Vérifier que la clé API est correcte sur Nexus Mods
+**Erreur 401 même avec credentials valides**  
+→ Vérifier que la clé API est correcte sur Nexus Mods
 
-### Problème : Les credentials ne persistent pas
-**Solution** : Vérifier que localStorage est activé dans le navigateur
+**Les credentials ne persistent pas**  
+→ Vérifier que localStorage est activé dans le navigateur
 
-### Problème : Headers non envoyés aux API
-**Solution** : Vérifier que `useNexusMods(credentials)` reçoit bien les credentials
+**Headers non envoyés aux API**  
+→ Vérifier que `useNexusMods(credentials)` reçoit bien les credentials
 
-## 📞 Support et Ressources
+> 📘 Pour plus de solutions, consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
-### Documentation
-- [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md) - Configuration détaillée
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Guide de test
+## 📞 Ressources
+
+### Documentation du Projet
+
+- [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md) - Configuration avancée des credentials
+- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Guide de test complet
 - [EXAMPLES.js](./EXAMPLES.js) - Exemples de code
 
-### Liens utiles
+### Ressources Externes
+
 - [Documentation API Nexus Mods](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0)
 - [Obtenir une API Key Nexus](https://www.nexusmods.com/users/myaccount?tab=api)
 - [React Hooks Documentation](https://react.dev/reference/react)
 - [localStorage MDN](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage)
 
-## 🎉 Conclusion
+---
 
-Le système de configuration des identifiants est maintenant **complètement fonctionnel** et prêt à être utilisé ! 
+## 🎉 État Actuel
 
-### Ce qui fonctionne :
-- ✅ Saisie et sauvegarde des credentials
+**Version 3.0.0** - 6 Novembre 2025
+
+### Fonctionnalités Actives
+
+- ✅ Configuration personnelle des identifiants Nexus
+- ✅ Affichage des vrais noms de jeux avec icônes
+- ✅ Page des actualités de mods (ActuUpdatePage)
+- ✅ Gestion complète des mods suivis
 - ✅ Stockage local sécurisé
-- ✅ Envoi des credentials aux APIs
-- ✅ Gestion d'erreur améliorée
-- ✅ Interface utilisateur intuitive
-- ✅ Rétrocompatibilité maintenue
-- ✅ Documentation complète
+- ✅ Cache intelligent multi-niveaux
+- ✅ Support Vercel et Netlify
 
-### Prêt pour :
-- ✅ Développement local
-- ✅ Tests utilisateurs
-- ✅ Déploiement en production
-- ✅ Utilisation multi-utilisateurs
+### Statut
+
+- ✅ **Production Ready** - Prêt pour déploiement
+- ✅ **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials
+- ✅ **Documentation complète** - Guides utilisateurs et développeurs
+
+> 📝 **Historique complet :** Consultez [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques des versions précédentes.
 
 ---
 
-**Félicitations ! 🎊** Votre application est maintenant beaucoup plus flexible et sécurisée !
-
-**Version :** 2.0.0  
-**Date :** 5 Novembre 2025  
-**Status :** ✅ Prêt pour production
+**Dernière mise à jour :** 6 Novembre 2025
