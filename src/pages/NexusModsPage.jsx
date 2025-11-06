@@ -55,20 +55,28 @@ export default function NexusModsPage({ credentials }) {
     }
   };
 
-  if (loading) return <p className="text-center mt-5">Chargement Nexus…</p>;
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-slate-600 dark:text-slate-400">Chargement Nexus…</p>
+      </div>
+    );
+  }
   
   if (error) {
     // Si l'erreur est liée aux credentials manquants
     if (error.includes("credentials") || error.includes("401")) {
       return (
-        <div className="container mt-5">
-          <div className="alert alert-warning" role="alert">
-            <h4 className="alert-heading">⚠️ Configuration requise</h4>
-            <p>
+        <div className="container mx-auto px-4 py-8">
+          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
+            <h4 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
+              ⚠️ Configuration requise
+            </h4>
+            <p className="text-slate-700 dark:text-slate-300 mb-3">
               Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
             </p>
-            <hr />
-            <p className="mb-0">
+            <hr className="my-3 border-slate-200 dark:border-slate-700" />
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
             </p>
           </div>
@@ -76,26 +84,36 @@ export default function NexusModsPage({ credentials }) {
       );
     }
     return (
-      <div className="container mt-5">
-        <div className="alert alert-danger" role="alert">
-          <h4 className="alert-heading">❌ Erreur</h4>
-          <p>{error}</p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="pico-card p-6 border-red-500 dark:border-red-600">
+          <h4 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">❌ Erreur</h4>
+          <p className="text-slate-700 dark:text-slate-300">{error}</p>
         </div>
       </div>
     );
   }
   
-  if (!games.length) return <p className="text-center mt-5">Aucun mod suivi trouvé</p>;
+  if (!games.length) {
+    return (
+      <div className="container mx-auto px-4 py-8 text-center">
+        <p className="text-slate-600 dark:text-slate-400">Aucun mod suivi trouvé</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Mods Suivis par Jeu</h2>
+    <div className="container mx-auto px-4 py-8">
+      <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-6">
+        Mods Suivis par Jeu
+      </h2>
       
-      <div className="d-flex align-items-end justify-content-between mb-3">
-        <div style={{ minWidth: 320 }}>
-          <label className="form-label">Jeu</label>
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Jeu
+          </label>
           <select
-            className="form-select"
+            className="pico-select"
             value={gameKey}
             onChange={(e) => setGameKey(e.target.value)}
           >
@@ -107,112 +125,126 @@ export default function NexusModsPage({ credentials }) {
             ))}
           </select>
         </div>
-        <button className="btn btn-outline-secondary" onClick={refresh}>Rafraîchir</button>
+        <button className="pico-btn-outline w-fit" onClick={refresh}>
+          Rafraîchir
+        </button>
       </div>
 
       {gameKey && (
-        <div className="row g-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mods.map((m) => (
-            <div className="col-12 col-md-6 col-lg-4" key={`${m.domain}-${m.id}`}>
-              <div className="card h-100 shadow-sm">
-                {m.picture && (
-                  <img src={m.picture} alt={m.name} className="card-img-top" />
+            <div className="pico-card" key={`${m.domain}-${m.id}`}>
+              {m.picture && (
+                <img src={m.picture} alt={m.name} className="w-full h-40 object-cover" />
+              )}
+              <div className="p-5 flex flex-col h-full">
+                <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
+                  {m.name || `${m.domain}/${m.id}`}
+                </h5>
+
+                {m.summary && (
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{m.summary}</p>
                 )}
-                <div className="card-body d-flex flex-column">
-                  <h5 className="card-title">{m.name || `${m.domain}/${m.id}`}</h5>
 
-                  {m.summary && (
-                    <p className="card-text small text-muted mb-2">{m.summary}</p>
-                  )}
-
-                  <div className="mb-2 d-flex align-items-center gap-2 flex-wrap">
-                    {m.previousVersion && m.previousVersion !== m.version && (
-                      <span className="badge bg-secondary"><s>{m.previousVersion}</s></span>
-                    )}
-                    <span className="badge bg-success">Version {m.version || "?"}</span>
-                    <span className="small text-muted">
-                      · par{" "}
-                      {m.author ? (
-                        <a
-                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-decoration-none text-primary"
-                        >
-                          {m.author}
-                        </a>
-                      ) : (
-                        "Auteur inconnu"
-                      )}
+                <div className="mb-3 flex items-center gap-2 flex-wrap">
+                  {m.previousVersion && m.previousVersion !== m.version && (
+                    <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">
+                      {m.previousVersion}
                     </span>
-                  </div>
-
-                  {m.changelog && m.changelog.length > 0 && (
-                    <div className="mb-3">
-                      <small className="fw-bold d-block mb-1">Changelog :</small>
-                      <div className="small" style={{ maxHeight: "100px", overflowY: "auto" }}>
-                        {(() => {
-                          const lines = flattenChangeLines(m.changelog[0], 6);
-                          if (!lines.length)
-                            return (
-                              <p className="mb-0 text-muted fst-italic">Aucun détail disponible</p>
-                            );
-                          const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
-                          return (
-                            <ul className="mb-0 ps-3">
-                              {lines.map((ln, i) => (
-                                <li key={i}>{ln}</li>
-                              ))}
-                              {hasMore && <li className="text-muted fst-italic">…</li>}
-                            </ul>
-                          );
-                        })()}
-                      </div>
-                      {m.changelogUrl && (
-                        <a
-                          href={m.changelogUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="small text-decoration-none"
-                        >
-                          Voir le changelog complet →
-                        </a>
-                      )}
-                    </div>
                   )}
-
-                  <div className="mt-auto">
-                    <div className="d-flex justify-content-between align-items-center mb-2">
+                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-sm font-medium">
+                    Version {m.version || "?"}
+                  </span>
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    · par{" "}
+                    {m.author ? (
                       <a
-                        href={m.url}
+                        href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
                         target="_blank"
                         rel="noreferrer"
-                        className={`btn btn-primary btn-sm ${m.url ? "" : "disabled"}`}
+                        className="text-pico-primary hover:underline"
                       >
-                        Ouvrir sur Nexus
+                        {m.author}
                       </a>
-                      <span className="badge bg-light text-dark">
-                        {m.updatedAt
-                          ? new Date(
-                              Number(m.updatedAt) *
-                              (String(m.updatedAt).length > 10 ? 1 : 1000)
-                            ).toLocaleString()
-                          : "?"}
-                      </span>
+                    ) : (
+                      "Auteur inconnu"
+                    )}
+                  </span>
+                </div>
+
+                {m.changelog && m.changelog.length > 0 && (
+                  <div className="mb-4">
+                    <small className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
+                      Changelog :
+                    </small>
+                    <div className="text-sm max-h-24 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-2 rounded">
+                      {(() => {
+                        const lines = flattenChangeLines(m.changelog[0], 6);
+                        if (!lines.length)
+                          return (
+                            <p className="mb-0 text-slate-500 dark:text-slate-400 italic">
+                              Aucun détail disponible
+                            </p>
+                          );
+                        const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
+                        return (
+                          <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
+                            {lines.map((ln, i) => (
+                              <li key={i}>{ln}</li>
+                            ))}
+                            {hasMore && <li className="text-slate-500 dark:text-slate-400 italic">…</li>}
+                          </ul>
+                        );
+                      })()}
                     </div>
-                    <button
-                      className="btn btn-outline-danger btn-sm w-100"
-                      onClick={() => handleUntrack(m.domain, m.id, m.name)}
-                      disabled={untracking === m.id}
-                    >
-                      {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
-                    </button>
+                    {m.changelogUrl && (
+                      <a
+                        href={m.changelogUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-sm text-pico-primary hover:underline inline-block mt-1"
+                      >
+                        Voir le changelog complet →
+                      </a>
+                    )}
                   </div>
+                )}
+
+                <div className="mt-auto space-y-2">
+                  <div className="flex justify-between items-center">
+                    <a
+                      href={m.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className={`pico-btn-primary text-sm ${m.url ? "" : "opacity-50 pointer-events-none"}`}
+                    >
+                      Ouvrir sur Nexus
+                    </a>
+                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
+                      {m.updatedAt
+                        ? new Date(
+                            Number(m.updatedAt) *
+                            (String(m.updatedAt).length > 10 ? 1 : 1000)
+                          ).toLocaleString()
+                        : "?"}
+                    </span>
+                  </div>
+                  <button
+                    className="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors text-sm font-medium disabled:opacity-50"
+                    onClick={() => handleUntrack(m.domain, m.id, m.name)}
+                    disabled={untracking === m.id}
+                  >
+                    {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
+                  </button>
                 </div>
               </div>
             </div>
           ))}
-          {!mods.length && <p>Aucun mod pour ce jeu.</p>}
+          {!mods.length && (
+            <p className="text-slate-500 dark:text-slate-400 col-span-full">
+              Aucun mod pour ce jeu.
+            </p>
+          )}
         </div>
       )}
     </div>
