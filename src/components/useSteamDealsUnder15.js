@@ -1,12 +1,7 @@
+// src/components/useSteamDealsUnder15.js
 import { useEffect, useState } from "react";
 
-/* -------------------------------
-   Tri par popularité :
-   - combine steamRatingPercent et steamRatingCount
-   - utilise Wilson lower bound (95%)
-   - tiebreak sur nombre d’avis puis dealRating
---------------------------------- */
-
+/* Tri popularité via Wilson (95%) sur avis Steam */
 const USD_EUR_RATE =
   Number(process.env.REACT_APP_USD_EUR_RATE) > 0 ? Number(process.env.REACT_APP_USD_EUR_RATE) : 0.95;
 
@@ -14,11 +9,7 @@ function asEUR(usd) {
   const n = Number(usd);
   if (!Number.isFinite(n)) return null;
   const eur = n * USD_EUR_RATE;
-  return new Intl.NumberFormat("fr-FR", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 2,
-  }).format(eur);
+  return new Intl.NumberFormat("fr-FR", { style: "currency", currency: "EUR", maximumFractionDigits: 2 }).format(eur);
 }
 
 function steamImageCandidates(appId) {
@@ -32,7 +23,6 @@ function steamImageCandidates(appId) {
   ];
 }
 
-/** Wilson lower bound (intervalle de confiance 95%) */
 function wilsonLowerBound(p, n, z = 1.96) {
   if (!Number.isFinite(n) || n <= 0 || !Number.isFinite(p)) return 0;
   const phat = Math.max(0, Math.min(1, p));
@@ -53,16 +43,11 @@ export default function useSteamDealsUnder15() {
       setLoading(true);
       setError(null);
       try {
-        const url =
-          "https://www.cheapshark.com/api/1.0/deals?storeID=1&upperPrice=15&pageSize=60";
-        const res = await fetch(url, {
-          signal: ctrl.signal,
-          headers: { Accept: "application/json" },
-        });
+        const url = "https://www.cheapshark.com/api/1.0/deals?storeID=1&upperPrice=15&pageSize=60";
+        const res = await fetch(url, { signal: ctrl.signal, headers: { Accept: "application/json" } });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
 
-        // Calcul du score de popularité basé sur les avis Steam
         const scored = (Array.isArray(json) ? json : []).map((d) => {
           const count = Number(d.steamRatingCount ?? 0);
           const percent = Number(d.steamRatingPercent ?? 0) / 100;
@@ -71,31 +56,26 @@ export default function useSteamDealsUnder15() {
           return { raw: d, score, count, dealRating };
         });
 
-        // Tri : score desc → count desc → dealRating desc
         scored.sort((a, b) => {
           if (b.score !== a.score) return b.score - a.score;
           if (b.count !== a.count) return b.count - a.count;
           return b.dealRating - a.dealRating;
         });
 
-        // Normalisation des données pour affichage
         const mapped = scored.map(({ raw }) => {
           const eur = raw.salePrice === "0.00" ? null : asEUR(raw.salePrice);
           const candidates = steamImageCandidates(raw.steamAppID);
           const cheapThumb = raw.thumb || null;
-          const steamLink = raw.steamAppID
-            ? `https://store.steampowered.com/app/${raw.steamAppID}`
-            : `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(raw.dealID)}`;
 
           return {
             id: raw.dealID,
+            steamAppID: raw.steamAppID ?? null, // ← nécessaire pour router vers /steam/app/:appid
             title: raw.title,
-            price:
-              raw.salePrice === "0.00"
-                ? "Gratuit"
-                : eur ?? `${Number(raw.salePrice).toFixed(2)} $`,
+            price: raw.salePrice === "0.00" ? "Gratuit" : eur ?? `${Number(raw.salePrice).toFixed(2)} $`,
             platform: "Steam",
-            link: steamLink,
+            link: raw.steamAppID
+              ? `https://store.steampowered.com/app/${raw.steamAppID}`
+              : `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(raw.dealID)}`,
             images: [...candidates, cheapThumb].filter(Boolean),
             steamRatingPercent: raw.steamRatingPercent ?? null,
             steamRatingCount: raw.steamRatingCount ?? null,

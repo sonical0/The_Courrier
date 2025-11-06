@@ -3,14 +3,13 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "./index.css";
 import App from "./App";
-import PageAPI from "./page_api";
+import GameDetails from "./pages/GameDetails"; // ← sans {}
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
+ReactDOM.createRoot(document.getElementById("root")).render(
   <BrowserRouter>
     <Routes>
       <Route path="/" element={<App />} />
-      <Route path="/page_api" element={<PageAPI />} />
+      <Route path="/steam/app/:appid" element={<GameDetails />} />
     </Routes>
   </BrowserRouter>
 );

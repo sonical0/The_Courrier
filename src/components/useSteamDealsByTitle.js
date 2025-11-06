@@ -1,3 +1,4 @@
+// src/components/useSteamDealsByTitle.js
 import { useEffect, useState } from "react";
 
 const API = "https://www.cheapshark.com/api/1.0";
@@ -42,7 +43,6 @@ export default function useSteamDealsByTitle(title) {
           storeID: "1",         // Steam
           pageSize: "60",
           title: q,
-          // pas de onSale
         });
         const res = await fetch(`${API}/deals?${params.toString()}`, {
           signal: ctrl.signal,
@@ -52,25 +52,24 @@ export default function useSteamDealsByTitle(title) {
         const json = await res.json();
 
         const mapped = (Array.isArray(json) ? json : []).map((d) => {
-          // CheapShark renvoie toujours salePrice/normalPrice (USD).
-          // Si pas en promo, salePrice ≈ normalPrice.
           const isFree = d.salePrice === "0.00";
           const eurVal = isFree ? 0 : eurValueFromUSD(d.salePrice);
           const priceLabel = isFree ? "Gratuit" : formatEUR(eurVal) ?? `${Number(d.salePrice).toFixed(2)} $`;
 
-          const candidates = steamImageCandidates(d.steamAppID);
+          const appId = d.steamAppID ?? null;
+          const candidates = steamImageCandidates(appId);
           const cheapThumb = d.thumb || null;
-          const steamLink = d.steamAppID
-            ? `https://store.steampowered.com/app/${d.steamAppID}`
-            : `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(d.dealID)}`;
 
           return {
             id: d.dealID,
+            steamAppID: appId,                              // ← nécessaire pour le routing interne /steam/app/:appid
             title: d.title,
             price: priceLabel,
-            priceValueEUR: eurVal, // nombre en €
+            priceValueEUR: eurVal,                          // nombre en €
             platform: "Steam",
-            link: steamLink,
+            link: appId
+              ? `https://store.steampowered.com/app/${appId}` // fallback externe si utilisé
+              : `https://www.cheapshark.com/redirect?dealID=${encodeURIComponent(d.dealID)}`,
             images: [...candidates, cheapThumb].filter(Boolean),
           };
         });
