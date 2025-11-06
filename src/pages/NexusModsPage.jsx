@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import useNexusMods from "../components/useNexusMods";
 
-// Helpers pour nettoyer et aplatir les changelogs (mêmes règles que BootstrapPage)
+// Helpers pour nettoyer et aplatir les changelogs (mêmes règles que ActuUpdatePage)
 function decodeEntities(str) {
   if (!str) return "";
   return str
@@ -133,11 +133,11 @@ export default function NexusModsPage({ credentials }) {
       {gameKey && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mods.map((m) => (
-            <div className="pico-card" key={`${m.domain}-${m.id}`}>
+            <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
               {m.picture && (
-                <img src={m.picture} alt={m.name} className="w-full h-40 object-cover" />
+                <img src={m.picture} alt={m.name} className="w-full h-40 object-cover flex-shrink-0" />
               )}
-              <div className="p-5 flex flex-col h-full">
+              <div className="p-5 flex flex-col flex-grow">
                 <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
                   {m.name || `${m.domain}/${m.id}`}
                 </h5>

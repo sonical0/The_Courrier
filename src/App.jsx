@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
-import BootstrapPage from "./pages/BootstrapPage";
-import TailwindPage from "./pages/TailwindPage";
+import ActuUpdatePage from "./pages/ActuUpdatePage";
 import NexusModsPage from "./pages/NexusModsPage.jsx";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
@@ -26,8 +25,10 @@ export default function App() {
     }
   };
 
-  // Afficher le modal si pas de credentials
-  const shouldShowModal = !loading && !hasCredentials && !showModal;
+  // Afficher le modal automatiquement seulement si pas de credentials et pas déjà ouvert manuellement
+  // showModal prend la priorité (ouverture manuelle via bouton Config)
+  // sinon, on affiche automatiquement seulement si loading terminé ET pas de credentials
+  const shouldShowModal = showModal || (!loading && !hasCredentials);
 
   return (
     <Router>
@@ -53,12 +54,6 @@ export default function App() {
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
                   >
                     Actus Mods
-                  </Link>
-                  <Link 
-                    to="/tailwind" 
-                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
-                  >
-                    Tailwind
                   </Link>
                   <Link 
                     to="/nexus-mods" 
@@ -108,17 +103,22 @@ export default function App() {
         </header>
 
         <CredentialsModal
-          show={showModal || shouldShowModal}
+          show={shouldShowModal}
           onSave={handleSaveCredentials}
-          onCancel={showModal ? () => setShowModal(false) : undefined}
+          onCancel={hasCredentials ? () => setShowModal(false) : undefined}
         />
 
         <main>
-          <Routes>
-            <Route path="/" element={<BootstrapPage credentials={credentials} />} />
-            <Route path="/tailwind" element={<TailwindPage />} />
-            <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
-          </Routes>
+          {loading ? (
+            <div className="container mx-auto px-4 py-8 text-center">
+              <p className="text-slate-600 dark:text-slate-400">Chargement...</p>
+            </div>
+          ) : (
+            <Routes>
+              <Route path="/" element={<ActuUpdatePage credentials={credentials} />} />
+              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
+            </Routes>
+          )}
         </main>
       </div>
     </Router>

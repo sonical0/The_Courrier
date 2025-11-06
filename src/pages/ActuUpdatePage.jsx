@@ -36,7 +36,7 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
   return lines;
 }
 
-export default function BootstrapPage({ credentials }) {
+export default function ActuUpdatePage({ credentials }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
   const [period, setPeriod] = useState(7); // en jours
 
@@ -53,6 +53,7 @@ export default function BootstrapPage({ credentials }) {
       if (mods.length) {
         out.push({
           gameLabel: g.name || g.domain || `Game ${g.gameId || ""}`.trim(),
+          gameData: g,
           mods,
         });
       }
@@ -160,22 +161,37 @@ export default function BootstrapPage({ credentials }) {
         <p className="text-slate-500 dark:text-slate-400">Aucune mise à jour récente trouvée.</p>
       )}
 
-      {grouped.map(({ gameLabel, mods }) => (
+      {grouped.map(({ gameLabel, gameData, mods }) => (
         <section className="mb-8" key={gameLabel}>
-          <h4 className="text-2xl font-semibold text-slate-800 dark:text-white mb-4">{gameLabel}</h4>
+          <div className="flex items-center gap-3 mb-4">
+            <h4 className="text-2xl font-semibold text-slate-800 dark:text-white">
+              {gameLabel}
+            </h4>
+            {gameData?.gameId && (
+              <img 
+                src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${gameData.gameId}.jpg`}
+                alt={`${gameLabel} icon`}
+                className="w-10 h-10 rounded object-cover border-2 border-slate-300 dark:border-slate-600"
+                onError={(e) => {
+                  // Fallback si l'image n'existe pas
+                  e.target.style.display = 'none';
+                }}
+              />
+            )}
+          </div>
           
           {/* Grid responsive: 3 colonnes desktop, 2 tablette, 1 mobile */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mods.map((m) => (
-              <div className="pico-card" key={`${m.domain}-${m.id}`}>
+              <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
                 {m.picture && (
                   <img
                     src={m.picture}
                     alt={m.name}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-40 object-cover flex-shrink-0"
                   />
                 )}
-                <div className="p-5 flex flex-col h-full">
+                <div className="p-5 flex flex-col flex-grow">
                   <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
                     {m.name || `${m.domain}/${m.id}`}
                   </h5>
