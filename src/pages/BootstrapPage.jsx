@@ -183,15 +183,15 @@ export default function BootstrapPage({ credentials }) {
           {/* Grid responsive: 3 colonnes desktop, 2 tablette, 1 mobile */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mods.map((m) => (
-              <div className="pico-card" key={`${m.domain}-${m.id}`}>
+              <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
                 {m.picture && (
                   <img
                     src={m.picture}
                     alt={m.name}
-                    className="w-full h-40 object-cover"
+                    className="w-full h-40 object-cover flex-shrink-0"
                   />
                 )}
-                <div className="p-5 flex flex-col h-full">
+                <div className="p-5 flex flex-col flex-grow">
                   <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
                     {m.name || `${m.domain}/${m.id}`}
                   </h5>
