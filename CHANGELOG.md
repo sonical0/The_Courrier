@@ -1,5 +1,51 @@
 # Changelog - The Courrier
 
+## Version 3.1.0 - Amélioration de la Documentation (7 Novembre 2025)
+
+### Documentation
+
+#### Refactorisation Complète
+- Déduplication de tous les fichiers markdown
+- Suppression de CHANGELOG_CREDENTIALS.md (contenu identique à CHANGELOG.md)
+- Centralisation par domaine : chaque fichier .md a un rôle unique
+- README.md allégé avec liens vers les docs spécialisées
+- SUMMARY.md recréé comme vue d'ensemble + index
+- PRE_DEPLOYMENT_CHECK.md transformé en checklist opérationnelle
+- Retrait de toutes les références Netlify (focus Vercel uniquement)
+- Suppression de tous les émojis des fichiers markdown
+
+#### Credentials de Test
+- Ajout d'un compte de test Nexus Mods public
+  - Username: `TheCourrier0`
+  - Password: `The Courrier0`
+  - API Key: `UWM49C/gfBy+QCvaL2pe9p+C8PLiNji+HjObvGWuxsI9qKW3X1I=--LjVbDPG5bU/U59Ph--lzlQfxo4wC5kS6KTnG0IMw==`
+- Documentation dans README.md, DEPLOYMENT.md et TESTING_GUIDE.md
+
+#### Architecture Documentaire
+```text
+README.md               → Présentation + Architecture + Liens
+├─> CHANGELOG.md        → Historique complet (source unique)
+├─> CREDENTIALS_CONFIG.md → Configuration credentials (source unique)
+├─> TESTING_GUIDE.md    → Tests complets (source unique)
+├─> DEPLOYMENT.md       → Déploiement Vercel (source unique)
+├─> PRE_DEPLOYMENT_CHECK.md → Checklist opérationnelle
+└─> SUMMARY.md          → Vue d'ensemble utilisateur + Index
+```
+
+### Fichiers Modifiés
+- README.md - Sections détaillées remplacées par des liens
+- SUMMARY.md - Recréé avec vue d'ensemble utilisateur uniquement
+- DEPLOYMENT.md - Focus Vercel, suppression Netlify, ajout credentials test
+- TESTING_GUIDE.md - Ajout credentials test, liens vers autres docs
+- PRE_DEPLOYMENT_CHECK.md - Transformé en checklist avec liens
+- CREDENTIALS_CONFIG.md - Ajout liens vers TESTING_GUIDE et DEPLOYMENT
+- Tous les .md - Suppression des émojis
+
+### Fichiers Supprimés
+- CHANGELOG_CREDENTIALS.md - Fusionné dans CHANGELOG.md
+
+---
+
 ## Version 3.0.0 - Refonte des fonctionnalités (6 Novembre 2025)
 
 ###  Nouvelles Fonctionnalités
