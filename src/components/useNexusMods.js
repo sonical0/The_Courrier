@@ -1,14 +1,11 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
 
-// tolérant aux formats timestamp/ISO/numérique
 function toEpoch(val) {
   if (!val) return 0;
   if (typeof val === "number") return val;
   if (typeof val === "string") {
-    // nombre encodé en string
     const n = Number(val);
     if (!Number.isNaN(n) && n > 0) return n;
-    // date ISO
     const t = Date.parse(val);
     if (!Number.isNaN(t)) return Math.floor(t / 1000);
   }
@@ -24,15 +21,12 @@ export default function useNexusMods(credentials = null) {
     setLoading(true);
     setError(null);
     try {
-      // Préparer les headers avec les credentials si disponibles
       const headers = { Accept: "application/json" };
       if (credentials?.username && credentials?.apiKey) {
         headers["X-Nexus-Username"] = credentials.username;
         headers["X-Nexus-ApiKey"] = credentials.apiKey;
       }
 
-      // En dev, utilise le proxy de package.json (Create React App)
-      // En prod (Netlify/Vercel), utilise les serverless functions
       const res = await fetch(`/api/nexus/tracked`, { headers });
       if (!res.ok) {
         const text = await res.text();

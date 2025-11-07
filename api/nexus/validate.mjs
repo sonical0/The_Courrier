@@ -1,4 +1,3 @@
-// api/nexus/validate.mjs
 import fetch from "node-fetch";
 
 const nexusHeaders = () => {
@@ -14,7 +13,6 @@ const nexusHeaders = () => {
 };
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");

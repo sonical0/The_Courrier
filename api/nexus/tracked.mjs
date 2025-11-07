@@ -1,7 +1,6 @@
-// api/nexus/tracked.mjs
+
 import fetch from "node-fetch";
 
-// Cache simple en mémoire
 const CACHE = new Map();
 const TTL = {
   tracked: 60_000,
@@ -76,7 +75,6 @@ async function withPool(items, limit, fn) {
   return ret;
 }
 
-// Fonction pour récupérer les infos d'un jeu
 async function getGameInfo(domain, username, apiKey) {
   const ck = kGame(domain);
   const cached = cacheGet(ck);
@@ -95,20 +93,20 @@ async function getGameInfo(domain, username, apiKey) {
     cacheSet(ck, info, TTL.game);
     return info;
   } catch (error) {
-    // En cas d'erreur, retourner des infos basiques
+
     const fallback = {
       id: null,
       name: domain,
       domain: domain,
     };
-    // Cache court pour éviter de retaper en erreur
+
     cacheSet(ck, fallback, 5 * 60_000);
     return fallback;
   }
 }
 
 export default async function handler(req, res) {
-  // CORS
+
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Nexus-Username, X-Nexus-ApiKey");
@@ -117,7 +115,6 @@ export default async function handler(req, res) {
     return res.status(204).end();
   }
 
-  // Récupérer les credentials depuis les headers ou les variables d'environnement
   const username = req.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
   const apiKey = req.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
 
@@ -125,14 +122,13 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Missing Nexus API credentials. Please configure your username and API key." });
   }
 
-  // Check cache
   const hit = cacheGet(kTracked);
   if (hit) {
     return res.status(200).json(hit);
   }
 
   try {
-    // Fetch tracked mods
+
     const tracked = await fetchJson(
       "https://api.nexusmods.com/v1/user/tracked_mods.json",
       { headers: nexusHeaders(username, apiKey) }
@@ -161,7 +157,6 @@ export default async function handler(req, res) {
       };
     }).filter((m) => m.id && m.domain);
 
-    // Enrich with details
     const enriched = await withPool(rows, 4, async (m) => {
       const ck = kMod(m.domain, m.id);
       const modCache = cacheGet(ck);
@@ -191,7 +186,7 @@ export default async function handler(req, res) {
             }
           }
         } catch {
-          // Changelog non disponible
+
         }
 
         const merged = {
@@ -236,7 +231,6 @@ export default async function handler(req, res) {
 
     enriched.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
-    // Enrichir avec les informations des jeux
     const uniqueDomains = [...new Set(enriched.map(m => m.domain).filter(Boolean))];
     const gamesInfo = await Promise.all(
       uniqueDomains.map(domain => getGameInfo(domain, username, apiKey))

@@ -27,17 +27,14 @@ export default function App() {
     }
   };
 
-  // Affichage auto du modal si pas de credentials (la demande explicite via bouton garde la priorité)
   const shouldShowModal = showModal || (!loading && !hasCredentials);
 
   return (
     <Router>
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-        {/* Header */}
         <header className="bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-700">
           <div className="container mx-auto px-4">
             <nav className="flex items-center justify-between py-4">
-              {/* Logo + Title */}
               <div className="flex items-center gap-3">
                 <img
                   src="/logo512.png"
@@ -49,7 +46,6 @@ export default function App() {
                 </h1>
               </div>
 
-              {/* Desktop nav (>= xl ~ 1280px) */}
               <div className="hidden xl:flex items-center gap-6">
                 <div className="flex gap-4">
                   <Link
@@ -99,14 +95,12 @@ export default function App() {
                 )}
               </div>
 
-              {/* Burger (tablette et inférieur: < xl) */}
               <div className="xl:hidden">
                 <button
                   aria-label="Ouvrir le menu"
                   className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
                   onClick={() => setIsMenuOpen((v) => !v)}
                 >
-                  {/* Icône 3 barres */}
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
                        viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
@@ -115,7 +109,6 @@ export default function App() {
               </div>
             </nav>
 
-            {/* Panel mobile / tablette : menu vertical */}
             {isMenuOpen && (
               <div className="xl:hidden pb-4">
                 <div className={`flex flex-col gap-3 rounded-xl border p-4 transition-colors ${
@@ -170,7 +163,6 @@ export default function App() {
                     ⚙️ Config
                   </button>
 
-                  {/* État utilisateur + action supprimer (optionnel mais utile) */}
                   <div className="flex items-center justify-between pt-2">
                     {hasCredentials ? (
                       <>

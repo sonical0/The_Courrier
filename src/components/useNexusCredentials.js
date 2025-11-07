@@ -2,14 +2,10 @@ import { useState, useEffect } from "react";
 
 const STORAGE_KEY = "nexus_credentials";
 
-/**
- * Hook pour gérer les credentials Nexus Mods stockés dans localStorage
- */
 export default function useNexusCredentials() {
   const [credentials, setCredentials] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Charger les credentials au montage
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
@@ -26,7 +22,6 @@ export default function useNexusCredentials() {
     }
   }, []);
 
-  // Sauvegarder les credentials
   const saveCredentials = (username, apiKey) => {
     try {
       const creds = { username, apiKey };
@@ -39,7 +34,6 @@ export default function useNexusCredentials() {
     }
   };
 
-  // Supprimer les credentials
   const clearCredentials = () => {
     try {
       localStorage.removeItem(STORAGE_KEY);
@@ -51,7 +45,6 @@ export default function useNexusCredentials() {
     }
   };
 
-  // Vérifier si les credentials sont présents
   const hasCredentials = () => {
     return credentials && credentials.username && credentials.apiKey;
   };
