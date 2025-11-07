@@ -368,7 +368,7 @@ Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface
 
 ##  Déploiement
 
-L'application peut être déployée sur **Vercel** ou **Netlify** sans configuration complexe. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
+L'application peut être déployée sur **Vercel** sans configuration complexe. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
 
 **Guide complet de déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
 

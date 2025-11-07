@@ -9,7 +9,7 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
 ###  Stockage Local et Sécurisé
 
 - Les identifiants (username et API key) sont stockés uniquement dans le **localStorage** du navigateur de l'utilisateur
-- Aucune donnée sensible n'est envoyée ni stockée sur les serveurs Vercel/Netlify
+- Aucune donnée sensible n'est envoyée ni stockée sur le serveur Vercel
 - Les credentials transitent uniquement entre le navigateur de l'utilisateur et les serveurs de Nexus Mods via les fonctions serverless
 
 ###  Interface Utilisateur
@@ -31,7 +31,7 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
    - `X-Nexus-Username`: le nom d'utilisateur
    - `X-Nexus-ApiKey`: la clé API
 
-4. Les fonctions serverless (Vercel/Netlify) lisent ces headers et les utilisent pour authentifier les requêtes vers l'API Nexus Mods
+4. Les fonctions serverless Vercel lisent ces headers et les utilisent pour authentifier les requêtes vers l'API Nexus Mods
 
 ## Architecture Technique
 
@@ -52,8 +52,7 @@ Toutes les fonctions API ont été mises à jour pour accepter les credentials d
 Fichiers modifiés :
 - `api/nexus/tracked.mjs`
 - `api/nexus/untrack.mjs`
-- `netlify/functions/nexus-tracked.mjs`
-- `netlify/functions/nexus-untrack.mjs`
+- `api/nexus/validate.mjs`
 
 ## Déploiement
 
@@ -113,9 +112,8 @@ Pour modifier vos identifiants plus tard, cliquez sur le bouton " Config" dans l
 
 ## Compatibilité
 
--  Fonctionne avec Vercel
--  Fonctionne avec Netlify
--  Compatible avec le développement local (via proxy)
--  Rétrocompatible avec l'ancienne méthode (variables d'environnement)
+- Fonctionne avec Vercel
+- Compatible avec le développement local (via proxy)
+- Rétrocompatible avec l'ancienne méthode (variables d'environnement)
 
 

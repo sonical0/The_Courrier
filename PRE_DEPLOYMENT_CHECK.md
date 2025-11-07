@@ -1,12 +1,10 @@
-#  Checklist Pré-Déploiement - The Courrier#  Vérification Pré-Déploiement - The Courrier
+#  Checklist Pré-Déploiement - The Courrier
 
+**Date de vérification** : 7 Novembre 2025  
 
+**Version** : 3.0.0  
 
-**Date de vérification** : 7 Novembre 2025  **Date de vérification** : 6 Novembre 2025  
-
-**Version** : 3.0.0  **Version** : 3.0.0  
-
-**Plateforme de déploiement prévue** : Vercel / Netlify**Plateforme de déploiement prévue** : Vercel
+**Plateforme de déploiement prévue** : Vercel
 
 
 
@@ -22,18 +20,12 @@
 
 
 
-###  DocumentationLe README.md contient maintenant une section complète "Pitch du Projet" qui explique :
+###  Documentation
 
-
-
-- [ ] README.md complet et à jour-  **Nature de l'application** : WebApp de veille de données pour mods Nexus Mods
-
-- [ ] DEPLOYMENT.md avec instructions Vercel/Netlify-  **Objectifs** : Surveillance, analyse, organisation, information
-
-- [ ] Tous les fichiers .md cohérents (pas de doublons)-  **Avantages** : Filtrage temporel, affichage enrichi, gestion personnalisée, mode sombre/clair
-
-- [ ] Guide d'obtention de clé API clair-  **Différenciation** : Ce qui distingue The Courrier de l'interface Nexus standard
-
+- [ ] README.md complet et à jour
+- [ ] DEPLOYMENT.md avec instructions Vercel
+- [ ] Tous les fichiers .md cohérents (pas de doublons)
+- [ ] Guide d'obtention de clé API clair
 - [ ] Architecture bien documentée
 
 **Localisation** : README.md lignes 8-22
@@ -211,20 +203,9 @@ Suivre les instructions dans [DEPLOYMENT.md](./DEPLOYMENT.md)    └── useTh
 ##  Actions Après Déploiement
 
 #### Services & API
-
-- [ ] Site accessible sur l'URL de production-  Backend local (server.mjs - port 4000)
-
-- [ ] Modal s'affiche au premier lancement-  Fonctions Vercel (api/nexus/)
-
-- [ ] Credentials acceptés et sauvegardés-  Fonctions Netlify (netlify/functions/)
-
-- [ ] Navigation fonctionne entre les pages-  Détails des endpoints
-
-- [ ] Données chargées depuis l'API Nexus Mods
-
-- [ ] Pas d'erreurs dans la console navigateur**Localisation** : README.md lignes 198-248
-
-- [ ] Logs serverless propres (pas d'erreurs 500)
+-  Backend local (server.mjs - port 4000)
+-  Fonctions Vercel (api/nexus/)
+-  Détails des endpoints
 
 #### Flux de Données
 
@@ -332,7 +313,6 @@ Tous les documents utilisent les mêmes endpoints :
 - README.md 
 - useNexusMods.js 
 - api/nexus/*.mjs 
-- netlify/functions/*.mjs 
 
 ###  Scripts NPM Cohérents
 
@@ -366,7 +346,7 @@ package.json et documentation alignés :
 
 3. **CORS** : Headers configurés
    - ✓ `Access-Control-Allow-Headers` inclut les headers personnalisés
-   - ✓ Vérifié dans api/nexus/*.mjs et netlify/functions/*.mjs
+   - ✓ Vérifié dans api/nexus/*.mjs
 
 ---
 
@@ -389,21 +369,6 @@ package.json et documentation alignés :
 -  tracked.mjs
 -  untrack.mjs
 
-###  Configuration Netlify (Alternative)
-
-**Fichier** : `netlify.toml`
-```toml
-[build]
-  command = "npm run build"
-  publish = "build"
-  functions = "netlify/functions"
-```
-
-**Fonctions Serverless** : `/netlify/functions/`
--  nexus-validate.mjs
--  nexus-tracked.mjs
--  nexus-untrack.mjs
-
 ---
 
 ##  Résumé de la Documentation
@@ -411,7 +376,7 @@ package.json et documentation alignés :
 | Document | Statut | Rôle |
 |----------|--------|------|
 | **README.md** |  COMPLET | Documentation principale avec pitch, stack, architecture, API |
-| **DEPLOYMENT.md** |  À JOUR | Guide de déploiement Vercel/Netlify |
+| **DEPLOYMENT.md** |  À JOUR | Guide de déploiement Vercel |
 | **CREDENTIALS_CONFIG.md** |  COHÉRENT | Configuration avancée des credentials |
 | **TESTING_GUIDE.md** |  COHÉRENT | Scénarios de test manuels et auto |
 | **CHANGELOG.md** |  À JOUR | Historique technique des versions |
@@ -458,7 +423,7 @@ Tous les éléments demandés sont présents et cohérents :
 
 **Checklist Finale** :
 - [x] README.md complet et à jour
-- [x] DEPLOYMENT.md avec instructions Vercel/Netlify
+- [x] DEPLOYMENT.md avec instructions Vercel
 - [x] Tous les fichiers .md cohérents
 - [x] Code nettoyé et organisé
 - [x] Configuration serverless prête
