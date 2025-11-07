@@ -40,12 +40,32 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 - **Node.js 18+** - Runtime JavaScript
 - **Express 4.19.2** - Serveur HTTP pour développement local
 - **node-fetch 3.3.2** - Client HTTP pour appels API
-- **Serverless Functions** - Architecture sans serveur (Vercel/Netlify)
+- **Serverless Functions** - Architecture sans serveur (Vercel)
 
 ### Outils de Développement
 - **Create React App 5.0.1** - Toolchain React
-- **Vercel / Netlify** - Plateformes de déploiement
+- **Vercel** - Plateforme de déploiement
 - **Git** - Contrôle de version
+
+---
+
+## 📸 Captures d'écran
+
+### Page d'accueil - Mises à jour récentes
+![Page d'accueil](./screenshots/homepage.png)
+*Suivez les mises à jour de vos mods favoris avec un filtrage temporel avancé*
+
+### Liste des mods par jeu
+![Liste des mods](./screenshots/mods-list.png)
+*Gérez tous vos mods suivis, organisés par jeu*
+
+### Configuration des identifiants
+![Modal de configuration](./screenshots/credentials-modal.png)
+*Configuration simple et sécurisée de vos identifiants Nexus Mods*
+
+### Mode sombre
+![Mode sombre](./screenshots/dark-mode.png)
+*Interface adaptative avec support du thème sombre*
 
 ---
 
@@ -207,9 +227,7 @@ server.mjs                               # Serveur Express pour dev local
 └── Proxy vers API Nexus Mods
 ```
 
-#### Fonctions Serverless (Production)
-
-##### Pour Vercel
+#### Fonctions Serverless (Production - Vercel)
 
 ```
 api/nexus/
@@ -223,17 +241,6 @@ api/nexus/
 └── untrack.mjs                          # DELETE /api/nexus/untrack
     └── Query params: domain, modId
 ```
-
-##### Pour Netlify
-
-```
-netlify/functions/
-├── nexus-validate.mjs                   # /.netlify/functions/nexus-validate
-├── nexus-tracked.mjs                    # /.netlify/functions/nexus-tracked
-└── nexus-untrack.mjs                    # /.netlify/functions/nexus-untrack
-```
-
-> **Note** : Les fonctions Netlify et Vercel sont identiques en fonctionnalité, seuls les chemins d'accès diffèrent.
 
 ### Flux de Données
 
@@ -341,81 +348,23 @@ Notre système de cache réduit considérablement le nombre d'appels API réels.
 
 ## 🔐 Sécurité & Credentials
 
-### Configuration par l'Utilisateur (Recommandé)
+Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface, stockés dans le localStorage du navigateur.
 
-Depuis la version 2.0, chaque utilisateur configure ses propres identifiants :
-
-- ✅ **Stockage local** : Credentials dans le localStorage du navigateur
-- ✅ **Pas de serveur** : Aucune clé API stockée côté serveur
-- ✅ **Isolation** : Chaque utilisateur utilise son propre compte Nexus
-- ✅ **Rate-limit personnel** : Pas de partage de limites entre utilisateurs
-
-### Comment ça marche ?
-
-1. L'utilisateur entre son username et API key dans le modal
-2. Les credentials sont stockés dans `localStorage` (clé : `nexus_credentials`)
-3. À chaque requête API, les credentials sont envoyés via headers HTTP :
-   - `X-Nexus-Username`: nom d'utilisateur
-   - `X-Nexus-ApiKey`: clé API
-4. Les fonctions serverless lisent ces headers et les utilisent pour appeler l'API Nexus
-
-### Limitations de Sécurité
-
-⚠️ **localStorage** :
-- Accessible par JavaScript sur le même domaine
-- Vulnérable aux attaques XSS si le site est compromis
-- Pas de chiffrement supplémentaire par défaut
-
-Pour une sécurité renforcée, considérez :
-- L'utilisation d'un système d'authentification côté serveur
-- Le chiffrement des credentials avant stockage
-- L'utilisation de tokens temporaires
+**Configuration détaillée des identifiants** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
 
 ---
 
-## � Déploiement
+## 🌐 Déploiement
 
-L'application est prête pour être déployée sur **Vercel** ou **Netlify** sans configuration complexe.
+L'application peut être déployée sur **Vercel** ou **Netlify** sans configuration complexe. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
 
-### Déploiement sur Vercel (Recommandé)
-
-1. **Créer un compte** sur [vercel.com](https://vercel.com)
-2. **Importer le repo** GitHub
-3. Vercel détecte automatiquement :
-   - Build command : `npm run build`
-   - Output directory : `build`
-   - Fonctions serverless dans `/api/nexus/`
-4. **Déployer** (aucune variable d'environnement requise !)
-5. Accédez à votre app sur `https://your-app.vercel.app`
-
-### Déploiement sur Netlify
-
-1. **Créer un compte** sur [netlify.com](https://netlify.com)
-2. **Importer le repo** GitHub
-3. Configuration automatique via `netlify.toml` :
-   - Build command : `npm run build`
-   - Publish directory : `build`
-   - Functions directory : `netlify/functions`
-4. **Déployer**
-5. Accédez à votre app sur `https://your-app.netlify.app`
-
-### Variables d'Environnement (Optionnelles)
-
-Si vous préférez utiliser des credentials serveur partagés au lieu de la configuration par utilisateur :
-
-```bash
-NEXUS_API_KEY=your_api_key_here
-NEXUS_USERNAME=your_username_here
-NEXUS_APP_NAME=The Courrier
-```
-
-> 📖 Pour plus de détails, consultez [DEPLOYMENT.md](./DEPLOYMENT.md)
+**Guide complet de déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ---
 
 ## 📚 Documentation
 
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide complet de déploiement Netlify/Vercel
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide complet de déploiement sur Vercel
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration détaillée des identifiants
 - **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test et validation
 - **[CHANGELOG.md](./CHANGELOG.md)** - Historique complet des versions
@@ -437,11 +386,10 @@ NEXUS_APP_NAME=The Courrier
 
 ## 🧪 Tests
 
-### Tests Manuels
-
-Consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md) pour la liste complète des scénarios de test.
+**Scénarios de test complets** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
 **Tests Rapides** (2 minutes) :
+
 1. ✅ Vérifier l'affichage du modal au premier lancement
 2. ✅ Configurer des credentials de test
 3. ✅ Naviguer vers "Nexus Mods" et vérifier le chargement
@@ -453,17 +401,14 @@ Consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md) pour la liste complète des sc�
 npm test
 ```
 
-Les tests couvrent :
-- Hook `useNexusCredentials` (localStorage)
-- Hook `useNexusMods` (appels API)
-- Composant `CredentialsModal` (validation)
-- Intégration complète de l'application
-
 ---
 
-## 🔄 Changelog Récent
+## 🔄 Changelog
+
+**Historique complet des versions** : voir [CHANGELOG.md](./CHANGELOG.md)
 
 ### Version 3.0.0 (6 Nov 2025)
+
 - ✅ Affichage des vrais noms de jeux avec icônes officielles
 - ✅ Renommage `BootstrapPage` → `ActuUpdatePage`
 - ✅ Suppression de `TailwindPage` et `useWeather` (non utilisés)
@@ -471,18 +416,18 @@ Les tests couvrent :
 - ✅ Correction du bug de reconnexion après suppression des credentials
 
 ### Version 2.0.0 (5 Nov 2025)
+
 - ✅ Configuration des credentials dans l'interface utilisateur
 - ✅ Stockage local sécurisé (localStorage)
 - ✅ Support multi-utilisateurs
-- ✅ Architecture serverless compatible Vercel/Netlify
+- ✅ Architecture serverless compatible Vercel
 
 ### Version 1.0.0 (Initial)
+
 - ✅ Interface de base avec React
 - ✅ Intégration API Nexus Mods
 - ✅ Page d'actualités des mods
 - ✅ Page de gestion des mods suivis
-
-📖 Voir [CHANGELOG.md](./CHANGELOG.md) pour l'historique complet
 
 ---
 
@@ -546,5 +491,7 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 - [React Documentation](https://react.dev) - Framework frontend
 - [Tailwind CSS](https://tailwindcss.com) - Framework CSS
 - [Vercel](https://vercel.com) - Plateforme de déploiement
-- [Netlify](https://netlify.com) - Plateforme de déploiement
+
+
+````
 

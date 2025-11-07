@@ -1,141 +1,279 @@
-# ✅ Vérification Pré-Déploiement - The Courrier
+# ✅ Checklist Pré-Déploiement - The Courrier# ✅ Vérification Pré-Déploiement - The Courrier
 
-**Date de vérification** : 6 Novembre 2025  
-**Version** : 3.0.0  
-**Plateforme de déploiement prévue** : Vercel
 
----
 
-## 📋 Checklist de Vérification
+**Date de vérification** : 7 Novembre 2025  **Date de vérification** : 6 Novembre 2025  
 
-### 🎯 1. Pitch du Projet - ✅ VALIDÉ
+**Version** : 3.0.0  **Version** : 3.0.0  
 
-Le README.md contient maintenant une section complète "Pitch du Projet" qui explique :
+**Plateforme de déploiement prévue** : Vercel / Netlify**Plateforme de déploiement prévue** : Vercel
 
-- ✅ **Nature de l'application** : WebApp de veille de données pour mods Nexus Mods
-- ✅ **Objectifs** : Surveillance, analyse, organisation, information
-- ✅ **Avantages** : Filtrage temporel, affichage enrichi, gestion personnalisée, mode sombre/clair
-- ✅ **Différenciation** : Ce qui distingue The Courrier de l'interface Nexus standard
+
+
+> **Documentation complète** : voir [README.md](./README.md), [DEPLOYMENT.md](./DEPLOYMENT.md), [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)---
+
+
+
+---## 📋 Checklist de Vérification
+
+
+
+## 📋 Checklist Rapide### 🎯 1. Pitch du Projet - ✅ VALIDÉ
+
+
+
+### 🎯 DocumentationLe README.md contient maintenant une section complète "Pitch du Projet" qui explique :
+
+
+
+- [ ] README.md complet et à jour- ✅ **Nature de l'application** : WebApp de veille de données pour mods Nexus Mods
+
+- [ ] DEPLOYMENT.md avec instructions Vercel/Netlify- ✅ **Objectifs** : Surveillance, analyse, organisation, information
+
+- [ ] Tous les fichiers .md cohérents (pas de doublons)- ✅ **Avantages** : Filtrage temporel, affichage enrichi, gestion personnalisée, mode sombre/clair
+
+- [ ] Guide d'obtention de clé API clair- ✅ **Différenciation** : Ce qui distingue The Courrier de l'interface Nexus standard
+
+- [ ] Architecture bien documentée
 
 **Localisation** : README.md lignes 8-22
 
+### 🔄 Versions et Cohérence
+
 ---
 
-### 🛠️ 2. Stack Technique - ✅ VALIDÉ
+- [ ] Versions synchronisées dans tous les .md (3.0.0 – 6 Nov 2025)
+
+- [ ] Endpoints API alignés entre frontend et backend### 🛠️ 2. Stack Technique - ✅ VALIDÉ
+
+- [ ] Terminologie uniforme : "credentials", "localStorage", "headers `X-Nexus-*`", "serverless functions"
 
 Documentation complète de la stack dans README.md :
 
-#### Frontend
-- ✅ React 19.2.0
-- ✅ React Router 7.9.4
-- ✅ Tailwind CSS 3.4.18
-- ✅ Bootstrap 5.3.8
-- ✅ JavaScript (ES6+)
+### 📦 Code et Build
 
-#### Backend
+#### Frontend
+
+- [ ] `npm install` fonctionne sans erreur- ✅ React 19.2.0
+
+- [ ] `npm run build` se termine avec succès- ✅ React Router 7.9.4
+
+- [ ] Aucun fichier `.env` commité dans le repo- ✅ Tailwind CSS 3.4.18
+
+- [ ] `.gitignore` contient `.env`- ✅ Bootstrap 5.3.8
+
+- [ ] Scripts npm fonctionnels (`npm start`, `npm run server`, `npm test`)- ✅ JavaScript (ES6+)
+
+
+
+### 🔧 Configuration Serverless#### Backend
+
 - ✅ Node.js 18+
-- ✅ Express 4.19.2
-- ✅ node-fetch 3.3.2
-- ✅ Serverless Functions (Vercel/Netlify)
+
+- [ ] Fonctions Vercel dans `/api/nexus/` (validate.mjs, tracked.mjs, untrack.mjs)- ✅ Express 4.19.2
+
+- [ ] Fonctions Netlify dans `/netlify/functions/` (nexus-validate.mjs, nexus-tracked.mjs, nexus-untrack.mjs)- ✅ node-fetch 3.3.2
+
+- [ ] `vercel.json` configuré avec rewrites- ✅ Serverless Functions (Vercel/Netlify)
+
+- [ ] `netlify.toml` configuré avec redirects
 
 #### Outils
-- ✅ Create React App 5.0.1
+
+### 🔒 Sécurité- ✅ Create React App 5.0.1
+
 - ✅ Git
 
-**Localisation** : README.md lignes 26-40
+- [ ] Aucune clé API hardcodée dans le code
+
+- [ ] Headers CORS configurés dans les fonctions serverless**Localisation** : README.md lignes 26-40
+
+- [ ] Headers de sécurité : X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+
+- [ ] localStorage utilisé pour credentials côté client---
+
+
+
+> **Détails sécurité** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)### 🚀 3. Comment Lancer le Projet - ✅ VALIDÉ
+
+
+
+### 🧪 TestsGuide complet avec démarche détaillée :
+
+
+
+- [ ] Test local : modal s'affiche au premier lancement#### Obtenir la clé API
+
+- [ ] Test local : credentials persistent après F5- ✅ Instructions pas-à-pas pour créer un compte Nexus Mods
+
+- [ ] Test local : navigation fonctionne (/, /nexus-mods)- ✅ Navigation vers la page API Access
+
+- [ ] Test build : `npm run build` réussit- ✅ Génération de la clé API
+
+- [ ] Test déploiement : site accessible après deploy- ✅ Avertissement de sécurité
+
+
+
+> **Tests complets** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)**Localisation** : README.md lignes 58-69
+
+
+
+### 📡 API et Cache#### Installation
+
+```bash
+
+- [ ] Cache configuré : 60s (liste mods), 10min (détails mod), 24h (infos jeu)git clone https://github.com/sonical0/The_Courrier.git
+
+- [ ] TTL cohérent dans toutes les fonctions serverlesscd The_Courrier
+
+- [ ] Endpoints exposés : `/api/nexus/validate`, `/api/nexus/tracked`, `/api/nexus/untrack`npm install
+
+```
 
 ---
 
-### 🚀 3. Comment Lancer le Projet - ✅ VALIDÉ
-
-Guide complet avec démarche détaillée :
-
-#### Obtenir la clé API
-- ✅ Instructions pas-à-pas pour créer un compte Nexus Mods
-- ✅ Navigation vers la page API Access
-- ✅ Génération de la clé API
-- ✅ Avertissement de sécurité
-
-**Localisation** : README.md lignes 58-69
-
-#### Installation
-```bash
-git clone https://github.com/sonical0/The_Courrier.git
-cd The_Courrier
-npm install
-```
-
 #### Lancement
-- ✅ **Option 1** : Dev avec serveur local (2 terminaux)
+
+## 🚀 Actions Avant Déploiement- ✅ **Option 1** : Dev avec serveur local (2 terminaux)
+
 - ✅ **Option 2** : Build production
+
+### 1. Tests Locaux
 
 **Localisation** : README.md lignes 71-98
 
-#### Premier lancement
-- ✅ Explication du modal de configuration
+```bash
+
+# Terminal 1 : Backend#### Premier lancement
+
+npm run server- ✅ Explication du modal de configuration
+
 - ✅ Étapes de saisie des credentials
-- ✅ Information sur le stockage local
+
+# Terminal 2 : Frontend- ✅ Information sur le stockage local
+
+npm start
 
 **Localisation** : README.md lignes 100-111
 
----
+# Vérifier : http://localhost:3000
 
-### 🏗️ 4. Architecture Technique - ✅ VALIDÉ
+```---
 
-Documentation exhaustive de l'architecture :
 
-#### Sitemap & Routing
-- ✅ `/` → ActuUpdatePage
+
+### 2. Build de Production### 🏗️ 4. Architecture Technique - ✅ VALIDÉ
+
+
+
+```bashDocumentation exhaustive de l'architecture :
+
+npm run build
+
+# Doit se terminer sans erreur#### Sitemap & Routing
+
+```- ✅ `/` → ActuUpdatePage
+
 - ✅ `/nexus-mods` → NexusModsPage
 
+### 3. Vérification Git
+
 #### Structure des Composants
-```
-src/
-├── App.jsx                    # Point d'entrée
+
+```bash```
+
+# Vérifier qu'aucun .env n'est commitésrc/
+
+git status├── App.jsx                    # Point d'entrée
+
 ├── pages/
-│   ├── ActuUpdatePage.jsx     # Actualités
-│   └── NexusModsPage.jsx      # Gestion mods
-└── components/
+
+# Vérifier les fichiers modifiés│   ├── ActuUpdatePage.jsx     # Actualités
+
+git diff│   └── NexusModsPage.jsx      # Gestion mods
+
+```└── components/
+
     ├── CredentialsModal.jsx   # Configuration
-    ├── useNexusCredentials.js # Hook localStorage
+
+### 4. Déploiement    ├── useNexusCredentials.js # Hook localStorage
+
     ├── useNexusMods.js        # Hook API
-    └── useTheme.js            # Hook thème
+
+Suivre les instructions dans [DEPLOYMENT.md](./DEPLOYMENT.md)    └── useTheme.js            # Hook thème
+
 ```
+
+---
 
 **Localisation** : README.md lignes 115-196
 
-#### Services & API
-- ✅ Backend local (server.mjs - port 4000)
-- ✅ Fonctions Vercel (api/nexus/)
-- ✅ Fonctions Netlify (netlify/functions/)
-- ✅ Détails des endpoints
+## ✅ Actions Après Déploiement
 
-**Localisation** : README.md lignes 198-248
+#### Services & API
+
+- [ ] Site accessible sur l'URL de production- ✅ Backend local (server.mjs - port 4000)
+
+- [ ] Modal s'affiche au premier lancement- ✅ Fonctions Vercel (api/nexus/)
+
+- [ ] Credentials acceptés et sauvegardés- ✅ Fonctions Netlify (netlify/functions/)
+
+- [ ] Navigation fonctionne entre les pages- ✅ Détails des endpoints
+
+- [ ] Données chargées depuis l'API Nexus Mods
+
+- [ ] Pas d'erreurs dans la console navigateur**Localisation** : README.md lignes 198-248
+
+- [ ] Logs serverless propres (pas d'erreurs 500)
 
 #### Flux de Données
-- ✅ Schéma complet du flux utilisateur → localStorage → API → Nexus
+
+---- ✅ Schéma complet du flux utilisateur → localStorage → API → Nexus
+
 - ✅ Explication du système de cache (TTL, clés)
+
+## 🐛 Dépannage
 
 **Localisation** : README.md lignes 250-290
 
+**Problème rencontré ?** Consultez :
+
 ---
 
-### 📡 5. Endpoints API - ✅ VALIDÉ
+- [DEPLOYMENT.md](./DEPLOYMENT.md) - Section Dépannage
+
+- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Scénarios d'erreur### 📡 5. Endpoints API - ✅ VALIDÉ
+
+- [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md) - Configuration avancée
 
 Liste complète et documentation des endpoints :
 
+---
+
 #### Endpoints Nexus Mods Utilisés
 
+## 🎉 Validation Finale
+
 | Endpoint | Usage |
-|----------|-------|
+
+**Le projet est prêt si tous les points sont cochés ✅**|----------|-------|
+
 | `/v1/users/validate.json` | Validation credentials |
-| `/v1/user/tracked_mods.json` | Liste mods suivis |
-| `/v1/games/{domain}/mods/{id}.json` | Détails mod |
-| `/v1/games/{domain}/mods/{id}/changelogs.json` | Changelogs |
-| `/v1/games/{domain}.json` | Infos jeu |
+
+- Architecture documentée : [README.md](./README.md)| `/v1/user/tracked_mods.json` | Liste mods suivis |
+
+- Déploiement documenté : [DEPLOYMENT.md](./DEPLOYMENT.md)| `/v1/games/{domain}/mods/{id}.json` | Détails mod |
+
+- Tests documentés : [TESTING_GUIDE.md](./TESTING_GUIDE.md)| `/v1/games/{domain}/mods/{id}/changelogs.json` | Changelogs |
+
+- Credentials documentés : [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)| `/v1/games/{domain}.json` | Infos jeu |
+
+- Historique documenté : [CHANGELOG.md](./CHANGELOG.md)
 
 **✅ Chaque endpoint inclut** :
-- Méthode HTTP
+
+**🚀 Prêt pour le déploiement !**- Méthode HTTP
+
 - Usage détaillé
 - Lien direct vers la documentation officielle
 

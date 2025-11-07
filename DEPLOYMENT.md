@@ -44,10 +44,7 @@ Dans les paramètres du site Netlify :
 
 Ne configurez **aucune variable d'environnement**. Les utilisateurs entreront leur propre nom d'utilisateur et clé API au premier lancement de l'application via un modal.
 
-**Avantages** :
-- ✅ Chaque utilisateur utilise son propre compte Nexus Mods
-- ✅ Pas de limite de rate-limit partagée
-- ✅ Meilleure sécurité : credentials stockés localement dans le navigateur
+> **Configuration détaillée** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
 
 #### Option B : Configuration serveur (Ancienne méthode)
 

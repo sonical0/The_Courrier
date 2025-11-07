@@ -1,5 +1,9 @@
 # Guide de Test - Configuration des Identifiants
 
+> **Pré-requis credentials** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
+
+> **Exécution locale/CI** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
+
 ## Tests Manuels
 
 ### ✅ Test 1 : Première utilisation (aucun credential)

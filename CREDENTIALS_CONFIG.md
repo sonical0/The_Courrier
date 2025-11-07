@@ -107,9 +107,14 @@ Pour un environnement de production critique, considérez :
 
 Pour modifier vos identifiants plus tard, cliquez sur le bouton "⚙️ Config" dans la barre de navigation.
 
+> **Tests détaillés** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+
+> **Déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
+
 ## Compatibilité
 
 - ✅ Fonctionne avec Vercel
 - ✅ Fonctionne avec Netlify
 - ✅ Compatible avec le développement local (via proxy)
 - ✅ Rétrocompatible avec l'ancienne méthode (variables d'environnement)
+
