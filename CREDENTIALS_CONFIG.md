@@ -6,20 +6,20 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
 
 ## Fonctionnalités
 
-### 🔐 Stockage Local et Sécurisé
+###  Stockage Local et Sécurisé
 
 - Les identifiants (username et API key) sont stockés uniquement dans le **localStorage** du navigateur de l'utilisateur
-- Aucune donnée sensible n'est envoyée ni stockée sur les serveurs Vercel/Netlify
+- Aucune donnée sensible n'est envoyée ni stockée sur le serveur Vercel
 - Les credentials transitent uniquement entre le navigateur de l'utilisateur et les serveurs de Nexus Mods via les fonctions serverless
 
-### 🎨 Interface Utilisateur
+###  Interface Utilisateur
 
 - **Modal de configuration** : Une popup s'affiche automatiquement au premier lancement si aucun identifiant n'est configuré
 - **Bouton de configuration** : Dans la barre de navigation, permet de modifier les identifiants à tout moment
 - **Badge utilisateur** : Affiche le nom d'utilisateur connecté dans la navbar
 - **Bouton de suppression** : Permet d'effacer les identifiants localement
 
-### 🔄 Fonctionnement
+###  Fonctionnement
 
 1. Au premier lancement, l'utilisateur voit une popup lui demandant :
    - Son **nom d'utilisateur Nexus Mods**
@@ -31,7 +31,7 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
    - `X-Nexus-Username`: le nom d'utilisateur
    - `X-Nexus-ApiKey`: la clé API
 
-4. Les fonctions serverless (Vercel/Netlify) lisent ces headers et les utilisent pour authentifier les requêtes vers l'API Nexus Mods
+4. Les fonctions serverless Vercel lisent ces headers et les utilisent pour authentifier les requêtes vers l'API Nexus Mods
 
 ## Architecture Technique
 
@@ -52,8 +52,7 @@ Toutes les fonctions API ont été mises à jour pour accepter les credentials d
 Fichiers modifiés :
 - `api/nexus/tracked.mjs`
 - `api/nexus/untrack.mjs`
-- `netlify/functions/nexus-tracked.mjs`
-- `netlify/functions/nexus-untrack.mjs`
+- `api/nexus/validate.mjs`
 
 ## Déploiement
 
@@ -72,20 +71,20 @@ NEXUS_API_KEY=votre_cle_api
 Aucune configuration serveur n'est nécessaire ! Les utilisateurs configurent leurs propres credentials directement dans l'application.
 
 **Avantages :**
-- ✅ Chaque utilisateur utilise son propre compte Nexus Mods
-- ✅ Pas de limite de rate-limit partagée
-- ✅ Plus de sécurité : les credentials ne sont jamais sur le serveur
-- ✅ Facilite le déploiement : pas besoin de configurer des variables d'environnement
+-  Chaque utilisateur utilise son propre compte Nexus Mods
+-  Pas de limite de rate-limit partagée
+-  Plus de sécurité : les credentials ne sont jamais sur le serveur
+-  Facilite le déploiement : pas besoin de configurer des variables d'environnement
 
 ## Sécurité
 
-### Ce qui est sécurisé ✅
+### Ce qui est sécurisé 
 
 - Les credentials sont stockés uniquement dans le navigateur de l'utilisateur
 - Les requêtes sont envoyées directement aux serveurs Nexus Mods via HTTPS
 - Les fonctions serverless agissent comme un proxy sans stocker les données
 
-### Limitations ⚠️
+### Limitations 
 
 - **localStorage** : Accessible par JavaScript sur le même domaine (vulnérable aux attaques XSS si le site est compromis)
 - **Pas de chiffrement supplémentaire** : Les credentials sont stockés en texte clair dans le localStorage
@@ -105,11 +104,16 @@ Pour un environnement de production critique, considérez :
 4. Cliquez sur "Enregistrer"
 5. Profitez de l'application !
 
-Pour modifier vos identifiants plus tard, cliquez sur le bouton "⚙️ Config" dans la barre de navigation.
+Pour modifier vos identifiants plus tard, cliquez sur le bouton " Config" dans la barre de navigation.
+
+> **Tests détaillés** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+
+> **Déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## Compatibilité
 
-- ✅ Fonctionne avec Vercel
-- ✅ Fonctionne avec Netlify
-- ✅ Compatible avec le développement local (via proxy)
-- ✅ Rétrocompatible avec l'ancienne méthode (variables d'environnement)
+- Fonctionne avec Vercel
+- Compatible avec le développement local (via proxy)
+- Rétrocompatible avec l'ancienne méthode (variables d'environnement)
+
+

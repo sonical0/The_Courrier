@@ -1,4 +1,4 @@
-// server.mjs
+
 import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
@@ -12,9 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ---------- Cache ----------
 const CACHE = new Map();
-// TTL route validate court, mods plus long
+
 const TTL = {
   tracked: 60_000,
   mod: 10 * 60_000,
@@ -35,7 +34,6 @@ const cacheGet = (k) => {
 };
 const cacheSet = (k, v, ttl) => CACHE.set(k, { val: v, exp: now() + ttl });
 
-// ---------- Nexus headers ----------
 const nexusHeaders = (username, apiKey) => {
   const appName = (process.env.NEXUS_APP_NAME || "The Courrier").trim();
   const user = username || (process.env.NEXUS_USERNAME || "unknown").trim();
@@ -63,7 +61,6 @@ const ensureKey = (req, res) => {
   return true;
 };
 
-// ---------- Utils ----------
 async function fetchJson(url, { headers }) {
   const r = await fetch(url, { headers });
   const txt = await r.text();
@@ -90,7 +87,6 @@ const toEpoch = (v) => {
   return 0;
 };
 
-// Pool de promesses simple pour limiter la concurrence
 async function withPool(items, limit, fn) {
   const ret = [];
   let i = 0;
@@ -106,7 +102,6 @@ async function withPool(items, limit, fn) {
   return ret;
 }
 
-// Fonction pour récupérer les infos d'un jeu
 async function getGameInfo(domain, username, apiKey) {
   const ck = kGame(domain);
   const cached = cacheGet(ck);
@@ -125,19 +120,18 @@ async function getGameInfo(domain, username, apiKey) {
     cacheSet(ck, info, TTL.game);
     return info;
   } catch (error) {
-    // En cas d'erreur, retourner des infos basiques
+
     const fallback = {
       id: null,
       name: domain,
       domain: domain,
     };
-    // Cache court pour éviter de retaper en erreur
+
     cacheSet(ck, fallback, 5 * 60_000);
     return fallback;
   }
 }
 
-// ---------- Routes ----------
 app.get("/api/nexus/validate", async (req, res) => {
   if (!ensureKey(req, res)) return;
   const { username, apiKey } = getCredentials(req);
@@ -151,40 +145,34 @@ app.get("/api/nexus/validate", async (req, res) => {
   }
 });
 
-// Endpoint pour vider le cache
 app.post("/api/nexus/clear-cache", (req, res) => {
   CACHE.clear();
   console.log("🗑️ Cache vidé");
   res.json({ success: true, message: "Cache vidé avec succès" });
 });
 
-/**
- * Enrichit les mods trackés avec les infos détaillées:
- * name, version, author, picture_url, updated_timestamp, url
- */
+
 app.get("/api/nexus/tracked", async (req, res) => {
   if (!ensureKey(req, res)) return;
   const { username, apiKey } = getCredentials(req);
 
-  // 1) cache global court pour la liste brute
   const hit = cacheGet(kTracked);
   if (hit) return res.json(hit);
 
   try {
-    // 2) récup liste des mods suivis
+
     const tracked = await fetchJson(
       "https://api.nexusmods.com/v1/user/tracked_mods.json",
       { headers: nexusHeaders(username, apiKey) }
     );
 
-    // 3) normalise id/domain et prépare la liste à enrichir
     const rows = (Array.isArray(tracked) ? tracked : []).map((m) => {
       const id = m.mod_id ?? m.modId ?? m.id;
       const domain = m.domain_name ?? m.domain ?? m.game?.domain_name;
       return {
         id,
         domain,
-        // champs éventuellement déjà fournis par l’API tracked
+
         name: m.name ?? m.mod_name ?? m.title,
         version: m.version ?? m.mod_version,
         author: m.author ?? m.user?.name,
@@ -203,7 +191,6 @@ app.get("/api/nexus/tracked", async (req, res) => {
       };
     }).filter((m) => m.id && m.domain);
 
-    // 4) enrichissement par appel /games/{domain}/mods/{id} avec pool=4 + cache par mod
     const enriched = await withPool(rows, 4, async (m) => {
       const ck = kMod(m.domain, m.id);
       const modCache = cacheGet(ck);
@@ -215,7 +202,6 @@ app.get("/api/nexus/tracked", async (req, res) => {
           { headers: nexusHeaders(username, apiKey) }
         );
 
-        // Récupération du changelog
         let changelog = [];
         let previousVersion = null;
         try {
@@ -223,20 +209,20 @@ app.get("/api/nexus/tracked", async (req, res) => {
             `https://api.nexusmods.com/v1/games/${m.domain}/mods/${m.id}/changelogs.json`,
             { headers: nexusHeaders(username, apiKey) }
           );
-          // Prendre les 3 dernières versions du changelog
+
           if (changelogData && typeof changelogData === 'object') {
             const versions = Object.keys(changelogData).sort().reverse();
             changelog = versions.slice(0, 3).map(version => ({
               version,
               changes: changelogData[version]
             }));
-            // La version précédente est la deuxième dans la liste
+
             if (versions.length > 1) {
               previousVersion = versions[1];
             }
           }
         } catch {
-          // Changelog non disponible
+
         }
 
         const merged = {
@@ -272,7 +258,7 @@ app.get("/api/nexus/tracked", async (req, res) => {
         cacheSet(ck, merged, TTL.mod);
         return { ...m, ...merged };
       } catch {
-        // en cas d’échec d’enrichissement, on garde la base + URL reconstruite
+
         return {
           ...m,
           url: m.url || `https://www.nexusmods.com/${m.domain}/mods/${m.id}`,
@@ -280,10 +266,8 @@ app.get("/api/nexus/tracked", async (req, res) => {
       }
     });
 
-    // 5) tri par date décroissante
     enriched.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
-    // 6) Enrichir avec les informations des jeux
     const uniqueDomains = [...new Set(enriched.map(m => m.domain).filter(Boolean))];
     const gamesInfo = await Promise.all(
       uniqueDomains.map(domain => getGameInfo(domain, username, apiKey))
@@ -299,7 +283,6 @@ app.get("/api/nexus/tracked", async (req, res) => {
       };
     });
 
-    // 7) cache 60s et renvoi
     cacheSet(kTracked, enrichedWithGames, TTL.tracked);
     res.json(enrichedWithGames);
   } catch (e) {
@@ -307,9 +290,7 @@ app.get("/api/nexus/tracked", async (req, res) => {
   }
 });
 
-/**
- * Retire un mod de la liste des mods suivis
- */
+
 app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
   if (!ensureKey(req, res)) return;
   const { username, apiKey } = getCredentials(req);
@@ -333,8 +314,7 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
       const text = await response.text();
       throw new Error(`HTTP ${response.status}${text ? " — " + text : ""}`);
     }
-    
-    // Invalide le cache
+
     CACHE.delete(kTracked);
     CACHE.delete(kMod(domain, modId));
     
@@ -344,7 +324,6 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
   }
 });
 
-// ---------- Static (prod) ----------
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientBuild = path.join(__dirname, "build");
 app.use(express.static(clientBuild));
@@ -356,7 +335,6 @@ app.get("*", (_req, res) => {
   }
 });
 
-// ---------- Start ----------
 const port = Number(process.env.PORT || 4000);
 const masked = (process.env.NEXUS_API_KEY || "").trim().slice(0, 4).padEnd(12, "*");
 app.listen(port, () => {

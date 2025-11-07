@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import useNexusMods from "../components/useNexusMods";
 
-// Helpers pour nettoyer et aplatir les changelogs (mêmes règles que ActuUpdatePage)
 function decodeEntities(str) {
   if (!str) return "";
   return str
@@ -37,7 +36,7 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
 export default function NexusModsPage({ credentials }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
   const [gameKey, setGameKey] = useState("");
-  const [untracking, setUntracking] = useState(null); // modId en cours de suppression
+  const [untracking, setUntracking] = useState(null);
 
   const mods = useMemo(() => (gameKey ? modsForGame(gameKey) : []), [gameKey, modsForGame]);
 
@@ -64,7 +63,6 @@ export default function NexusModsPage({ credentials }) {
   }
   
   if (error) {
-    // Si l'erreur est liée aux credentials manquants
     if (error.includes("credentials") || error.includes("401")) {
       return (
         <div className="container mx-auto px-4 py-8">

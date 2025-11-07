@@ -1,8 +1,5 @@
 import { useState } from "react";
 
-/**
- * Modal Tailwind pour saisir les credentials Nexus Mods
- */
 export default function CredentialsModal({ show, onSave, onCancel }) {
   const [username, setUsername] = useState("");
   const [apiKey, setApiKey] = useState("");
@@ -12,7 +9,6 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
     e.preventDefault();
     setError("");
 
-    // Validation basique
     if (!username.trim()) {
       setError("Le nom d'utilisateur est requis");
       return;
@@ -29,19 +25,16 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onCancel}
       />
 
-      {/* Modal */}
       <div
         className="fixed inset-0 z-50 flex items-center justify-center p-4"
         onClick={(e) => e.target === e.currentTarget && onCancel?.()}
       >
   <div className="bg-slate-50 dark:bg-slate-900 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
-          {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-t-xl">
             <h5 className="text-xl font-bold text-slate-900 dark:text-white">
               Configuration Nexus Mods
@@ -61,7 +54,6 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
           </div>
 
           <form onSubmit={handleSubmit}>
-            {/* Body */}
             <div className="p-6 space-y-4 bg-slate-50 dark:bg-slate-900">
               <p className="text-sm text-slate-600 dark:text-slate-400">
                 Pour utiliser cette application, vous devez fournir vos identifiants
@@ -127,7 +119,6 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="flex gap-3 justify-end p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 rounded-b-xl">
               {onCancel && (
                 <button

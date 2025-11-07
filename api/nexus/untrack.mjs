@@ -1,4 +1,3 @@
-// api/nexus/untrack.mjs
 import fetch from "node-fetch";
 
 const nexusHeaders = (username, apiKey) => {
@@ -14,7 +13,6 @@ const nexusHeaders = (username, apiKey) => {
 };
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Nexus-Username, X-Nexus-ApiKey");
@@ -27,7 +25,6 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // Récupérer les credentials depuis les headers ou les variables d'environnement
   const username = req.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
   const apiKey = req.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
 
@@ -35,7 +32,6 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Missing Nexus API credentials. Please configure your username and API key." });
   }
 
-  // Parse query params: /api/nexus/untrack?domain=xxx&modId=yyy
   const { domain, modId } = req.query;
 
   if (!domain || !modId) {

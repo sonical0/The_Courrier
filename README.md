@@ -1,4 +1,4 @@
-# The Courrier 📰
+# The Courrier 
 
 > **WebApp de veille technologique pour les mods Nexus Mods**
 
@@ -10,14 +10,14 @@ Une application web moderne permettant de suivre et monitorer les mises à jour 
 
 ---
 
-## 🎯 Pitch du Projet
+##  Pitch du Projet
 
 **The Courrier** est une webapp de **veille de données** pour les modifications (mods) de jeux vidéo hébergées sur Nexus Mods. Elle permet aux joueurs et moddeurs de :
 
-- 📊 **Surveiller** les mises à jour de leurs mods favoris en temps réel
-- 📈 **Analyser** les changelogs et historiques de versions
-- 🎮 **Organiser** leurs mods par jeu avec une interface intuitive
-- 🔔 **Être informés** des dernières nouveautés de la communauté modding
+-  **Surveiller** les mises à jour de leurs mods favoris en temps réel
+- � **Analyser** les changelogs et historiques de versions
+-  **Organiser** leurs mods par jeu avec une interface intuitive
+- � **Être informés** des dernières nouveautés de la communauté modding
 
 Contrairement à l'interface standard de Nexus Mods, The Courrier offre une expérience optimisée pour la veille avec :
 - Filtrage temporel avancé (7/15/30 jours, année)
@@ -27,7 +27,7 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ---
 
-## 🛠️ Stack Technique
+## � Stack Technique
 
 ### Frontend
 - **React 19.2.0** - Framework JavaScript pour interfaces utilisateur
@@ -40,37 +40,61 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 - **Node.js 18+** - Runtime JavaScript
 - **Express 4.19.2** - Serveur HTTP pour développement local
 - **node-fetch 3.3.2** - Client HTTP pour appels API
-- **Serverless Functions** - Architecture sans serveur (Vercel/Netlify)
+- **Serverless Functions** - Architecture sans serveur (Vercel)
 
 ### Outils de Développement
 - **Create React App 5.0.1** - Toolchain React
-- **Vercel / Netlify** - Plateformes de déploiement
+- **Vercel** - Plateforme de déploiement
 - **Git** - Contrôle de version
 
 ---
 
-## ✨ Fonctionnalités
+## Captures d'écran
 
-### 📰 Actualités des Mods (ActuUpdatePage)
+### Homepage - Premier lancement (Mode clair)
+![Homepage premier lancement](./screenshots/homepage-first-launch-light.png)
+*Page d'accueil au premier lancement avec modal de configuration des identifiants*
+
+### Homepage - Mises à jour récentes
+![Page d'accueil](./screenshots/homepage.png)
+*Suivez les mises à jour de vos mods favoris avec un filtrage temporel avancé*
+
+### Liste des mods - Desktop (Mode clair)
+![Liste des mods desktop](./screenshots/mods-list-desktop-light.png)
+*Vue desktop de la liste des mods avec layout optimisé pour grands écrans*
+
+### Liste des mods par jeu
+![Liste des mods](./screenshots/mods-list.png)
+*Gérez tous vos mods suivis, organisés par jeu*
+
+### Configuration des identifiants
+![Modal de configuration](./screenshots/credentials-modal.png)
+*Configuration simple et sécurisée de vos identifiants Nexus Mods*
+
+---
+
+##  Fonctionnalités
+
+###  Actualités des Mods (ActuUpdatePage)
 - Affichage des mods récemment mis à jour
 - Filtrage par période (7, 15, 30 jours, année passée)
 - **Noms réels des jeux** avec icônes officielles Nexus Mods
 - Changelogs détaillés avec version précédente
 - Liens directs vers les pages Nexus Mods
 
-### 🎮 Mods Suivis (NexusModsPage)
+###  Mods Suivis (NexusModsPage)
 - Vue par jeu de tous vos mods suivis
 - Gestion des mods (ne plus suivre)
 - Informations détaillées (version, auteur, changelog)
 - Dates de mise à jour
 
-### 🔧 Configuration
+###  Configuration
 - Interface de configuration des identifiants Nexus Mods
 - Stockage sécurisé dans le navigateur (localStorage)
 - Mode clair/sombre
 - Interface responsive (mobile, tablette, desktop)
 
-## 🚀 Démarrage Rapide
+##  Démarrage Rapide
 
 ### Prérequis
 
@@ -86,7 +110,15 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 4. Cliquez sur **"Generate API Key"** (si vous n'en avez pas déjà une)
 5. Copiez votre clé API (elle ressemble à : `abc123def456...`)
 
-> ⚠️ **Important** : Ne partagez jamais votre clé API publiquement !
+>  **Important** : Ne partagez jamais votre clé API publiquement !
+
+**Credentials de test disponibles** (pour tester rapidement l'application) :
+
+- **Username** : `TheCourrier0`
+- **Password** : `The Courrier0` (pour se connecter sur nexusmods.com)
+- **API Key** : `UWM49C/gfBy+QCvaL2pe9p+C8PLiNji+HjObvGWuxsI9qKW3X1I=--LjVbDPG5bU/U59Ph--lzlQfxo4wC5kS6KTnG0IMw==`
+
+>  Ces credentials sont publics et destinés aux tests uniquement. Créez votre propre compte pour une utilisation personnelle.
 
 ### Installation
 
@@ -129,11 +161,11 @@ npm run build
 3. Entrez votre **nom d'utilisateur Nexus Mods**
 4. Entrez votre **clé API** (obtenue précédemment)
 5. Cliquez sur **"Enregistrer"**
-6. C'est prêt ! 🎉
+6. C'est prêt ! 
 
 Vos identifiants sont stockés localement dans votre navigateur et ne sont jamais envoyés à nos serveurs.
 
-## 🏗️ Architecture Technique
+##  Architecture Technique
 
 ### Sitemap & Routing
 
@@ -207,9 +239,7 @@ server.mjs                               # Serveur Express pour dev local
 └── Proxy vers API Nexus Mods
 ```
 
-#### Fonctions Serverless (Production)
-
-##### Pour Vercel
+#### Fonctions Serverless (Production - Vercel)
 
 ```
 api/nexus/
@@ -223,17 +253,6 @@ api/nexus/
 └── untrack.mjs                          # DELETE /api/nexus/untrack
     └── Query params: domain, modId
 ```
-
-##### Pour Netlify
-
-```
-netlify/functions/
-├── nexus-validate.mjs                   # /.netlify/functions/nexus-validate
-├── nexus-tracked.mjs                    # /.netlify/functions/nexus-tracked
-└── nexus-untrack.mjs                    # /.netlify/functions/nexus-untrack
-```
-
-> **Note** : Les fonctions Netlify et Vercel sont identiques en fonctionnalité, seuls les chemins d'accès diffèrent.
 
 ### Flux de Données
 
@@ -283,7 +302,7 @@ netlify/functions/
 
 Le cache est en mémoire côté serveur et réinitialisé à chaque redémarrage de fonction serverless.
 
-## 📡 Endpoints API Nexus Mods
+##  Endpoints API Nexus Mods
 
 L'application utilise l'API publique officielle de Nexus Mods v1. Tous les appels transitent par nos fonctions serverless pour sécuriser les credentials.
 
@@ -291,11 +310,11 @@ L'application utilise l'API publique officielle de Nexus Mods v1. Tous les appel
 
 | Endpoint Nexus Mods | Méthode | Usage | Documentation |
 |---------------------|---------|-------|---------------|
-| `/v1/users/validate.json` | GET | Validation des credentials API | [🔗 Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_users_validate_json) |
-| `/v1/user/tracked_mods.json` | GET | Liste des mods suivis par l'utilisateur | [🔗 Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_user_tracked_mods_json) |
-| `/v1/games/{game_domain_name}/mods/{id}.json` | GET | Détails d'un mod spécifique | [🔗 Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_games__game_domain_name__mods__id__json) |
-| `/v1/games/{game_domain_name}/mods/{id}/changelogs.json` | GET | Changelogs d'un mod | [🔗 Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_games__game_domain_name__mods__id__changelogs_json) |
-| `/v1/games/{game_domain_name}.json` | GET | Informations sur un jeu (nom, icône) | [🔗 Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_games__game_domain_name__json) |
+| `/v1/users/validate.json` | GET | Validation des credentials API | [ Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_users_validate_json) |
+| `/v1/user/tracked_mods.json` | GET | Liste des mods suivis par l'utilisateur | [ Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_user_tracked_mods_json) |
+| `/v1/games/{game_domain_name}/mods/{id}.json` | GET | Détails d'un mod spécifique | [ Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_games__game_domain_name__mods__id__json) |
+| `/v1/games/{game_domain_name}/mods/{id}/changelogs.json` | GET | Changelogs d'un mod | [ Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_games__game_domain_name__mods__id__changelogs_json) |
+| `/v1/games/{game_domain_name}.json` | GET | Informations sur un jeu (nom, icône) | [ Doc](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0#/default/get_v1_games__game_domain_name__json) |
 
 ### Nos Endpoints (Proxy)
 
@@ -334,88 +353,30 @@ Notre système de cache réduit considérablement le nombre d'appels API réels.
 
 ### Documentation Complète
 
-📖 **Documentation officielle Nexus Mods API v1** :
+ **Documentation officielle Nexus Mods API v1** :
 [https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0)
 
 ---
 
-## 🔐 Sécurité & Credentials
+##  Sécurité & Credentials
 
-### Configuration par l'Utilisateur (Recommandé)
+Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface, stockés dans le localStorage du navigateur.
 
-Depuis la version 2.0, chaque utilisateur configure ses propres identifiants :
-
-- ✅ **Stockage local** : Credentials dans le localStorage du navigateur
-- ✅ **Pas de serveur** : Aucune clé API stockée côté serveur
-- ✅ **Isolation** : Chaque utilisateur utilise son propre compte Nexus
-- ✅ **Rate-limit personnel** : Pas de partage de limites entre utilisateurs
-
-### Comment ça marche ?
-
-1. L'utilisateur entre son username et API key dans le modal
-2. Les credentials sont stockés dans `localStorage` (clé : `nexus_credentials`)
-3. À chaque requête API, les credentials sont envoyés via headers HTTP :
-   - `X-Nexus-Username`: nom d'utilisateur
-   - `X-Nexus-ApiKey`: clé API
-4. Les fonctions serverless lisent ces headers et les utilisent pour appeler l'API Nexus
-
-### Limitations de Sécurité
-
-⚠️ **localStorage** :
-- Accessible par JavaScript sur le même domaine
-- Vulnérable aux attaques XSS si le site est compromis
-- Pas de chiffrement supplémentaire par défaut
-
-Pour une sécurité renforcée, considérez :
-- L'utilisation d'un système d'authentification côté serveur
-- Le chiffrement des credentials avant stockage
-- L'utilisation de tokens temporaires
+**Configuration détaillée des identifiants** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
 
 ---
 
-## � Déploiement
+##  Déploiement
 
-L'application est prête pour être déployée sur **Vercel** ou **Netlify** sans configuration complexe.
+L'application peut être déployée sur **Vercel** sans configuration complexe. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
 
-### Déploiement sur Vercel (Recommandé)
-
-1. **Créer un compte** sur [vercel.com](https://vercel.com)
-2. **Importer le repo** GitHub
-3. Vercel détecte automatiquement :
-   - Build command : `npm run build`
-   - Output directory : `build`
-   - Fonctions serverless dans `/api/nexus/`
-4. **Déployer** (aucune variable d'environnement requise !)
-5. Accédez à votre app sur `https://your-app.vercel.app`
-
-### Déploiement sur Netlify
-
-1. **Créer un compte** sur [netlify.com](https://netlify.com)
-2. **Importer le repo** GitHub
-3. Configuration automatique via `netlify.toml` :
-   - Build command : `npm run build`
-   - Publish directory : `build`
-   - Functions directory : `netlify/functions`
-4. **Déployer**
-5. Accédez à votre app sur `https://your-app.netlify.app`
-
-### Variables d'Environnement (Optionnelles)
-
-Si vous préférez utiliser des credentials serveur partagés au lieu de la configuration par utilisateur :
-
-```bash
-NEXUS_API_KEY=your_api_key_here
-NEXUS_USERNAME=your_username_here
-NEXUS_APP_NAME=The Courrier
-```
-
-> 📖 Pour plus de détails, consultez [DEPLOYMENT.md](./DEPLOYMENT.md)
+**Guide complet de déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ---
 
-## 📚 Documentation
+##  Documentation
 
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide complet de déploiement Netlify/Vercel
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide complet de déploiement sur Vercel
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration détaillée des identifiants
 - **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test et validation
 - **[CHANGELOG.md](./CHANGELOG.md)** - Historique complet des versions
@@ -423,7 +384,7 @@ NEXUS_APP_NAME=The Courrier
 
 ---
 
-## 🔄 Scripts NPM
+##  Scripts NPM
 
 | Commande | Description |
 |----------|-------------|
@@ -431,21 +392,20 @@ NEXUS_APP_NAME=The Courrier
 | `npm run server` | Lance le serveur Express local (port 4000) |
 | `npm run build` | Crée le build optimisé pour la production |
 | `npm test` | Lance les tests unitaires (Jest + React Testing Library) |
-| `npm run eject` | Éjecte la configuration CRA (⚠️ irréversible) |
+| `npm run eject` | Éjecte la configuration CRA ( irréversible) |
 
 ---
 
-## 🧪 Tests
+##  Tests
 
-### Tests Manuels
-
-Consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md) pour la liste complète des scénarios de test.
+**Scénarios de test complets** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
 **Tests Rapides** (2 minutes) :
-1. ✅ Vérifier l'affichage du modal au premier lancement
-2. ✅ Configurer des credentials de test
-3. ✅ Naviguer vers "Nexus Mods" et vérifier le chargement
-4. ✅ Rafraîchir (F5) et vérifier la persistance des credentials
+
+1.  Vérifier l'affichage du modal au premier lancement
+2.  Configurer des credentials de test
+3.  Naviguer vers "Nexus Mods" et vérifier le chargement
+4.  Rafraîchir (F5) et vérifier la persistance des credentials
 
 ### Tests Automatisés
 
@@ -453,40 +413,37 @@ Consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md) pour la liste complète des sc�
 npm test
 ```
 
-Les tests couvrent :
-- Hook `useNexusCredentials` (localStorage)
-- Hook `useNexusMods` (appels API)
-- Composant `CredentialsModal` (validation)
-- Intégration complète de l'application
-
 ---
 
-## 🔄 Changelog Récent
+##  Changelog
+
+**Historique complet des versions** : voir [CHANGELOG.md](./CHANGELOG.md)
 
 ### Version 3.0.0 (6 Nov 2025)
-- ✅ Affichage des vrais noms de jeux avec icônes officielles
-- ✅ Renommage `BootstrapPage` → `ActuUpdatePage`
-- ✅ Suppression de `TailwindPage` et `useWeather` (non utilisés)
-- ✅ Amélioration du layout des cartes de mods
-- ✅ Correction du bug de reconnexion après suppression des credentials
+
+-  Affichage des vrais noms de jeux avec icônes officielles
+-  Renommage `BootstrapPage` → `ActuUpdatePage`
+-  Suppression de `TailwindPage` et `useWeather` (non utilisés)
+-  Amélioration du layout des cartes de mods
+-  Correction du bug de reconnexion après suppression des credentials
 
 ### Version 2.0.0 (5 Nov 2025)
-- ✅ Configuration des credentials dans l'interface utilisateur
-- ✅ Stockage local sécurisé (localStorage)
-- ✅ Support multi-utilisateurs
-- ✅ Architecture serverless compatible Vercel/Netlify
+
+-  Configuration des credentials dans l'interface utilisateur
+-  Stockage local sécurisé (localStorage)
+-  Support multi-utilisateurs
+-  Architecture serverless compatible Vercel
 
 ### Version 1.0.0 (Initial)
-- ✅ Interface de base avec React
-- ✅ Intégration API Nexus Mods
-- ✅ Page d'actualités des mods
-- ✅ Page de gestion des mods suivis
 
-📖 Voir [CHANGELOG.md](./CHANGELOG.md) pour l'historique complet
+-  Interface de base avec React
+-  Intégration API Nexus Mods
+-  Page d'actualités des mods
+-  Page de gestion des mods suivis
 
 ---
 
-## 🤝 Contribution
+##  Contribution
 
 Les contributions sont les bienvenues ! Pour contribuer :
 
@@ -505,13 +462,13 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 ---
 
-## 📄 Licence
+##  Licence
 
 Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-## 👤 Auteur
+##  Auteur
 
 **sonical0**
 - GitHub: [@sonical0](https://github.com/sonical0)
@@ -519,7 +476,7 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-## 🙏 Remerciements
+##  Remerciements
 
 - **Nexus Mods** pour leur API publique
 - La communauté **React** et **Tailwind CSS**
@@ -527,24 +484,27 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-## 📞 Support & Contact
+## � Support & Contact
 
-- 🐛 **Bugs** : Ouvrez une issue sur [GitHub](https://github.com/sonical0/The_Courrier/issues)
-- 💡 **Suggestions** : Créez une discussion sur [GitHub Discussions](https://github.com/sonical0/The_Courrier/discussions)
-- 📖 **Documentation** : Consultez les fichiers `.md` dans le repository
-
----
-
-**Made with ❤️ for the modding community**
+-  **Bugs** : Ouvrez une issue sur [GitHub](https://github.com/sonical0/The_Courrier/issues)
+-  **Suggestions** : Créez une discussion sur [GitHub Discussions](https://github.com/sonical0/The_Courrier/discussions)
+-  **Documentation** : Consultez les fichiers `.md` dans le repository
 
 ---
 
-## 🔗 Liens Utiles
+**Made with  for the modding community**
+
+---
+
+##  Liens Utiles
 
 - [Nexus Mods](https://www.nexusmods.com) - Plateforme de mods
 - [API Nexus Mods Documentation](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0) - Documentation API
 - [React Documentation](https://react.dev) - Framework frontend
 - [Tailwind CSS](https://tailwindcss.com) - Framework CSS
 - [Vercel](https://vercel.com) - Plateforme de déploiement
-- [Netlify](https://netlify.com) - Plateforme de déploiement
+
+
+````
+
 

@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import useNexusMods from "../components/useNexusMods";
 
-// Utils d'affichage pour nettoyer les textes HTML des changelogs
 function decodeEntities(str) {
   if (!str) return "";
   return str
@@ -15,14 +14,12 @@ function decodeEntities(str) {
 
 function htmlToPlainText(html) {
   if (!html) return "";
-  // remplace les <br> par des sauts de ligne, supprime le reste des balises
   const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
   const noTags = withBreaks.replace(/<[^>]+>/g, "");
   return decodeEntities(noTags);
 }
 
 function flattenChangeLines(changelogEntry, maxLines = 6) {
-  // changelogEntry = { version, changes: string[] }
   const lines = [];
   if (!changelogEntry || !Array.isArray(changelogEntry.changes)) return lines;
   for (const raw of changelogEntry.changes) {
@@ -38,11 +35,10 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
 
 export default function ActuUpdatePage({ credentials }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
-  const [period, setPeriod] = useState(7); // en jours
+  const [period, setPeriod] = useState(7);
 
   const cutoff = Math.floor(Date.now() / 1000) - period * 24 * 3600;
 
-  // Regroupe par jeu uniquement les mods mis à jour < période sélectionnée
   const grouped = useMemo(() => {
     const out = [];
     for (const g of games) {
@@ -58,7 +54,6 @@ export default function ActuUpdatePage({ credentials }) {
         });
       }
     }
-    // Tri des jeux par actus les plus récentes
     out.sort(
       (a, b) =>
         Number(b.mods[0]?.updatedAt || 0) - Number(a.mods[0]?.updatedAt || 0)
@@ -83,7 +78,6 @@ export default function ActuUpdatePage({ credentials }) {
   }
   
   if (error) {
-    // Si l'erreur est liée aux credentials manquants
     if (error.includes("credentials") || error.includes("401")) {
       return (
         <div className="container mx-auto px-4 py-8">
@@ -112,7 +106,6 @@ export default function ActuUpdatePage({ credentials }) {
     );
   }
 
-  // Si aucun mod suivi, afficher le message d'introduction
   if (!games.length) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -202,14 +195,12 @@ export default function ActuUpdatePage({ credentials }) {
                 alt={`${gameLabel} icon`}
                 className="w-10 h-10 rounded object-cover border-2 border-slate-300 dark:border-slate-600"
                 onError={(e) => {
-                  // Fallback si l'image n'existe pas
                   e.target.style.display = 'none';
                 }}
               />
             )}
           </div>
           
-          {/* Grid responsive: 3 colonnes desktop, 2 tablette, 1 mobile */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mods.map((m) => (
               <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
