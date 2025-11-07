@@ -107,7 +107,7 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
                   autoComplete="off"
                 />
                 <small className="block mt-1 text-xs text-slate-500 dark:text-slate-400">
-                  Vous pouvez obtenir votre clé API sur{" "}
+                  Rendez-vous sur{" "}
                   <a
                     href="https://www.nexusmods.com/users/myaccount?tab=api"
                     target="_blank"
@@ -116,6 +116,7 @@ export default function CredentialsModal({ show, onSave, onCancel }) {
                   >
                     votre page de paramètres Nexus Mods
                   </a>
+                  {" "}et copiez la clé <strong>"Personal API Key"</strong> qui se trouve <strong>tout en bas de la page</strong>.
                 </small>
               </div>
 

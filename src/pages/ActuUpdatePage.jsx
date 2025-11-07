@@ -112,11 +112,40 @@ export default function ActuUpdatePage({ credentials }) {
     );
   }
 
+  // Si aucun mod suivi, afficher le message d'introduction
+  if (!games.length) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="pico-card p-6">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">
+              👋 Bienvenue sur The Courrier !
+            </h3>
+            <p className="text-slate-700 dark:text-slate-300 mb-4">
+              <strong>The Courrier</strong> vous permet de suivre facilement les mises à jour de vos mods Nexus Mods préférés.
+            </p>
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+                <strong>🎯 Pour voir vos mods apparaître ici :</strong>
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-sm text-slate-700 dark:text-slate-300 ml-2">
+                <li>Rendez-vous sur <a href="https://www.nexusmods.com" target="_blank" rel="noreferrer" className="text-pico-primary hover:underline">Nexus Mods</a></li>
+                <li>Connectez-vous avec votre compte</li>
+                <li>Activez le suivi ("Track") sur les mods qui vous intéressent</li>
+                <li>Revenez ici pour voir les mises à jour</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
-          Actualités des Mods · {periodLabel()}
+          Mise à jour · {periodLabel()}
         </h2>
         <button 
           className="pico-btn-outline w-fit"

@@ -104,7 +104,7 @@ export default function NexusModsPage({ credentials }) {
   return (
     <div className="container mx-auto px-4 py-8">
       <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-6">
-        Mods Suivis par Jeu
+        Liste des Mods
       </h2>
       
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
