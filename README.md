@@ -49,11 +49,19 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ---
 
-##  Captures d'écran
+## Captures d'écran
 
-### Page d'accueil - Mises à jour récentes
+### Homepage - Premier lancement (Mode clair)
+![Homepage premier lancement](./screenshots/homepage-first-launch-light.png)
+*Page d'accueil au premier lancement avec modal de configuration des identifiants*
+
+### Homepage - Mises à jour récentes
 ![Page d'accueil](./screenshots/homepage.png)
 *Suivez les mises à jour de vos mods favoris avec un filtrage temporel avancé*
+
+### Liste des mods - Desktop (Mode clair)
+![Liste des mods desktop](./screenshots/mods-list-desktop-light.png)
+*Vue desktop de la liste des mods avec layout optimisé pour grands écrans*
 
 ### Liste des mods par jeu
 ![Liste des mods](./screenshots/mods-list.png)
@@ -62,10 +70,6 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 ### Configuration des identifiants
 ![Modal de configuration](./screenshots/credentials-modal.png)
 *Configuration simple et sécurisée de vos identifiants Nexus Mods*
-
-### Mode sombre
-![Mode sombre](./screenshots/dark-mode.png)
-*Interface adaptative avec support du thème sombre*
 
 ---
 
