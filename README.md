@@ -108,6 +108,13 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 > ⚠️ **Important** : Ne partagez jamais votre clé API publiquement !
 
+**Credentials de test disponibles** (pour tester rapidement l'application) :
+
+- **Username** : `TheCourrier0`
+- **API Key** : `UWM49C/gfBy+QCvaL2pe9p+C8PLiNji+HjObvGWuxsI9qKW3X1I=--LjVbDPG5bU/U59Ph--lzlQfxo4wC5kS6KTnG0IMw==`
+
+> ⚠️ Ces credentials sont publics et destinés aux tests uniquement. Créez votre propre compte pour une utilisation personnelle.
+
 ### Installation
 
 ```bash

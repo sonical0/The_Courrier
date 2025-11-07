@@ -59,6 +59,13 @@ Si vous voulez que tous les utilisateurs utilisent le même compte Nexus Mods, a
 
 > **Note** : Si ces variables ne sont pas définies, l'application demandera automatiquement les credentials à l'utilisateur.
 
+**Credentials de test disponibles** (pour tester l'application) :
+
+- **Username** : `TheCourrier0`
+- **API Key** : `UWM49C/gfBy+QCvaL2pe9p+C8PLiNji+HjObvGWuxsI9qKW3X1I=--LjVbDPG5bU/U59Ph--lzlQfxo4wC5kS6KTnG0IMw==`
+
+> ⚠️ Ces credentials sont publics et destinés aux tests uniquement. Ne les utilisez pas en production.
+
 ### 4️⃣ Déployer
 
 Cliquez sur **"Deploy"** et attendez que le build se termine (2-3 minutes).
