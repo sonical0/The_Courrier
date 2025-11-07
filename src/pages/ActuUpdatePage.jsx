@@ -116,7 +116,7 @@ export default function ActuUpdatePage({ credentials }) {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
         <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
-          Actualités des Mods · {periodLabel()}
+          Mise à jour · {periodLabel()}
         </h2>
         <button 
           className="pico-btn-outline w-fit"

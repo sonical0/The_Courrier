@@ -56,13 +56,13 @@ export default function App() {
                     to="/"
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
                   >
-                    Actus Mods
+                    Mise à jour
                   </Link>
                   <Link
                     to="/nexus-mods"
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
                   >
-                    Nexus Mods
+                    Liste des Mods
                   </Link>
                 </div>
 
@@ -118,27 +118,43 @@ export default function App() {
             {/* Panel mobile / tablette : menu vertical */}
             {isMenuOpen && (
               <div className="xl:hidden pb-4">
-                <div className="flex flex-col gap-3 rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-white dark:bg-slate-800">
+                <div className={`flex flex-col gap-3 rounded-xl border p-4 transition-colors ${
+                  theme === 'dark' 
+                    ? 'border-slate-700 bg-slate-800' 
+                    : 'border-slate-200 bg-white'
+                }`}>
                   <Link
                     to="/"
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full text-left px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium"
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                      theme === 'dark'
+                        ? 'bg-slate-700 text-white hover:bg-slate-600'
+                        : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                    }`}
                   >
-                    Actus Mods
+                    Mise à jour
                   </Link>
                   <Link
                     to="/nexus-mods"
                     onClick={() => setIsMenuOpen(false)}
-                    className="w-full text-left px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium"
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                      theme === 'dark'
+                        ? 'bg-slate-700 text-white hover:bg-slate-600'
+                        : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                    }`}
                   >
-                    Nexus Mods
+                    Liste des Mods
                   </Link>
                   <button
                     onClick={() => {
                       toggleTheme();
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors font-medium"
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                      theme === 'dark'
+                        ? 'bg-slate-700 text-white hover:bg-slate-600'
+                        : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                    }`}
                     title={theme === "light" ? "Passer en mode nuit" : "Passer en mode jour"}
                   >
                     {theme === "light" ? "🌙 Nuit" : "☀️ Jour"}
@@ -158,7 +174,11 @@ export default function App() {
                   <div className="flex items-center justify-between pt-2">
                     {hasCredentials ? (
                       <>
-                        <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm font-medium">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          theme === 'dark'
+                            ? 'bg-green-900/30 text-green-300'
+                            : 'bg-green-100 text-green-800'
+                        }`}>
                           ✓ {credentials?.username}
                         </span>
                         <button
@@ -170,7 +190,9 @@ export default function App() {
                         </button>
                       </>
                     ) : (
-                      <span className="text-sm text-slate-500 dark:text-slate-400">
+                      <span className={`text-sm ${
+                        theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
+                      }`}>
                         Identifiants non configurés
                       </span>
                     )}
