@@ -1,4 +1,4 @@
-# ✅ Checklist Pré-Déploiement - The Courrier# ✅ Vérification Pré-Déploiement - The Courrier
+#  Checklist Pré-Déploiement - The Courrier#  Vérification Pré-Déploiement - The Courrier
 
 
 
@@ -14,75 +14,75 @@
 
 
 
----## 📋 Checklist de Vérification
+---##  Checklist de Vérification
 
 
 
-## 📋 Checklist Rapide### 🎯 1. Pitch du Projet - ✅ VALIDÉ
+##  Checklist Rapide###  1. Pitch du Projet -  VALIDÉ
 
 
 
-### 🎯 DocumentationLe README.md contient maintenant une section complète "Pitch du Projet" qui explique :
+###  DocumentationLe README.md contient maintenant une section complète "Pitch du Projet" qui explique :
 
 
 
-- [ ] README.md complet et à jour- ✅ **Nature de l'application** : WebApp de veille de données pour mods Nexus Mods
+- [ ] README.md complet et à jour-  **Nature de l'application** : WebApp de veille de données pour mods Nexus Mods
 
-- [ ] DEPLOYMENT.md avec instructions Vercel/Netlify- ✅ **Objectifs** : Surveillance, analyse, organisation, information
+- [ ] DEPLOYMENT.md avec instructions Vercel/Netlify-  **Objectifs** : Surveillance, analyse, organisation, information
 
-- [ ] Tous les fichiers .md cohérents (pas de doublons)- ✅ **Avantages** : Filtrage temporel, affichage enrichi, gestion personnalisée, mode sombre/clair
+- [ ] Tous les fichiers .md cohérents (pas de doublons)-  **Avantages** : Filtrage temporel, affichage enrichi, gestion personnalisée, mode sombre/clair
 
-- [ ] Guide d'obtention de clé API clair- ✅ **Différenciation** : Ce qui distingue The Courrier de l'interface Nexus standard
+- [ ] Guide d'obtention de clé API clair-  **Différenciation** : Ce qui distingue The Courrier de l'interface Nexus standard
 
 - [ ] Architecture bien documentée
 
 **Localisation** : README.md lignes 8-22
 
-### 🔄 Versions et Cohérence
+###  Versions et Cohérence
 
 ---
 
 - [ ] Versions synchronisées dans tous les .md (3.0.0 – 6 Nov 2025)
 
-- [ ] Endpoints API alignés entre frontend et backend### 🛠️ 2. Stack Technique - ✅ VALIDÉ
+- [ ] Endpoints API alignés entre frontend et backend### � 2. Stack Technique -  VALIDÉ
 
 - [ ] Terminologie uniforme : "credentials", "localStorage", "headers `X-Nexus-*`", "serverless functions"
 
 Documentation complète de la stack dans README.md :
 
-### 📦 Code et Build
+###  Code et Build
 
 #### Frontend
 
-- [ ] `npm install` fonctionne sans erreur- ✅ React 19.2.0
+- [ ] `npm install` fonctionne sans erreur-  React 19.2.0
 
-- [ ] `npm run build` se termine avec succès- ✅ React Router 7.9.4
+- [ ] `npm run build` se termine avec succès-  React Router 7.9.4
 
-- [ ] Aucun fichier `.env` commité dans le repo- ✅ Tailwind CSS 3.4.18
+- [ ] Aucun fichier `.env` commité dans le repo-  Tailwind CSS 3.4.18
 
-- [ ] `.gitignore` contient `.env`- ✅ Bootstrap 5.3.8
+- [ ] `.gitignore` contient `.env`-  Bootstrap 5.3.8
 
-- [ ] Scripts npm fonctionnels (`npm start`, `npm run server`, `npm test`)- ✅ JavaScript (ES6+)
+- [ ] Scripts npm fonctionnels (`npm start`, `npm run server`, `npm test`)-  JavaScript (ES6+)
 
 
 
-### 🔧 Configuration Serverless#### Backend
+###  Configuration Serverless#### Backend
 
-- ✅ Node.js 18+
+-  Node.js 18+
 
-- [ ] Fonctions Vercel dans `/api/nexus/` (validate.mjs, tracked.mjs, untrack.mjs)- ✅ Express 4.19.2
+- [ ] Fonctions Vercel dans `/api/nexus/` (validate.mjs, tracked.mjs, untrack.mjs)-  Express 4.19.2
 
-- [ ] Fonctions Netlify dans `/netlify/functions/` (nexus-validate.mjs, nexus-tracked.mjs, nexus-untrack.mjs)- ✅ node-fetch 3.3.2
+- [ ] Fonctions Netlify dans `/netlify/functions/` (nexus-validate.mjs, nexus-tracked.mjs, nexus-untrack.mjs)-  node-fetch 3.3.2
 
-- [ ] `vercel.json` configuré avec rewrites- ✅ Serverless Functions (Vercel/Netlify)
+- [ ] `vercel.json` configuré avec rewrites-  Serverless Functions (Vercel/Netlify)
 
 - [ ] `netlify.toml` configuré avec redirects
 
 #### Outils
 
-### 🔒 Sécurité- ✅ Create React App 5.0.1
+###  Sécurité-  Create React App 5.0.1
 
-- ✅ Git
+-  Git
 
 - [ ] Aucune clé API hardcodée dans le code
 
@@ -94,23 +94,23 @@ Documentation complète de la stack dans README.md :
 
 
 
-> **Détails sécurité** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)### 🚀 3. Comment Lancer le Projet - ✅ VALIDÉ
+> **Détails sécurité** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)###  3. Comment Lancer le Projet -  VALIDÉ
 
 
 
-### 🧪 TestsGuide complet avec démarche détaillée :
+###  TestsGuide complet avec démarche détaillée :
 
 
 
 - [ ] Test local : modal s'affiche au premier lancement#### Obtenir la clé API
 
-- [ ] Test local : credentials persistent après F5- ✅ Instructions pas-à-pas pour créer un compte Nexus Mods
+- [ ] Test local : credentials persistent après F5-  Instructions pas-à-pas pour créer un compte Nexus Mods
 
-- [ ] Test local : navigation fonctionne (/, /nexus-mods)- ✅ Navigation vers la page API Access
+- [ ] Test local : navigation fonctionne (/, /nexus-mods)-  Navigation vers la page API Access
 
-- [ ] Test build : `npm run build` réussit- ✅ Génération de la clé API
+- [ ] Test build : `npm run build` réussit-  Génération de la clé API
 
-- [ ] Test déploiement : site accessible après deploy- ✅ Avertissement de sécurité
+- [ ] Test déploiement : site accessible après deploy-  Avertissement de sécurité
 
 
 
@@ -118,7 +118,7 @@ Documentation complète de la stack dans README.md :
 
 
 
-### 📡 API et Cache#### Installation
+###  API et Cache#### Installation
 
 ```bash
 
@@ -134,9 +134,9 @@ Documentation complète de la stack dans README.md :
 
 #### Lancement
 
-## 🚀 Actions Avant Déploiement- ✅ **Option 1** : Dev avec serveur local (2 terminaux)
+##  Actions Avant Déploiement-  **Option 1** : Dev avec serveur local (2 terminaux)
 
-- ✅ **Option 2** : Build production
+-  **Option 2** : Build production
 
 ### 1. Tests Locaux
 
@@ -146,11 +146,11 @@ Documentation complète de la stack dans README.md :
 
 # Terminal 1 : Backend#### Premier lancement
 
-npm run server- ✅ Explication du modal de configuration
+npm run server-  Explication du modal de configuration
 
-- ✅ Étapes de saisie des credentials
+-  Étapes de saisie des credentials
 
-# Terminal 2 : Frontend- ✅ Information sur le stockage local
+# Terminal 2 : Frontend-  Information sur le stockage local
 
 npm start
 
@@ -162,7 +162,7 @@ npm start
 
 
 
-### 2. Build de Production### 🏗️ 4. Architecture Technique - ✅ VALIDÉ
+### 2. Build de Production###  4. Architecture Technique -  VALIDÉ
 
 
 
@@ -172,9 +172,9 @@ npm run build
 
 # Doit se terminer sans erreur#### Sitemap & Routing
 
-```- ✅ `/` → ActuUpdatePage
+```-  `/` → ActuUpdatePage
 
-- ✅ `/nexus-mods` → NexusModsPage
+-  `/nexus-mods` → NexusModsPage
 
 ### 3. Vérification Git
 
@@ -208,17 +208,17 @@ Suivre les instructions dans [DEPLOYMENT.md](./DEPLOYMENT.md)    └── useTh
 
 **Localisation** : README.md lignes 115-196
 
-## ✅ Actions Après Déploiement
+##  Actions Après Déploiement
 
 #### Services & API
 
-- [ ] Site accessible sur l'URL de production- ✅ Backend local (server.mjs - port 4000)
+- [ ] Site accessible sur l'URL de production-  Backend local (server.mjs - port 4000)
 
-- [ ] Modal s'affiche au premier lancement- ✅ Fonctions Vercel (api/nexus/)
+- [ ] Modal s'affiche au premier lancement-  Fonctions Vercel (api/nexus/)
 
-- [ ] Credentials acceptés et sauvegardés- ✅ Fonctions Netlify (netlify/functions/)
+- [ ] Credentials acceptés et sauvegardés-  Fonctions Netlify (netlify/functions/)
 
-- [ ] Navigation fonctionne entre les pages- ✅ Détails des endpoints
+- [ ] Navigation fonctionne entre les pages-  Détails des endpoints
 
 - [ ] Données chargées depuis l'API Nexus Mods
 
@@ -228,11 +228,11 @@ Suivre les instructions dans [DEPLOYMENT.md](./DEPLOYMENT.md)    └── useTh
 
 #### Flux de Données
 
----- ✅ Schéma complet du flux utilisateur → localStorage → API → Nexus
+----  Schéma complet du flux utilisateur → localStorage → API → Nexus
 
-- ✅ Explication du système de cache (TTL, clés)
+-  Explication du système de cache (TTL, clés)
 
-## 🐛 Dépannage
+##  Dépannage
 
 **Localisation** : README.md lignes 250-290
 
@@ -242,7 +242,7 @@ Suivre les instructions dans [DEPLOYMENT.md](./DEPLOYMENT.md)    └── useTh
 
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Section Dépannage
 
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Scénarios d'erreur### 📡 5. Endpoints API - ✅ VALIDÉ
+- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Scénarios d'erreur###  5. Endpoints API -  VALIDÉ
 
 - [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md) - Configuration avancée
 
@@ -252,11 +252,11 @@ Liste complète et documentation des endpoints :
 
 #### Endpoints Nexus Mods Utilisés
 
-## 🎉 Validation Finale
+##  Validation Finale
 
 | Endpoint | Usage |
 
-**Le projet est prêt si tous les points sont cochés ✅**|----------|-------|
+**Le projet est prêt si tous les points sont cochés **|----------|-------|
 
 | `/v1/users/validate.json` | Validation credentials |
 
@@ -270,9 +270,9 @@ Liste complète et documentation des endpoints :
 
 - Historique documenté : [CHANGELOG.md](./CHANGELOG.md)
 
-**✅ Chaque endpoint inclut** :
+** Chaque endpoint inclut** :
 
-**🚀 Prêt pour le déploiement !**- Méthode HTTP
+** Prêt pour le déploiement !**- Méthode HTTP
 
 - Usage détaillé
 - Lien direct vers la documentation officielle
@@ -290,17 +290,17 @@ Liste complète et documentation des endpoints :
 **Localisation** : README.md lignes 307-315
 
 #### Documentation Complète
-- ✅ Lien vers la documentation officielle Swagger Hub
-- ✅ Explication de l'authentification (headers)
-- ✅ Information sur les rate limits
+-  Lien vers la documentation officielle Swagger Hub
+-  Explication de l'authentification (headers)
+-  Information sur les rate limits
 
 **Localisation** : README.md lignes 317-338
 
 ---
 
-## 🔍 Cohérence entre les Fichiers
+##  Cohérence entre les Fichiers
 
-### ✅ Versions Synchronisées
+###  Versions Synchronisées
 
 Tous les fichiers documentent la même version :
 - README.md → Version 3.0.0 (6 Nov 2025)
@@ -308,7 +308,7 @@ Tous les fichiers documentent la même version :
 - SUMMARY.md → Version 3.0.0 (6 Nov 2025)
 - DEPLOYMENT.md → Mis à jour avec nouvelle architecture
 
-### ✅ Architecture Credentials Cohérente
+###  Architecture Credentials Cohérente
 
 Tous les documents mentionnent correctement :
 - Configuration par utilisateur (localStorage) - **RECOMMANDÉ**
@@ -316,12 +316,12 @@ Tous les documents mentionnent correctement :
 - Headers HTTP personnalisés : `X-Nexus-Username`, `X-Nexus-ApiKey`
 
 **Fichiers vérifiés** :
-- README.md ✅
-- DEPLOYMENT.md ✅
-- CREDENTIALS_CONFIG.md ✅
-- SUMMARY.md ✅
+- README.md 
+- DEPLOYMENT.md 
+- CREDENTIALS_CONFIG.md 
+- SUMMARY.md 
 
-### ✅ Endpoints API Cohérents
+###  Endpoints API Cohérents
 
 Tous les documents utilisent les mêmes endpoints :
 - `/api/nexus/validate`
@@ -329,12 +329,12 @@ Tous les documents utilisent les mêmes endpoints :
 - `/api/nexus/tracked/:domain/:modId`
 
 **Fichiers vérifiés** :
-- README.md ✅
-- useNexusMods.js ✅
-- api/nexus/*.mjs ✅
-- netlify/functions/*.mjs ✅
+- README.md 
+- useNexusMods.js 
+- api/nexus/*.mjs 
+- netlify/functions/*.mjs 
 
-### ✅ Scripts NPM Cohérents
+###  Scripts NPM Cohérents
 
 package.json et documentation alignés :
 - `npm start` → Port 3000 (React)
@@ -344,17 +344,17 @@ package.json et documentation alignés :
 
 ---
 
-## 🔒 Sécurité Pré-Déploiement
+##  Sécurité Pré-Déploiement
 
-### ✅ Vérifications de Sécurité
+###  Vérifications de Sécurité
 
-- ✅ Aucun fichier `.env` dans le repo
-- ✅ `.gitignore` contient `.env`
-- ✅ Aucune clé API hardcodée dans le code
-- ✅ Headers CORS configurés dans les fonctions serverless
-- ✅ Documentation sur les limitations de sécurité (localStorage)
+-  Aucun fichier `.env` dans le repo
+-  `.gitignore` contient `.env`
+-  Aucune clé API hardcodée dans le code
+-  Headers CORS configurés dans les fonctions serverless
+-  Documentation sur les limitations de sécurité (localStorage)
 
-### ⚠️ Points d'Attention
+###  Points d'Attention
 
 1. **localStorage** : Les credentials sont visibles dans les DevTools
    - ✓ Documenté dans README.md
@@ -370,9 +370,9 @@ package.json et documentation alignés :
 
 ---
 
-## 📦 Fichiers Prêts pour le Déploiement
+##  Fichiers Prêts pour le Déploiement
 
-### ✅ Configuration Vercel
+###  Configuration Vercel
 
 **Fichier** : `vercel.json`
 ```json
@@ -385,11 +385,11 @@ package.json et documentation alignés :
 ```
 
 **Fonctions Serverless** : `/api/nexus/`
-- ✅ validate.mjs
-- ✅ tracked.mjs
-- ✅ untrack.mjs
+-  validate.mjs
+-  tracked.mjs
+-  untrack.mjs
 
-### ✅ Configuration Netlify (Alternative)
+###  Configuration Netlify (Alternative)
 
 **Fichier** : `netlify.toml`
 ```toml
@@ -400,34 +400,34 @@ package.json et documentation alignés :
 ```
 
 **Fonctions Serverless** : `/netlify/functions/`
-- ✅ nexus-validate.mjs
-- ✅ nexus-tracked.mjs
-- ✅ nexus-untrack.mjs
+-  nexus-validate.mjs
+-  nexus-tracked.mjs
+-  nexus-untrack.mjs
 
 ---
 
-## 📊 Résumé de la Documentation
+##  Résumé de la Documentation
 
 | Document | Statut | Rôle |
 |----------|--------|------|
-| **README.md** | ✅ COMPLET | Documentation principale avec pitch, stack, architecture, API |
-| **DEPLOYMENT.md** | ✅ À JOUR | Guide de déploiement Vercel/Netlify |
-| **CREDENTIALS_CONFIG.md** | ✅ COHÉRENT | Configuration avancée des credentials |
-| **TESTING_GUIDE.md** | ✅ COHÉRENT | Scénarios de test manuels et auto |
-| **CHANGELOG.md** | ✅ À JOUR | Historique technique des versions |
-| **SUMMARY.md** | ✅ À JOUR | Vue d'ensemble et guide utilisateur |
+| **README.md** |  COMPLET | Documentation principale avec pitch, stack, architecture, API |
+| **DEPLOYMENT.md** |  À JOUR | Guide de déploiement Vercel/Netlify |
+| **CREDENTIALS_CONFIG.md** |  COHÉRENT | Configuration avancée des credentials |
+| **TESTING_GUIDE.md** |  COHÉRENT | Scénarios de test manuels et auto |
+| **CHANGELOG.md** |  À JOUR | Historique technique des versions |
+| **SUMMARY.md** |  À JOUR | Vue d'ensemble et guide utilisateur |
 
 ---
 
-## 🎯 Recommandations Finales
+##  Recommandations Finales
 
 ### Avant le Déploiement
 
-1. ✅ **Tests locaux** : Lancer `npm start` et `npm run server` pour vérifier
-2. ✅ **Build local** : Exécuter `npm run build` pour s'assurer qu'il n'y a pas d'erreurs
-3. ✅ **Variables d'environnement** : Décider si vous utilisez des credentials serveur (optionnel)
-4. ✅ **Git** : Vérifier que tous les fichiers sont committés
-5. ✅ **Branch** : Utiliser la branche `test` ou merger vers `main`
+1.  **Tests locaux** : Lancer `npm start` et `npm run server` pour vérifier
+2.  **Build local** : Exécuter `npm run build` pour s'assurer qu'il n'y a pas d'erreurs
+3.  **Variables d'environnement** : Décider si vous utilisez des credentials serveur (optionnel)
+4.  **Git** : Vérifier que tous les fichiers sont committés
+5.  **Branch** : Utiliser la branche `test` ou merger vers `main`
 
 ### Après le Déploiement
 
@@ -440,17 +440,17 @@ package.json et documentation alignés :
 
 ---
 
-## ✅ CONCLUSION
+##  CONCLUSION
 
-**🎉 Le projet est PRÊT pour le déploiement sur Vercel !**
+** Le projet est PRÊT pour le déploiement sur Vercel !**
 
 Tous les éléments demandés sont présents et cohérents :
-- ✅ Pitch du projet clairement défini
-- ✅ Stack technique complètement documentée
-- ✅ Procédure de lancement détaillée avec obtention de la clé API
-- ✅ Architecture technique exhaustive (sitemap, composants, services)
-- ✅ Liste complète des endpoints API avec liens vers la documentation
-- ✅ Cohérence entre tous les fichiers .md
+-  Pitch du projet clairement défini
+-  Stack technique complètement documentée
+-  Procédure de lancement détaillée avec obtention de la clé API
+-  Architecture technique exhaustive (sitemap, composants, services)
+-  Liste complète des endpoints API avec liens vers la documentation
+-  Cohérence entre tous les fichiers .md
 
 **Prochaine étape** : Déployer sur Vercel en suivant les instructions dans DEPLOYMENT.md !
 
@@ -466,4 +466,5 @@ Tous les éléments demandés sont présents et cohérents :
 - [x] Guide d'obtention de clé API clair
 - [x] Architecture bien documentée
 
-**🚀 Bon déploiement !**
+** Bon déploiement !**
+
