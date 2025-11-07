@@ -62,6 +62,7 @@ Si vous voulez que tous les utilisateurs utilisent le même compte Nexus Mods, a
 **Credentials de test disponibles** (pour tester l'application) :
 
 - **Username** : `TheCourrier0`
+- **Password** : `The Courrier0` (pour se connecter sur nexusmods.com)
 - **API Key** : `UWM49C/gfBy+QCvaL2pe9p+C8PLiNji+HjObvGWuxsI9qKW3X1I=--LjVbDPG5bU/U59Ph--lzlQfxo4wC5kS6KTnG0IMw==`
 
 > ⚠️ Ces credentials sont publics et destinés aux tests uniquement. Ne les utilisez pas en production.
