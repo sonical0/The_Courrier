@@ -21,7 +21,9 @@ Une application web moderne permettant de suivre et monitorer les mises à jour 
 
 Contrairement à l'interface standard de Nexus Mods, The Courrier offre une expérience optimisée pour la veille avec :
 - Filtrage temporel avancé (7/15/30 jours, année)
-- Affichage enrichi avec noms de jeux et icônes officielles
+- Affichage enrichi avec noms de jeux, icônes et catégories
+- Badges "NEW" pour identifier les nouveautés
+- Système de tri (date, nom, auteur)
 - Gestion personnalisée des credentials par utilisateur
 - Mode sombre/clair pour un confort optimal
 
@@ -79,14 +81,26 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 - Affichage des mods récemment mis à jour
 - Filtrage par période (7, 15, 30 jours, année passée)
 - **Noms réels des jeux** avec icônes officielles Nexus Mods
+- **Catégories des mods** affichées avec l'auteur
 - Changelogs détaillés avec version précédente
 - Liens directs vers les pages Nexus Mods
 
 ### Mods Suivis (NexusModsPage)
 - Vue par jeu de tous vos mods suivis
+- **Badge catégorie** avec icône pour chaque mod
 - Gestion des mods (ne plus suivre)
 - Informations détaillées (version, auteur, changelog)
 - Dates de mise à jour
+
+### Catégories de Mods
+- Système de catégories pour 5 jeux majeurs :
+  - Skyrim Special Edition (49 catégories)
+  - Skyrim classique (47 catégories)
+  - Baldur's Gate 3 (21 catégories)
+  - Cyberpunk 2077 (17 catégories)
+  - Fallout 4 (46 catégories)
+- Outils fournis pour ajouter facilement de nouveaux jeux
+- Voir [ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md) pour les détails
 
 ### Configuration
 - Interface de configuration des identifiants Nexus Mods
@@ -216,6 +230,7 @@ src/
     │   ├── Fetch des mods suivis        # GET /api/nexus/tracked
     │   ├── Untrack d'un mod             # DELETE /api/nexus/tracked/:domain/:modId
     │   ├── Enrichissement des données   # Normalisation & cache
+    │   ├── Catégories des mods          # Mapping par jeu
     │   ├── Gestion des jeux             # Groupement par domaine
     │   └── Injection des credentials    # Headers HTTP personnalisés
     │
@@ -232,6 +247,9 @@ src/
 ```
 server.mjs                               # Serveur Express pour dev local
 ├── PORT 4000
+├── Gestion des catégories               # Mapping statique pour 5 jeux
+│   ├── getCategoryName()                # Récupération catégorie par ID
+│   └── CATEGORIES_BY_GAME               # Mapping domain -> ID -> nom
 ├── Endpoints :
 │   ├── GET  /api/nexus/validate         # Validation des credentials
 │   ├── GET  /api/nexus/tracked          # Liste des mods suivis
@@ -296,11 +314,25 @@ api/nexus/
 
 | Donnée | TTL | Clé de cache |
 |--------|-----|--------------|
-| Liste des mods suivis | 60 secondes | `tracked` |
-| Détails d'un mod | 10 minutes | `mod:{domain}:{id}` |
+| Liste des mods suivis | 60 secondes | `tracked:{username}` |
+| Détails d'un mod | 10 minutes | `mod:{username}:{domain}:{id}` |
 | Informations de jeu | 24 heures | `game:{domain}` |
 
 Le cache est en mémoire côté serveur et réinitialisé à chaque redémarrage de fonction serverless.
+
+### Système de Catégories
+
+Les catégories sont mappées statiquement pour garantir performance et fiabilité :
+
+| Jeu | Catégories | Fichier |
+|-----|-----------|---------|
+| Skyrim Special Edition | 49 catégories | server.mjs |
+| Skyrim | 47 catégories | server.mjs |
+| Baldur's Gate 3 | 21 catégories | server.mjs |
+| Cyberpunk 2077 | 17 catégories | server.mjs |
+| Fallout 4 | 46 catégories | server.mjs |
+
+Pour ajouter un nouveau jeu, consultez [ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)
 
 ## Endpoints API Nexus Mods
 

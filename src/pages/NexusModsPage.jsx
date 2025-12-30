@@ -164,6 +164,14 @@ export default function NexusModsPage({ credentials }) {
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{m.summary}</p>
                 )}
 
+                {m.category && (
+                  <div className="mb-3">
+                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
+                      📚 {m.category}
+                    </span>
+                  </div>
+                )}
+
                 <div className="mb-3 flex items-center gap-2 flex-wrap">
                   {m.previousVersion && m.previousVersion !== m.version && (
                     <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">

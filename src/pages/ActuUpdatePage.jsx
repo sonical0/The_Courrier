@@ -249,7 +249,7 @@ export default function ActuUpdatePage({ credentials }) {
                       <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
                     )}
                   </div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">
+                  <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">
                     par{" "}
                     {m.author ? (
                       <a
@@ -262,6 +262,13 @@ export default function ActuUpdatePage({ credentials }) {
                       </a>
                     ) : (
                       "Auteur inconnu"
+                    )}
+                    {m.category && (
+                      <span className="ml-2">
+                        · <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
+                          {m.category}
+                        </span>
+                      </span>
                     )}
                   </div>
 

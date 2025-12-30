@@ -13,6 +13,9 @@
 - **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods
 - **Actualités des mods** : Page dédiée aux mises à jour récentes (24h, 7j, 30j)
 - **Affichage enrichi** : Vrais noms de jeux et icônes officielles Nexus
+- **Catégories des mods** : Affichage des catégories pour chaque mod (180+ catégories pour 5 jeux)
+- **Badges NEW** : Identifiez les nouveaux mods depuis votre dernière visite
+- **Tri avancé** : Trier par date, nom ou auteur
 - **Gestion des suivis** : Ajoutez/retirez des mods de votre liste
 - **Thème adaptatif** : Mode clair/sombre automatique
 
@@ -22,6 +25,7 @@
 - **Multi-plateforme** : Compatible Vercel et Netlify
 - **Cache intelligent** : Optimisation des appels API
 - **Architecture propre** : Hooks React réutilisables
+- **Système extensible** : Outils fournis pour ajouter de nouveaux jeux
 
 ## Documentation Complémentaire
 
@@ -30,6 +34,7 @@ Ce guide se concentre sur l'utilisation pratique. Pour plus de détails :
 - **[CHANGELOG.md](./CHANGELOG.md)** - Historique technique des versions
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration avancée des credentials
 - **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test complets
+- **[ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)** - Guide pour ajouter des catégories de nouveaux jeux
 - **[EXAMPLES.js](./EXAMPLES.js)** - Exemples de code pour développeurs
 - **[README.md](./README.md)** - Documentation technique du projet
 
