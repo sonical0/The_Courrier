@@ -211,7 +211,18 @@ app.get("/api/nexus/tracked", async (req, res) => {
           );
 
           if (changelogData && typeof changelogData === 'object') {
-            const versions = Object.keys(changelogData).sort().reverse();
+            // Tri sémantique des versions (1.13 > 1.12 > 1.9)
+            const versions = Object.keys(changelogData).sort((a, b) => {
+              const aParts = a.split('.').map(Number);
+              const bParts = b.split('.').map(Number);
+              for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+                const aNum = aParts[i] || 0;
+                const bNum = bParts[i] || 0;
+                if (aNum !== bNum) return bNum - aNum;
+              }
+              return 0;
+            });
+            
             changelog = versions.slice(0, 3).map(version => ({
               version,
               changes: changelogData[version]
