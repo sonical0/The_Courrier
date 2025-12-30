@@ -71,20 +71,20 @@ NEXUS_API_KEY=votre_cle_api
 Aucune configuration serveur n'est nécessaire ! Les utilisateurs configurent leurs propres credentials directement dans l'application.
 
 **Avantages :**
--  Chaque utilisateur utilise son propre compte Nexus Mods
--  Pas de limite de rate-limit partagée
--  Plus de sécurité : les credentials ne sont jamais sur le serveur
--  Facilite le déploiement : pas besoin de configurer des variables d'environnement
+- Chaque utilisateur utilise son propre compte Nexus Mods
+- Pas de limite de rate-limit partagée
+- Plus de sécurité : les credentials ne sont jamais sur le serveur
+- Facilite le déploiement : pas besoin de configurer des variables d'environnement
 
 ## Sécurité
 
-### Ce qui est sécurisé 
+### Ce qui est sécurisé
 
 - Les credentials sont stockés uniquement dans le navigateur de l'utilisateur
 - Les requêtes sont envoyées directement aux serveurs Nexus Mods via HTTPS
 - Les fonctions serverless agissent comme un proxy sans stocker les données
 
-### Limitations 
+### Limitations
 
 - **localStorage** : Accessible par JavaScript sur le même domaine (vulnérable aux attaques XSS si le site est compromis)
 - **Pas de chiffrement supplémentaire** : Les credentials sont stockés en texte clair dans le localStorage
