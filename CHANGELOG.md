@@ -111,7 +111,7 @@ README.md               → Présentation + Architecture + Liens
 #### Architecture
 - **Renommage des composants** : `BootstrapPage` → `ActuUpdatePage` (plus explicite)
 - **Nettoyage du code** : Suppression de `TailwindPage` et du hook `useWeather` (non utilisés)
--  **Amélioration de l'affichage** : Correction du layout des cartes (flex-col, flex-grow)
+- **Amélioration de l'affichage** : Correction du layout des cartes (flex-col, flex-grow)
 
 ### Changements Techniques
 
@@ -268,7 +268,7 @@ src/
 - **Rétrocompatibilité** : Support des variables d'environnement (fallback)
 - **Toutes les fonctions API** : tracked, untrack mises à jour (Vercel + Netlify)
 
-###Fichiers Créés
+### Fichiers Créés
 
 ```
 src/

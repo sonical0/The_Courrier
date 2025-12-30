@@ -271,17 +271,17 @@ Liste complète et documentation des endpoints :
 **Localisation** : README.md lignes 307-315
 
 #### Documentation Complète
--  Lien vers la documentation officielle Swagger Hub
--  Explication de l'authentification (headers)
--  Information sur les rate limits
+- Lien vers la documentation officielle Swagger Hub
+- Explication de l'authentification (headers)
+- Information sur les rate limits
 
 **Localisation** : README.md lignes 317-338
 
 ---
 
-##  Cohérence entre les Fichiers
+## Cohérence entre les Fichiers
 
-###  Versions Synchronisées
+### Versions Synchronisées
 
 Tous les fichiers documentent la même version :
 - README.md → Version 3.0.0 (6 Nov 2025)
@@ -289,7 +289,7 @@ Tous les fichiers documentent la même version :
 - SUMMARY.md → Version 3.0.0 (6 Nov 2025)
 - DEPLOYMENT.md → Mis à jour avec nouvelle architecture
 
-###  Architecture Credentials Cohérente
+### Architecture Credentials Cohérente
 
 Tous les documents mentionnent correctement :
 - Configuration par utilisateur (localStorage) - **RECOMMANDÉ**
@@ -297,12 +297,12 @@ Tous les documents mentionnent correctement :
 - Headers HTTP personnalisés : `X-Nexus-Username`, `X-Nexus-ApiKey`
 
 **Fichiers vérifiés** :
-- README.md 
-- DEPLOYMENT.md 
-- CREDENTIALS_CONFIG.md 
-- SUMMARY.md 
+- README.md
+- DEPLOYMENT.md
+- CREDENTIALS_CONFIG.md
+- SUMMARY.md
 
-###  Endpoints API Cohérents
+### Endpoints API Cohérents
 
 Tous les documents utilisent les mêmes endpoints :
 - `/api/nexus/validate`
@@ -310,11 +310,11 @@ Tous les documents utilisent les mêmes endpoints :
 - `/api/nexus/tracked/:domain/:modId`
 
 **Fichiers vérifiés** :
-- README.md 
-- useNexusMods.js 
+- README.md
+- useNexusMods.js
 - api/nexus/*.mjs 
 
-###  Scripts NPM Cohérents
+### Scripts NPM Cohérents
 
 package.json et documentation alignés :
 - `npm start` → Port 3000 (React)
@@ -324,15 +324,15 @@ package.json et documentation alignés :
 
 ---
 
-##  Sécurité Pré-Déploiement
+## Sécurité Pré-Déploiement
 
-###  Vérifications de Sécurité
+### Vérifications de Sécurité
 
--  Aucun fichier `.env` dans le repo
--  `.gitignore` contient `.env`
--  Aucune clé API hardcodée dans le code
--  Headers CORS configurés dans les fonctions serverless
--  Documentation sur les limitations de sécurité (localStorage)
+- Aucun fichier `.env` dans le repo
+- `.gitignore` contient `.env`
+- Aucune clé API hardcodée dans le code
+- Headers CORS configurés dans les fonctions serverless
+- Documentation sur les limitations de sécurité (localStorage)
 
 ### Points d'Attention
 
@@ -350,9 +350,9 @@ package.json et documentation alignés :
 
 ---
 
-##  Fichiers Prêts pour le Déploiement
+## Fichiers Prêts pour le Déploiement
 
-###  Configuration Vercel
+### Configuration Vercel
 
 **Fichier** : `vercel.json`
 ```json
@@ -365,34 +365,34 @@ package.json et documentation alignés :
 ```
 
 **Fonctions Serverless** : `/api/nexus/`
--  validate.mjs
--  tracked.mjs
--  untrack.mjs
+- validate.mjs
+- tracked.mjs
+- untrack.mjs
 
 ---
 
-##  Résumé de la Documentation
+## Résumé de la Documentation
 
 | Document | Statut | Rôle |
 |----------|--------|------|
-| **README.md** |  COMPLET | Documentation principale avec pitch, stack, architecture, API |
-| **DEPLOYMENT.md** |  À JOUR | Guide de déploiement Vercel |
-| **CREDENTIALS_CONFIG.md** |  COHÉRENT | Configuration avancée des credentials |
-| **TESTING_GUIDE.md** |  COHÉRENT | Scénarios de test manuels et auto |
-| **CHANGELOG.md** |  À JOUR | Historique technique des versions |
-| **SUMMARY.md** |  À JOUR | Vue d'ensemble et guide utilisateur |
+| **README.md** | COMPLET | Documentation principale avec pitch, stack, architecture, API |
+| **DEPLOYMENT.md** | À JOUR | Guide de déploiement Vercel |
+| **CREDENTIALS_CONFIG.md** | COHÉRENT | Configuration avancée des credentials |
+| **TESTING_GUIDE.md** | COHÉRENT | Scénarios de test manuels et auto |
+| **CHANGELOG.md** | À JOUR | Historique technique des versions |
+| **SUMMARY.md** | À JOUR | Vue d'ensemble et guide utilisateur |
 
 ---
 
-##  Recommandations Finales
+## Recommandations Finales
 
 ### Avant le Déploiement
 
-1.  **Tests locaux** : Lancer `npm start` et `npm run server` pour vérifier
-2.  **Build local** : Exécuter `npm run build` pour s'assurer qu'il n'y a pas d'erreurs
-3.  **Variables d'environnement** : Décider si vous utilisez des credentials serveur (optionnel)
-4.  **Git** : Vérifier que tous les fichiers sont committés
-5.  **Branch** : Utiliser la branche `test` ou merger vers `main`
+1. **Tests locaux** : Lancer `npm start` et `npm run server` pour vérifier
+2. **Build local** : Exécuter `npm run build` pour s'assurer qu'il n'y a pas d'erreurs
+3. **Variables d'environnement** : Décider si vous utilisez des credentials serveur (optionnel)
+4. **Git** : Vérifier que tous les fichiers sont commités
+5. **Branch** : Utiliser la branche `test` ou merger vers `main`
 
 ### Après le Déploiement
 
