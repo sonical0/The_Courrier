@@ -35,10 +35,21 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
 
 export default function NexusModsPage({ credentials }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
-  const [gameKey, setGameKey] = useState("");
+  const [gameKey, setGameKey] = useState("ALL");
   const [untracking, setUntracking] = useState(null);
 
-  const mods = useMemo(() => (gameKey ? modsForGame(gameKey) : []), [gameKey, modsForGame]);
+  const mods = useMemo(() => {
+    if (!gameKey || gameKey === "ALL") {
+      // Afficher tous les mods de tous les jeux
+      const allMods = [];
+      for (const g of games) {
+        const key = g.domain || g.gameId || g.name;
+        allMods.push(...modsForGame(key));
+      }
+      return allMods;
+    }
+    return modsForGame(gameKey);
+  }, [gameKey, modsForGame, games]);
 
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
@@ -115,7 +126,7 @@ export default function NexusModsPage({ credentials }) {
             value={gameKey}
             onChange={(e) => setGameKey(e.target.value)}
           >
-            <option value="">— Choisir un jeu —</option>
+            <option value="ALL">🎮 Tous les jeux</option>
             {games.map((g) => (
               <option key={g.key} value={g.domain || g.gameId || g.name}>
                 {g.name}
@@ -128,7 +139,7 @@ export default function NexusModsPage({ credentials }) {
         </button>
       </div>
 
-      {gameKey && (
+      {mods.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mods.map((m) => (
             <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>

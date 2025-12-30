@@ -36,12 +36,18 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
 export default function ActuUpdatePage({ credentials }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
   const [period, setPeriod] = useState(7);
+  const [selectedGame, setSelectedGame] = useState("ALL");
 
   const cutoff = Math.floor(Date.now() / 1000) - period * 24 * 3600;
 
   const grouped = useMemo(() => {
     const out = [];
-    for (const g of games) {
+    const gamesToShow = selectedGame === "ALL" ? games : games.filter(g => {
+      const key = g.domain || g.gameId || g.name;
+      return key === selectedGame;
+    });
+    
+    for (const g of gamesToShow) {
       const key = g.domain || g.gameId || g.name;
       const mods = modsForGame(key).filter(
         (m) => Number(m.updatedAt || 0) >= cutoff
@@ -59,7 +65,7 @@ export default function ActuUpdatePage({ credentials }) {
         Number(b.mods[0]?.updatedAt || 0) - Number(a.mods[0]?.updatedAt || 0)
     );
     return out;
-  }, [games, modsForGame, cutoff]);
+  }, [games, modsForGame, cutoff, selectedGame]);
 
   const periodLabel = () => {
     if (period === 7) return "7 derniers jours";
@@ -146,6 +152,26 @@ export default function ActuUpdatePage({ credentials }) {
         >
           Rafraîchir
         </button>
+      </div>
+
+      <div className="mb-6 flex flex-col md:flex-row gap-4">
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Filtrer par jeu
+          </label>
+          <select
+            className="pico-select"
+            value={selectedGame}
+            onChange={(e) => setSelectedGame(e.target.value)}
+          >
+            <option value="ALL">🎮 Tous les jeux</option>
+            {games.map((g) => (
+              <option key={g.key} value={g.domain || g.gameId || g.name}>
+                {g.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       <div className="mb-6 flex gap-2 flex-wrap">
