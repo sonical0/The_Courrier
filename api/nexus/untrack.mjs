@@ -32,7 +32,18 @@ export default async function handler(req, res) {
     return res.status(401).json({ error: "Missing Nexus API credentials. Please configure your username and API key." });
   }
 
-  const { domain, modId } = req.query;
+  // Support both query params (?domain=X&modId=Y) and URL params from rewrite
+  let { domain, modId } = req.query;
+  
+  // If not in query, try to extract from URL path (format: /api/nexus/tracked/DOMAIN/MODID)
+  if (!domain || !modId) {
+    const urlPath = req.url || '';
+    const match = urlPath.match(/\/tracked\/([^/]+)\/([^/?]+)/);
+    if (match) {
+      domain = match[1];
+      modId = match[2];
+    }
+  }
 
   if (!domain || !modId) {
     return res.status(400).json({ error: "Missing domain or modId parameters" });
