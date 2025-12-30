@@ -20,8 +20,8 @@ const TTL = {
   game: 24 * 60 * 60_000, // 24h pour les infos de jeux
 };
 const now = () => Date.now();
-const kTracked = "tracked";
-const kMod = (domain, id) => `mod:${domain}:${id}`;
+const kTracked = (username) => `tracked:${username}`;
+const kMod = (username, domain, id) => `mod:${username}:${domain}:${id}`;
 const kGame = (domain) => `game:${domain}`;
 
 const cacheGet = (k) => {
@@ -156,7 +156,7 @@ app.get("/api/nexus/tracked", async (req, res) => {
   if (!ensureKey(req, res)) return;
   const { username, apiKey } = getCredentials(req);
 
-  const hit = cacheGet(kTracked);
+  const hit = cacheGet(kTracked(username));
   if (hit) return res.json(hit);
 
   try {
@@ -192,7 +192,7 @@ app.get("/api/nexus/tracked", async (req, res) => {
     }).filter((m) => m.id && m.domain);
 
     const enriched = await withPool(rows, 4, async (m) => {
-      const ck = kMod(m.domain, m.id);
+      const ck = kMod(username, m.domain, m.id);
       const modCache = cacheGet(ck);
       if (modCache) return { ...m, ...modCache };
 
@@ -283,7 +283,7 @@ app.get("/api/nexus/tracked", async (req, res) => {
       };
     });
 
-    cacheSet(kTracked, enrichedWithGames, TTL.tracked);
+    cacheSet(kTracked(username), enrichedWithGames, TTL.tracked);
     res.json(enrichedWithGames);
   } catch (e) {
     res.status(500).json({ error: String(e.message || e) });
@@ -315,8 +315,8 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
       throw new Error(`HTTP ${response.status}${text ? " — " + text : ""}`);
     }
 
-    CACHE.delete(kTracked);
-    CACHE.delete(kMod(domain, modId));
+    CACHE.delete(kTracked(username));
+    CACHE.delete(kMod(username, domain, modId));
     
     res.json({ success: true, message: "Mod retiré de la liste suivie" });
   } catch (e) {
