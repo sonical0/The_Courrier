@@ -1,16 +1,31 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import ActuUpdatePage from "./pages/ActuUpdatePage";
 import NexusModsPage from "./pages/NexusModsPage.jsx";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
+import useNexusMods from "./components/useNexusMods";
+import useLastVisit from "./components/useLastVisit";
 import useTheme from "./components/useTheme";
 
 export default function App() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
+  const { loading: modsLoading, games, modsForGame } = useNexusMods(credentials);
+  const { countNew } = useLastVisit();
   const [showModal, setShowModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  // Calculer le nombre de nouveaux mods
+  const newModsCount = useMemo(() => {
+    if (modsLoading || !games.length) return 0;
+    const allMods = [];
+    for (const g of games) {
+      const key = g.domain || g.gameId || g.name;
+      allMods.push(...modsForGame(key));
+    }
+    return countNew(allMods);
+  }, [games, modsForGame, countNew, modsLoading]);
 
   const handleSaveCredentials = (username, apiKey) => {
     if (saveCredentials(username, apiKey)) {
@@ -50,9 +65,14 @@ export default function App() {
                 <div className="flex gap-4">
                   <Link
                     to="/"
-                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium relative"
                   >
                     Mise à jour
+                    {newModsCount > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {newModsCount > 99 ? "99+" : newModsCount}
+                      </span>
+                    )}
                   </Link>
                   <Link
                     to="/nexus-mods"
@@ -119,13 +139,18 @@ export default function App() {
                   <Link
                     to="/"
                     onClick={() => setIsMenuOpen(false)}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium relative ${
                       theme === 'dark'
                         ? 'bg-slate-700 text-white hover:bg-slate-600'
                         : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
                     }`}
                   >
                     Mise à jour
+                    {newModsCount > 0 && (
+                      <span className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                        {newModsCount > 99 ? "99+" : newModsCount}
+                      </span>
+                    )}
                   </Link>
                   <Link
                     to="/nexus-mods"

@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
+import useLastVisit from "../components/useLastVisit";
 
 function decodeEntities(str) {
   if (!str) return "";
@@ -35,8 +36,16 @@ function flattenChangeLines(changelogEntry, maxLines = 6) {
 
 export default function ActuUpdatePage({ credentials }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
+  const { isNew, updateLastVisit } = useLastVisit();
   const [period, setPeriod] = useState(7);
   const [selectedGame, setSelectedGame] = useState("ALL");
+  const [sortBy, setSortBy] = useState("date");
+
+  useEffect(() => {
+    // Marquer comme visité après 2 secondes
+    const timer = setTimeout(() => updateLastVisit(), 2000);
+    return () => clearTimeout(timer);
+  }, [updateLastVisit]);
 
   const cutoff = Math.floor(Date.now() / 1000) - period * 24 * 3600;
 
@@ -49,9 +58,20 @@ export default function ActuUpdatePage({ credentials }) {
     
     for (const g of gamesToShow) {
       const key = g.domain || g.gameId || g.name;
-      const mods = modsForGame(key).filter(
+      let mods = modsForGame(key).filter(
         (m) => Number(m.updatedAt || 0) >= cutoff
       );
+      
+      // Tri des mods selon l'option sélectionnée
+      if (sortBy === "name") {
+        mods.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+      } else if (sortBy === "author") {
+        mods.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
+      } else {
+        // Par défaut : tri par date (plus récent en premier)
+        mods.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+      }
+      
       if (mods.length) {
         out.push({
           gameLabel: g.name || g.domain || `Game ${g.gameId || ""}`.trim(),
@@ -65,7 +85,7 @@ export default function ActuUpdatePage({ credentials }) {
         Number(b.mods[0]?.updatedAt || 0) - Number(a.mods[0]?.updatedAt || 0)
     );
     return out;
-  }, [games, modsForGame, cutoff, selectedGame]);
+  }, [games, modsForGame, cutoff, selectedGame, sortBy]);
 
   const periodLabel = () => {
     if (period === 7) return "7 derniers jours";
@@ -172,6 +192,20 @@ export default function ActuUpdatePage({ credentials }) {
             ))}
           </select>
         </div>
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Trier par
+          </label>
+          <select
+            className="pico-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="date">📅 Date de mise à jour</option>
+            <option value="name">🔤 Nom</option>
+            <option value="author">👤 Auteur</option>
+          </select>
+        </div>
       </div>
 
       <div className="mb-6 flex gap-2 flex-wrap">
@@ -238,9 +272,14 @@ export default function ActuUpdatePage({ credentials }) {
                   />
                 )}
                 <div className="p-5 flex flex-col flex-grow">
-                  <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-1">
-                    {m.name || `${m.domain}/${m.id}`}
-                  </h5>
+                  <div className="flex items-start gap-2 mb-1">
+                    <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
+                      {m.name || `${m.domain}/${m.id}`}
+                    </h5>
+                    {isNew(m.updatedAt) && (
+                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                    )}
+                  </div>
                   <div className="text-sm text-slate-600 dark:text-slate-400 mb-3">
                     par{" "}
                     {m.author ? (
