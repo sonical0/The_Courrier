@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracteur de Catégories Nexus Mods</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: #e0e0e0;
+        }
+        h1 {
+            color: #da8e35;
+            text-align: center;
+        }
+        .instructions {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #da8e35;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 10px;
+            background: #333;
+            border-radius: 4px;
+        }
+        .step strong {
+            color: #da8e35;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #333;
+            border: 2px solid #444;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #da8e35;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #c17d2f;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        #output {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none;
+        }
+        pre {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            color: #4ec9b0;
+        }
+        .success {
+            color: #4ec9b0;
+            font-weight: bold;
+        }
+        .error {
+            color: #f48771;
+            font-weight: bold;
+        }
+        .copy-btn {
+            margin-top: 10px;
+            background: #569cd6;
+        }
+        .copy-btn:hover {
+            background: #4a8bbf;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 Extracteur de Catégories Nexus Mods</h1>
+    
+    <div class="instructions">
+        <h3>📋 Instructions :</h3>
+        <div class="step">
+            <strong>1.</strong> Entrez le nom du domaine du jeu (ex: starfield, witcher3, etc.)
+        </div>
+        <div class="step">
+            <strong>2.</strong> Cliquez sur "Extraire les catégories"
+        </div>
+        <div class="step">
+            <strong>3.</strong> Une nouvelle fenêtre s'ouvrira. Attendez le chargement complet de la page
+        </div>
+        <div class="step">
+            <strong>4.</strong> Ouvrez la console (F12) sur cette page
+        </div>
+        <div class="step">
+            <strong>5.</strong> Copiez/collez le code qui s'affichera dans la console
+        </div>
+        <div class="step">
+            <strong>6.</strong> Le résultat JSON apparaîtra ici automatiquement
+        </div>
+    </div>
+
+    <input 
+        type="text" 
+        id="gameDomain" 
+        placeholder="Ex: starfield, witcher3, skyrim, fallout4..."
+        autofocus
+    />
+    
+    <button onclick="extractCategories()">🚀 Extraire les catégories</button>
+
+    <div id="output">
+        <h3 class="success">✅ Catégories extraites avec succès !</h3>
+        <p>Copiez ce code et ajoutez-le dans <code>server.mjs</code> :</p>
+        <pre id="result"></pre>
+        <button class="copy-btn" onclick="copyToClipboard()">📋 Copier le résultat</button>
+    </div>
+
+    <script>
+        function extractCategories() {
+            const domain = document.getElementById('gameDomain').value.trim();
+            
+            if (!domain) {
+                alert('❌ Veuillez entrer un nom de jeu');
+                return;
+            }
+
+            const url = `https://www.nexusmods.com/${domain}/mods/categories/`;
+            
+            // Ouvrir la page dans un nouvel onglet
+            const newWindow = window.open(url, '_blank');
+            
+            if (newWindow) {
+                alert(`✅ Page ouverte !\n\n` +
+                      `1. Attendez le chargement complet\n` +
+                      `2. Appuyez sur F12 pour ouvrir la console\n` +
+                      `3. Collez ce code dans la console :\n\n` +
+                      `const categories = {};\n` +
+                      `document.querySelectorAll('a[href*="/mods/categories/"]').forEach(link => {\n` +
+                      `  const match = link.href.match(/\\/mods\\/categories\\/(\\d+)\\//); \n` +
+                      `  if (match) {\n` +
+                      `    const id = parseInt(match[1]);\n` +
+                      `    const text = link.textContent.trim();\n` +
+                      `    const name = text.replace(/\\s*\\d[\\d,\\s]*files.*$/i, '').trim();\n` +
+                      `    if (name && name.length > 0) categories[id] = name;\n` +
+                      `  }\n` +
+                      `});\n` +
+                      `console.log("NEXUS_CATEGORIES_START");\n` +
+                      `console.log(JSON.stringify({domain: "${domain}", categories}, null, 2));\n` +
+                      `console.log("NEXUS_CATEGORIES_END");`
+                );
+            } else {
+                alert('❌ Impossible d\'ouvrir la fenêtre. Vérifiez que les popups ne sont pas bloqués.');
+            }
+        }
+
+        // Écouter les messages du storage pour recevoir les catégories
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'nexus_categories' && e.newValue) {
+                try {
+                    const data = JSON.parse(e.newValue);
+                    displayResult(data);
+                } catch (err) {
+                    console.error('Erreur parsing:', err);
+                }
+            }
+        });
+
+        function displayResult(data) {
+            const output = document.getElementById('output');
+            const result = document.getElementById('result');
+            
+            const code = `  ${data.domain}: ${JSON.stringify(data.categories, null, 4).replace(/\n/g, '\n  ')}`;
+            
+            result.textContent = code;
+            output.style.display = 'block';
+            
+            // Scroll vers le résultat
+            output.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function copyToClipboard() {
+            const text = document.getElementById('result').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copié !';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Permettre d'appuyer sur Entrée pour extraire
+        document.getElementById('gameDomain').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                extractCategories();
+            }
+        });
+    </script>
+</body>
+</html>

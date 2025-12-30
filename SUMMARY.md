@@ -1,241 +1,147 @@
-#  The Courrier - Vue d'Ensemble#  The Courrier - Guide d'Utilisation et d'Implémentation
+# The Courrier - Guide d'Utilisation et d'Implémentation
 
+## Vue d'ensemble
 
+**The Courrier** est une application React permettant de suivre les mises à jour de vos mods préférés sur Nexus Mods. Ce document vous guide dans l'utilisation et l'implémentation du système.
 
-##  Présentation##  Vue d'ensemble
+> **Note :** Pour l'historique technique détaillé des changements, consultez [CHANGELOG.md](./CHANGELOG.md)
 
+## Fonctionnalités Principales
 
+### Pour les Utilisateurs
 
-**The Courrier** est une application React permettant de suivre les mises à jour de vos mods préférés sur Nexus Mods.**The Courrier** est une application React permettant de suivre les mises à jour de vos mods préférés sur Nexus Mods. Ce document vous guide dans l'utilisation et l'implémentation du système.
-
-
-
->  **Documentation technique complète** : voir [README.md](./README.md)>  **Note :** Pour l'historique technique détaillé des changements, consultez [CHANGELOG.md](./CHANGELOG.md)
-
-
-
-##  Fonctionnalités Principales##  Fonctionnalités Principales
-
-
-
-### Pour les Utilisateurs### Pour les Utilisateurs
-
--  **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods
-
--  **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods-  **Actualités des mods** : Page dédiée aux mises à jour récentes (24h, 7j, 30j)
-
--  **Actualités des mods** : Page dédiée aux mises à jour récentes (24h, 7j, 30j)-  **Affichage enrichi** : Vrais noms de jeux et icônes officielles Nexus
-
--  **Affichage enrichi** : Vrais noms de jeux et icônes officielles Nexus-  **Gestion des suivis** : Ajoutez/retirez des mods de votre liste
-
--  **Gestion des suivis** : Ajoutez/retirez des mods de votre liste-  **Thème adaptatif** : Mode clair/sombre automatique
-
--  **Thème adaptatif** : Mode clair/sombre automatique
+- **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods
+- **Actualités des mods** : Page dédiée aux mises à jour récentes (24h, 7j, 30j)
+- **Affichage enrichi** : Vrais noms de jeux et icônes officielles Nexus
+- **Catégories des mods** : Affichage des catégories pour chaque mod (180+ catégories pour 5 jeux)
+- **Badges NEW** : Identifiez les nouveaux mods depuis votre dernière visite
+- **Tri avancé** : Trier par date, nom ou auteur
+- **Gestion des suivis** : Ajoutez/retirez des mods de votre liste
+- **Thème adaptatif** : Mode clair/sombre automatique
 
 ### Pour les Développeurs
 
-### Pour les Développeurs-  **Déploiement simplifié** : Aucun secret à configurer
+- **Déploiement simplifié** : Aucun secret à configurer
+- **Multi-plateforme** : Compatible Vercel et Netlify
+- **Cache intelligent** : Optimisation des appels API
+- **Architecture propre** : Hooks React réutilisables
+- **Système extensible** : Outils fournis pour ajouter de nouveaux jeux
 
--  **Multi-plateforme** : Compatible Vercel et Netlify
+## Documentation Complémentaire
 
--  **Déploiement simplifié** : Aucun secret à configurer-  **Cache intelligent** : Optimisation des appels API
-
--  **Multi-plateforme** : Compatible Vercel et Netlify-  **Architecture propre** : Hooks React réutilisables
-
--  **Cache intelligent** : Optimisation des appels API
-
--  **Architecture propre** : Hooks React réutilisables##  Documentation Complémentaire
-
-
-
-##  Comment l'UtiliserCe guide se concentre sur l'utilisation pratique. Pour plus de détails :
-
-
-
-### Pour les utilisateurs finaux- **[CHANGELOG.md](./CHANGELOG.md)** - Historique technique des versions
-
-- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration avancée des credentials
-
-1. Ouvrez l'application- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test complets
-
-2. La popup s'affiche automatiquement- **[EXAMPLES.js](./EXAMPLES.js)** - Exemples de code pour développeurs
-
-3. Entrez vos identifiants Nexus Mods :- **[README.md](./README.md)** - Documentation technique du projet
-
-   - Username : votre nom d'utilisateur Nexus
-
-   - API Key : disponible sur <https://www.nexusmods.com/users/myaccount?tab=api>##  Comment l'utiliser
-
-4. Cliquez sur "Enregistrer"
-
-5. C'est prêt ! ### Pour les utilisateurs finaux
-
-
-
-### Pour modifier les credentials1. Ouvrez l'application
-
-2. La popup s'affiche automatiquement
-
-- Cliquez sur ** Config** dans la navbar3. Entrez vos identifiants Nexus Mods :
-
-- Modifiez les informations   - Username : votre nom d'utilisateur Nexus
-
-- Cliquez sur "Enregistrer"   - API Key : disponible sur https://www.nexusmods.com/users/myaccount?tab=api
-
-4. Cliquez sur "Enregistrer"
-
-### Pour supprimer les credentials5. C'est prêt ! 
-
-
-
-- Cliquez sur **** dans la navbar### Pour modifier les credentials
-
-- Confirmez la suppression
-
-- Cliquez sur ** Config** dans la navbar
-
-##  Structure du Projet- Modifiez les informations
-
-- Cliquez sur "Enregistrer"
-
-```text
-
-The_Courrier/### Pour supprimer les credentials
-
-├── src/
-
-│   ├── App.jsx                           # Point d'entrée de l'application- Cliquez sur **** dans la navbar
-
-│   ├── components/- Confirmez la suppression
-
-│   │   ├── CredentialsModal.jsx          # Modal de configuration des identifiants
-
-│   │   ├── useNexusCredentials.js        # Hook de gestion localStorage##  Configuration Technique
-
-│   │   ├── useNexusMods.js               # Hook d'interaction avec l'API Nexus
-
-│   │   └── useTheme.js                   # Hook de gestion du thème### Développement Local
-
-│   └── pages/
-
-│       ├── ActuUpdatePage.jsx            # Page des mises à jour récentes
-
-│       └── NexusModsPage.jsx             # Page de gestion des mods suivis##  Déploiement (Vercel & Netlify)
-
-├── api/nexus/                            # Fonctions serverless Vercel
-
-├── netlify/functions/                    # Fonctions serverless Netlify**The Courrier** est conçu pour être déployé facilement sur Vercel ou Netlify, sans configuration complexe.
-
-└── Documentation/                        # Voir section ci-dessous
-
-```### Déploiement sur Vercel
-
-
-
-##  Documentation Complémentaire1. **Importer le projet**  
-
-   - Créez un compte sur [vercel.com](https://vercel.com)  
-
-- **[README.md](./README.md)** - Documentation technique complète du projet   - Importez le repo GitHub
+Ce guide se concentre sur l'utilisation pratique. Pour plus de détails :
 
 - **[CHANGELOG.md](./CHANGELOG.md)** - Historique technique des versions
+- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration avancée des credentials
+- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test complets
+- **[ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)** - Guide pour ajouter des catégories de nouveaux jeux
+- **[EXAMPLES.js](./EXAMPLES.js)** - Exemples de code pour développeurs
+- **[README.md](./README.md)** - Documentation technique du projet
 
-- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration avancée des credentials2. **Build automatique**  
+## Comment l'utiliser
 
-- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test complets   - Vercel détecte l'app React  
+### Pour les utilisateurs finaux
 
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide de déploiement Vercel/Netlify   - Build command : `npm run build`  
+1. Ouvrez l'application
+2. La popup s'affiche automatiquement
+3. Entrez vos identifiants Nexus Mods :
+   - Username : votre nom d'utilisateur Nexus
+   - API Key : disponible sur https://www.nexusmods.com/users/myaccount?tab=api
+4. Cliquez sur "Enregistrer"
+5. C'est prêt !
 
-   - Output directory : `build`
+### Pour modifier les credentials
 
-> **Note** : Les tests sont décrits dans [TESTING_GUIDE.md](./TESTING_GUIDE.md). Le déploiement est décrit dans [DEPLOYMENT.md](./DEPLOYMENT.md).
+- Cliquez sur "Config" dans la navbar
+- Modifiez les informations
+- Cliquez sur "Enregistrer"
 
-3. **Fonctions serverless**  
+### Pour supprimer les credentials
 
-##  État Actuel   - Dossier : `/api/nexus/`  
+- Cliquez sur le bouton de suppression dans la navbar
+- Confirmez la suppression
 
+## Configuration Technique
+
+### Développement Local
+
+## Déploiement (Vercel & Netlify)
+
+**The Courrier** est conçu pour être déployé facilement sur Vercel ou Netlify, sans configuration complexe.
+
+### Déploiement sur Vercel
+
+1. **Importer le projet**
+   - Créez un compte sur [vercel.com](https://vercel.com)
+   - Importez le repo GitHub
+
+2. **Build automatique**
+   - Vercel détecte l'app React
+   - Build command : `npm run build`
+   - Output directory : `build`
+
+3. **Fonctions serverless**
+   - Dossier : `/api/nexus/`
    - Les endpoints sont automatiquement exposés
 
-**Version 3.0.0** - 6 Novembre 2025
-
-4. **Variables d'environnement (optionnelles)**  
-
-### Fonctionnalités Actives   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`  
-
+4. **Variables d'environnement (optionnelles)**
+   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`
    - Par défaut, chaque utilisateur configure ses propres credentials dans l'interface
 
--  Configuration personnelle des identifiants Nexus
+5. **Déployer**
+   - Cliquez sur "Deploy"
+   - Accédez à votre app sur `https://your-app-name.vercel.app`
 
--  Affichage des vrais noms de jeux avec icônes5. **Déployer**  
-
--  Page des actualités de mods (ActuUpdatePage)   - Cliquez sur "Deploy"  
-
--  Gestion complète des mods suivis   - Accédez à votre app sur `https://your-app-name.vercel.app`
-
--  Stockage local sécurisé
-
--  Cache intelligent multi-niveaux---
-
--  Support Vercel et Netlify
+---
 
 ### Déploiement sur Netlify
 
-### Statut
+1. **Importer le projet**
+   - Créez un compte sur [netlify.com](https://netlify.com)
+   - Importez le repo GitHub
 
-1. **Importer le projet**  
+2. **Build automatique**
+   - Netlify détecte le build via `netlify.toml`
+   - Build command : `npm run build`
+   - Publish directory : `build`
+   - Functions directory : `netlify/functions`
 
--  **Production Ready** - Prêt pour déploiement   - Créez un compte sur [netlify.com](https://netlify.com)  
-
--  **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials   - Importez le repo GitHub
-
--  **Documentation complète** - Guides utilisateurs et développeurs
-
-2. **Build automatique**  
-
----   - Netlify détecte le build via `netlify.toml`  
-
-   - Build command : `npm run build`  
-
-**Dernière mise à jour** : 7 Novembre 2025   - Publish directory : `build`  
-
-   - Functions directory : `netlify/functions`
-
-3. **Variables d'environnement (optionnelles)**  
-   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`  
+3. **Variables d'environnement (optionnelles)**
+   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`
    - Par défaut, chaque utilisateur configure ses propres credentials dans l'interface
 
-4. **Déployer**  
-   - Cliquez sur "Deploy site"  
+4. **Déployer**
+   - Cliquez sur "Deploy site"
    - Accédez à votre app sur `https://your-app-name.netlify.app`
 
 ---
 
-**Points clés :**
+**Points clés :**
 - Les credentials Nexus sont gérés côté client (localStorage) pour chaque utilisateur
 - Les fonctions serverless sont compatibles Vercel et Netlify sans modification
 - Consultez [DEPLOYMENT.md](./DEPLOYMENT.md) pour les instructions détaillées et les cas avancés
 
-##  Avantages du Système
+## Avantages du Système
 
 ### Pour les utilisateurs
--  Utilise leur propre compte Nexus
--  Pas de partage de rate-limit
--  Configuration simple en 30 secondes
--  Gestion facile des credentials
+- Utilise leur propre compte Nexus
+- Pas de partage de rate-limit
+- Configuration simple en 30 secondes
+- Gestion facile des credentials
 
 ### Pour les développeurs
--  Pas de secrets à gérer en production
--  Déploiement simplifié
--  Rétrocompatible avec l'ancien système
--  Code propre et maintenable
+- Pas de secrets à gérer en production
+- Déploiement simplifié
+- Rétrocompatible avec l'ancien système
+- Code propre et maintenable
 
 ### Pour la sécurité
--  Credentials jamais sur le serveur
--  Stockage local dans le navigateur
--  Transit sécurisé via HTTPS
--  Isolation par utilisateur
+- Credentials jamais sur le serveur
+- Stockage local dans le navigateur
+- Transit sécurisé via HTTPS
+- Isolation par utilisateur
 
-##  Tests à Effectuer
+## Tests à Effectuer
 
 ### Test Rapide (2 minutes)
 
@@ -271,7 +177,7 @@ The_Courrier/
 └── Documentation/                        # Voir section "Documentation Complémentaire"
 ```
 
->  **Changements récents :** Voir [CHANGELOG.md](./CHANGELOG.md) pour la liste complète des fichiers créés, modifiés et supprimés.
+> **Changements récents :** Voir [CHANGELOG.md](./CHANGELOG.md) pour la liste complète des fichiers créés, modifiés et supprimés.
 
 ## Prochaines Étapes Possibles
 
@@ -294,7 +200,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - [ ] Service Worker pour le mode hors-ligne
 - [ ] Analytics anonymes d'utilisation
 
-##  Conseils et Bonnes Pratiques
+## Conseils et Bonnes Pratiques
 
 ### Interface Utilisateur
 
@@ -313,16 +219,16 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Dépannage Rapide
 
-**La popup ne s'affiche pas**  
+**La popup ne s'affiche pas**
 → Vider le cache du navigateur et localStorage
 
-**Erreur 401 même avec credentials valides**  
+**Erreur 401 même avec credentials valides**
 → Vérifier que la clé API est correcte sur Nexus Mods
 
-**Les credentials ne persistent pas**  
+**Les credentials ne persistent pas**
 → Vérifier que localStorage est activé dans le navigateur
 
-**Headers non envoyés aux API**  
+**Headers non envoyés aux API**
 → Vérifier que `useNexusMods(credentials)` reçoit bien les credentials
 
 > Pour plus de solutions, consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md)
@@ -364,9 +270,8 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials
 - **Documentation complète** - Guides utilisateurs et développeurs
 
->  **Historique complet :** Consultez [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques des versions précédentes.
+> **Historique complet :** Consultez [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques des versions précédentes.
 
 ---
 
 **Dernière mise à jour :** 6 Novembre 2025
-

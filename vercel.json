@@ -4,8 +4,8 @@
   "devCommand": "npm start",
   "rewrites": [
     {
-      "source": "/api/nexus/tracked/:domain/:modId",
-      "destination": "/api/nexus/untrack?domain=$domain&modId=$modId"
+      "source": "/api/nexus/tracked/(.*)/(.*)$",
+      "destination": "/api/nexus/untrack?domain=$1&modId=$2"
     }
   ],
   "headers": [

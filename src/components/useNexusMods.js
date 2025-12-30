@@ -66,6 +66,8 @@ export default function useNexusMods(credentials = null) {
           gameName: m.gameName ?? m.game_name ?? m.game?.name,
           author: m.author ?? m.user?.name ?? m.uploader?.name,
           authorId: m.authorId ?? m.author_id ?? m.user?.member_id ?? m.uploader?.member_id,
+          category: m.category ?? m.category_name ?? null,
+          categoryId: m.categoryId ?? m.category_id ?? null,
           updatedAt,
           url,
           picture: m.picture_url ?? m.thumbnail_url ?? m.content_preview_link ?? m.picture,

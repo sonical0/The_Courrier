@@ -1,44 +1,45 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
-
-function decodeEntities(str) {
-  if (!str) return "";
-  return str
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'");
-}
-
-function htmlToPlainText(html) {
-  if (!html) return "";
-  const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
-  const noTags = withBreaks.replace(/<[^>]+>/g, "");
-  return decodeEntities(noTags);
-}
-
-function flattenChangeLines(changelogEntry, maxLines = 6) {
-  const lines = [];
-  if (!changelogEntry || !Array.isArray(changelogEntry.changes)) return lines;
-  for (const raw of changelogEntry.changes) {
-    const txt = htmlToPlainText(String(raw || ""));
-    const parts = txt.split(/\n+/).map((s) => s.trim()).filter(Boolean);
-    for (const p of parts) {
-      lines.push(p);
-      if (lines.length >= maxLines) return lines;
-    }
-  }
-  return lines;
-}
+import useLastVisit from "../components/useLastVisit";
+import EnhancedChangelog from "../components/EnhancedChangelog";
 
 export default function NexusModsPage({ credentials }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
-  const [gameKey, setGameKey] = useState("");
+  const { isNew, updateLastVisit } = useLastVisit();
+  const [gameKey, setGameKey] = useState("ALL");
   const [untracking, setUntracking] = useState(null);
+  const [sortBy, setSortBy] = useState("date");
 
-  const mods = useMemo(() => (gameKey ? modsForGame(gameKey) : []), [gameKey, modsForGame]);
+  useEffect(() => {
+    // Marquer comme visité après 2 secondes
+    const timer = setTimeout(() => updateLastVisit(), 2000);
+    return () => clearTimeout(timer);
+  }, [updateLastVisit]);
+
+  const mods = useMemo(() => {
+    let result = [];
+    if (!gameKey || gameKey === "ALL") {
+      // Afficher tous les mods de tous les jeux
+      for (const g of games) {
+        const key = g.domain || g.gameId || g.name;
+        result.push(...modsForGame(key));
+      }
+    } else {
+      result = modsForGame(gameKey);
+    }
+    
+    // Tri des mods
+    if (sortBy === "name") {
+      result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+    } else if (sortBy === "author") {
+      result.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
+    } else {
+      // Par défaut : tri par date (plus récent en premier)
+      result.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+    }
+    
+    return result;
+  }, [gameKey, modsForGame, games, sortBy]);
 
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
@@ -115,7 +116,7 @@ export default function NexusModsPage({ credentials }) {
             value={gameKey}
             onChange={(e) => setGameKey(e.target.value)}
           >
-            <option value="">— Choisir un jeu —</option>
+            <option value="ALL">🎮 Tous les jeux</option>
             {games.map((g) => (
               <option key={g.key} value={g.domain || g.gameId || g.name}>
                 {g.name}
@@ -123,12 +124,26 @@ export default function NexusModsPage({ credentials }) {
             ))}
           </select>
         </div>
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Trier par
+          </label>
+          <select
+            className="pico-select"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+          >
+            <option value="date">📅 Date de mise à jour</option>
+            <option value="name">🔤 Nom</option>
+            <option value="author">👤 Auteur</option>
+          </select>
+        </div>
         <button className="pico-btn-outline w-fit" onClick={refresh}>
           Rafraîchir
         </button>
       </div>
 
-      {gameKey && (
+      {mods.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mods.map((m) => (
             <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
@@ -136,12 +151,25 @@ export default function NexusModsPage({ credentials }) {
                 <img src={m.picture} alt={m.name} className="w-full h-40 object-cover flex-shrink-0" />
               )}
               <div className="p-5 flex flex-col flex-grow">
-                <h5 className="text-xl font-bold text-slate-800 dark:text-white mb-2">
-                  {m.name || `${m.domain}/${m.id}`}
-                </h5>
+                <div className="flex items-start gap-2 mb-2">
+                  <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
+                    {m.name || `${m.domain}/${m.id}`}
+                  </h5>
+                  {isNew(m.updatedAt) && (
+                    <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                  )}
+                </div>
 
                 {m.summary && (
                   <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{m.summary}</p>
+                )}
+
+                {m.category && (
+                  <div className="mb-3">
+                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
+                      📚 {m.category}
+                    </span>
+                  </div>
                 )}
 
                 <div className="mb-3 flex items-center gap-2 flex-wrap">
@@ -170,43 +198,7 @@ export default function NexusModsPage({ credentials }) {
                   </span>
                 </div>
 
-                {m.changelog && m.changelog.length > 0 && (
-                  <div className="mb-4">
-                    <small className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Changelog :
-                    </small>
-                    <div className="text-sm max-h-24 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-2 rounded">
-                      {(() => {
-                        const lines = flattenChangeLines(m.changelog[0], 6);
-                        if (!lines.length)
-                          return (
-                            <p className="mb-0 text-slate-500 dark:text-slate-400 italic">
-                              Aucun détail disponible
-                            </p>
-                          );
-                        const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
-                        return (
-                          <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                            {lines.map((ln, i) => (
-                              <li key={i}>{ln}</li>
-                            ))}
-                            {hasMore && <li className="text-slate-500 dark:text-slate-400 italic">…</li>}
-                          </ul>
-                        );
-                      })()}
-                    </div>
-                    {m.changelogUrl && (
-                      <a
-                        href={m.changelogUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-pico-primary hover:underline inline-block mt-1"
-                      >
-                        Voir le changelog complet →
-                      </a>
-                    )}
-                  </div>
-                )}
+                <EnhancedChangelog mod={m} maxLines={6} />
 
                 <div className="mt-auto space-y-2">
                   <div className="flex justify-between items-center">

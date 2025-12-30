@@ -1,5 +1,58 @@
 # Changelog - The Courrier
 
+## Version 3.2.0 - Affichage des Catégories de Mods (30 Décembre 2025)
+
+### Nouvelles Fonctionnalités
+
+#### Système de Catégories
+- Affichage des catégories de mods pour tous les mods suivis
+- Mapping complet des catégories pour 5 jeux majeurs :
+  - Skyrim Special Edition (49 catégories)
+  - Skyrim classique (47 catégories)
+  - Baldur's Gate 3 (21 catégories)
+  - Cyberpunk 2077 (17 catégories)
+  - Fallout 4 (46 catégories)
+- Badge visuel avec icône pour les catégories
+- Catégories affichées sur :
+  - Page des mods (NexusModsPage) avec badge violet
+  - Page des actualités (ActuUpdatePage) inline avec l'auteur
+
+#### Outils d'Extraction
+- Guide complet pour ajouter de nouveaux jeux (ADDING_GAME_CATEGORIES.md)
+- Interface graphique d'extraction (extract-categories.html)
+- Script JavaScript pour extraction via console navigateur
+
+### Améliorations Techniques
+
+#### Backend (server.mjs)
+- Ajout de la fonction `getCategoryName(domain, categoryId)`
+- Enrichissement automatique des mods avec leurs catégories
+- Mapping statique extensible dans `CATEGORIES_BY_GAME`
+- Fallback gracieux si catégorie non trouvée
+
+#### Frontend
+- Badge catégorie avec icône livre (📚) sur NexusModsPage
+- Affichage inline discret sur ActuUpdatePage
+- Style cohérent avec le design existant (Tailwind)
+
+### Fichiers Ajoutés
+- ADDING_GAME_CATEGORIES.md - Guide d'ajout de catégories
+- extract-categories.html - Outil d'extraction graphique
+
+### Fichiers Modifiés
+- server.mjs - Ajout système de catégories et mapping
+- src/pages/NexusModsPage.jsx - Affichage badge catégorie
+- src/pages/ActuUpdatePage.jsx - Affichage inline catégorie
+- src/components/useNexusMods.js - Propagation field catégorie
+
+### Notes Techniques
+- Tentative de scraping dynamique abandonnée (protection Cloudflare)
+- Solution finale : mapping statique + outils d'extraction manuelle
+- Performance : pas d'impact (données en cache côté serveur)
+- Extensibilité : ajout facile de nouveaux jeux via guide
+
+---
+
 ## Version 3.1.0 - Amélioration de la Documentation (7 Novembre 2025)
 
 ### Documentation
@@ -118,14 +171,14 @@ gameName: m.gameName ?? m.game_name ?? m.game?.name,
 )}
 ```
 
-###  Fichiers Créés
+### Fichiers Créés
 
 ```
 src/pages/
   ActuUpdatePage.jsx           # Renommage de BootstrapPage
 ```
 
-###  Fichiers Modifiés
+### Fichiers Modifiés
 
 ```
 src/
@@ -141,7 +194,7 @@ api/nexus/tracked.mjs          # Ajout fonction getGameInfo + enrichissement
 netlify/functions/nexus-tracked.mjs  # Ajout fonction getGameInfo + enrichissement
 ```
 
-###  Fichiers Supprimés
+### Fichiers Supprimés
 
 ```
 src/pages/
@@ -151,7 +204,7 @@ src/components/
   useWeather.js                # Supprimé (fonctionnalité non utilisée)
 ```
 
-###  Corrections de bugs
+### Corrections de bugs
 
 1. **Bug de reconnexion** : Les données étaient chargées avant les credentials depuis localStorage
    - **Solution** : Attendre le chargement des credentials avant d'afficher les routes
@@ -179,7 +232,7 @@ Les modifications sont prêtes pour :
 - **Netlify** : Fonction serverless `netlify/functions/nexus-tracked.mjs` mise à jour
 - **Local** : Serveur Express `server.mjs` mis à jour
 
-###  Structure du Projet (Mise à jour)
+###Structure du Projet (Mise à jour)
 
 ```
 src/
