@@ -19,6 +19,13 @@
   }
 }
 
+@layer utilities {
+  .overflow-wrap-anywhere {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+}
+
 @layer components {
   /* Style des cartes inspiré de PicoCSS */
   .pico-card {

@@ -1,38 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
-
-function decodeEntities(str) {
-  if (!str) return "";
-  return str
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/gi, "'");
-}
-
-function htmlToPlainText(html) {
-  if (!html) return "";
-  const withBreaks = html.replace(/<br\s*\/?>/gi, "\n");
-  const noTags = withBreaks.replace(/<[^>]+>/g, "");
-  return decodeEntities(noTags);
-}
-
-function flattenChangeLines(changelogEntry, maxLines = 6) {
-  const lines = [];
-  if (!changelogEntry || !Array.isArray(changelogEntry.changes)) return lines;
-  for (const raw of changelogEntry.changes) {
-    const txt = htmlToPlainText(String(raw || ""));
-    const parts = txt.split(/\n+/).map((s) => s.trim()).filter(Boolean);
-    for (const p of parts) {
-      lines.push(p);
-      if (lines.length >= maxLines) return lines;
-    }
-  }
-  return lines;
-}
+import EnhancedChangelog from "../components/EnhancedChangelog";
 
 export default function NexusModsPage({ credentials }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
@@ -221,43 +190,7 @@ export default function NexusModsPage({ credentials }) {
                   </span>
                 </div>
 
-                {m.changelog && m.changelog.length > 0 && (
-                  <div className="mb-4">
-                    <small className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-                      Changelog :
-                    </small>
-                    <div className="text-sm max-h-24 overflow-y-auto bg-slate-50 dark:bg-slate-900/50 p-2 rounded">
-                      {(() => {
-                        const lines = flattenChangeLines(m.changelog[0], 6);
-                        if (!lines.length)
-                          return (
-                            <p className="mb-0 text-slate-500 dark:text-slate-400 italic">
-                              Aucun détail disponible
-                            </p>
-                          );
-                        const hasMore = lines.length === 6 && (m.changelog[0].changes?.join("\n").length > lines.join("\n").length);
-                        return (
-                          <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                            {lines.map((ln, i) => (
-                              <li key={i}>{ln}</li>
-                            ))}
-                            {hasMore && <li className="text-slate-500 dark:text-slate-400 italic">…</li>}
-                          </ul>
-                        );
-                      })()}
-                    </div>
-                    {m.changelogUrl && (
-                      <a
-                        href={m.changelogUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-pico-primary hover:underline inline-block mt-1"
-                      >
-                        Voir le changelog complet →
-                      </a>
-                    )}
-                  </div>
-                )}
+                <EnhancedChangelog mod={m} maxLines={6} />
 
                 <div className="mt-auto space-y-2">
                   <div className="flex justify-between items-center">
