@@ -334,19 +334,19 @@ package.json et documentation alignés :
 -  Headers CORS configurés dans les fonctions serverless
 -  Documentation sur les limitations de sécurité (localStorage)
 
-###  Points d'Attention
+### Points d'Attention
 
 1. **localStorage** : Les credentials sont visibles dans les DevTools
-   - ✓ Documenté dans README.md
-   - ✓ Alternatives suggérées (chiffrement, tokens)
+   - Documenté dans README.md
+   - Alternatives suggérées (chiffrement, tokens)
 
 2. **Rate Limits** : API Nexus Mods limitée
-   - ✓ Système de cache implémenté (60s / 10min / 24h)
-   - ✓ Documenté dans README.md
+   - Système de cache implémenté (60s / 10min / 24h)
+   - Documenté dans README.md
 
 3. **CORS** : Headers configurés
-   - ✓ `Access-Control-Allow-Headers` inclut les headers personnalisés
-   - ✓ Vérifié dans api/nexus/*.mjs
+   - `Access-Control-Allow-Headers` inclut les headers personnalisés
+   - Vérifié dans api/nexus/*.mjs
 
 ---
 

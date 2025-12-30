@@ -6,20 +6,20 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
 
 ## Fonctionnalités
 
-###  Stockage Local et Sécurisé
+### Stockage Local et Sécurisé
 
 - Les identifiants (username et API key) sont stockés uniquement dans le **localStorage** du navigateur de l'utilisateur
 - Aucune donnée sensible n'est envoyée ni stockée sur le serveur Vercel
 - Les credentials transitent uniquement entre le navigateur de l'utilisateur et les serveurs de Nexus Mods via les fonctions serverless
 
-###  Interface Utilisateur
+### Interface Utilisateur
 
 - **Modal de configuration** : Une popup s'affiche automatiquement au premier lancement si aucun identifiant n'est configuré
 - **Bouton de configuration** : Dans la barre de navigation, permet de modifier les identifiants à tout moment
 - **Badge utilisateur** : Affiche le nom d'utilisateur connecté dans la navbar
 - **Bouton de suppression** : Permet d'effacer les identifiants localement
 
-###  Fonctionnement
+### Fonctionnement
 
 1. Au premier lancement, l'utilisateur voit une popup lui demandant :
    - Son **nom d'utilisateur Nexus Mods**

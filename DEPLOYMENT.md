@@ -142,17 +142,17 @@ npm run server
 
 ---
 
-##  Dépannage
+## Dépannage
 
 ### Erreur "Missing NEXUS_API_KEY"
 
-➡ Cette erreur apparaît si l'utilisateur n'a pas encore entré ses credentials dans le modal.
+Cette erreur apparaît si l'utilisateur n'a pas encore entré ses credentials dans le modal.
 
 **Solution** : Laissez l'utilisateur configurer ses credentials via le modal au premier lancement.
 
 ### Le modal ne s'affiche pas
 
-➡ Vérifiez si des credentials sont déjà stockés dans le localStorage :
+Vérifiez si des credentials sont déjà stockés dans le localStorage :
 
 1. Ouvrez la console du navigateur (F12)
 2. Allez dans l'onglet "Application" > "Local Storage"
@@ -161,11 +161,11 @@ npm run server
 
 ### Les fonctions ne répondent pas
 
-➡ Vérifiez les logs de vos fonctions serverless dans le Dashboard Vercel → Deployment → Runtime Logs
+Vérifiez les logs de vos fonctions serverless dans le Dashboard Vercel → Deployment → Runtime Logs
 
 ### Build échoue
 
-➡ Assurez-vous que toutes les dépendances sont présentes dans `package.json`. Installez-les localement pour vérifier :
+Assurez-vous que toutes les dépendances sont présentes dans `package.json`. Installez-les localement pour vérifier :
 
 ```bash
 npm install
@@ -174,11 +174,11 @@ npm run build
 
 ### Erreur CORS
 
-➡ Les fonctions serverless incluent déjà les headers CORS. Si vous rencontrez des problèmes, vérifiez que vous appelez bien les endpoints via `/api/nexus/*` et non directement les fonctions.
+Les fonctions serverless incluent déjà les headers CORS. Si vous rencontrez des problèmes, vérifiez que vous appelez bien les endpoints via `/api/nexus/*` et non directement les fonctions.
 
 ### Credentials non sauvegardés
 
-➡ Si le localStorage ne fonctionne pas :
+Si le localStorage ne fonctionne pas :
 
 - Vérifiez que les cookies ne sont pas bloqués dans votre navigateur
 - Essayez en navigation privée pour tester
@@ -186,7 +186,7 @@ npm run build
 
 ---
 
-## � Déploiements Automatiques
+## Déploiements Automatiques
 
 Vercel déploie automatiquement à chaque push sur la branche configurée (par défaut `main`).
 
@@ -196,7 +196,7 @@ Vercel déploie automatiquement à chaque push sur la branche configurée (par d
 
 ---
 
-##  Support
+## Support
 
 - [Documentation Vercel Functions](https://vercel.com/docs/functions)
 - [API Nexus Mods](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0)

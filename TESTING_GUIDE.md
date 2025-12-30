@@ -16,7 +16,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 ## Tests Manuels
 
-###  Test 1 : Première utilisation (aucun credential)
+### Test 1 : Première utilisation (aucun credential)
 
 1. Ouvrir l'application dans un navigateur neuf (ou vider le localStorage)
 2. **Résultat attendu** : La popup de configuration s'affiche automatiquement
@@ -26,7 +26,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 6. Cliquer sur "Enregistrer"
 7. **Résultat attendu** : La popup se ferme et le badge utilisateur apparaît dans la navbar
 
-###  Test 2 : Validation des champs
+### Test 2 : Validation des champs
 
 1. Afficher la popup de configuration
 2. Laisser le username vide et cliquer sur "Enregistrer"
@@ -34,7 +34,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 4. Remplir le username mais laisser l'API key vide
 5. **Résultat attendu** : Message d'erreur "La clé API est requise"
 
-###  Test 3 : Modification des credentials
+### Test 3 : Modification des credentials
 
 1. Être connecté avec des credentials valides
 2. Cliquer sur le bouton " Config" dans la navbar
@@ -45,7 +45,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 7. Cliquer à nouveau sur " Config" puis sur "Annuler"
 8. **Résultat attendu** : La popup se ferme sans modification
 
-###  Test 4 : Suppression des credentials
+### Test 4 : Suppression des credentials
 
 1. Être connecté avec des credentials valides
 2. Cliquer sur le bouton "" dans la navbar

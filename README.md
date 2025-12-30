@@ -1,4 +1,4 @@
-# The Courrier 
+# The Courrier
 
 > **WebApp de veille technologique pour les mods Nexus Mods**
 
@@ -10,14 +10,14 @@ Une application web moderne permettant de suivre et monitorer les mises à jour 
 
 ---
 
-##  Pitch du Projet
+## Pitch du Projet
 
 **The Courrier** est une webapp de **veille de données** pour les modifications (mods) de jeux vidéo hébergées sur Nexus Mods. Elle permet aux joueurs et moddeurs de :
 
--  **Surveiller** les mises à jour de leurs mods favoris en temps réel
-- � **Analyser** les changelogs et historiques de versions
--  **Organiser** leurs mods par jeu avec une interface intuitive
-- � **Être informés** des dernières nouveautés de la communauté modding
+- **Surveiller** les mises à jour de leurs mods favoris en temps réel
+- **Analyser** les changelogs et historiques de versions
+- **Organiser** leurs mods par jeu avec une interface intuitive
+- **Être informés** des dernières nouveautés de la communauté modding
 
 Contrairement à l'interface standard de Nexus Mods, The Courrier offre une expérience optimisée pour la veille avec :
 - Filtrage temporel avancé (7/15/30 jours, année)
@@ -27,7 +27,7 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ---
 
-## � Stack Technique
+## Stack Technique
 
 ### Frontend
 - **React 19.2.0** - Framework JavaScript pour interfaces utilisateur
@@ -73,28 +73,28 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ---
 
-##  Fonctionnalités
+## Fonctionnalités
 
-###  Actualités des Mods (ActuUpdatePage)
+### Actualités des Mods (ActuUpdatePage)
 - Affichage des mods récemment mis à jour
 - Filtrage par période (7, 15, 30 jours, année passée)
 - **Noms réels des jeux** avec icônes officielles Nexus Mods
 - Changelogs détaillés avec version précédente
 - Liens directs vers les pages Nexus Mods
 
-###  Mods Suivis (NexusModsPage)
+### Mods Suivis (NexusModsPage)
 - Vue par jeu de tous vos mods suivis
 - Gestion des mods (ne plus suivre)
 - Informations détaillées (version, auteur, changelog)
 - Dates de mise à jour
 
-###  Configuration
+### Configuration
 - Interface de configuration des identifiants Nexus Mods
 - Stockage sécurisé dans le navigateur (localStorage)
 - Mode clair/sombre
 - Interface responsive (mobile, tablette, desktop)
 
-##  Démarrage Rapide
+## Démarrage Rapide
 
 ### Prérequis
 
@@ -161,11 +161,11 @@ npm run build
 3. Entrez votre **nom d'utilisateur Nexus Mods**
 4. Entrez votre **clé API** (obtenue précédemment)
 5. Cliquez sur **"Enregistrer"**
-6. C'est prêt ! 
+6. C'est prêt !
 
 Vos identifiants sont stockés localement dans votre navigateur et ne sont jamais envoyés à nos serveurs.
 
-##  Architecture Technique
+## Architecture Technique
 
 ### Sitemap & Routing
 
@@ -302,7 +302,7 @@ api/nexus/
 
 Le cache est en mémoire côté serveur et réinitialisé à chaque redémarrage de fonction serverless.
 
-##  Endpoints API Nexus Mods
+## Endpoints API Nexus Mods
 
 L'application utilise l'API publique officielle de Nexus Mods v1. Tous les appels transitent par nos fonctions serverless pour sécuriser les credentials.
 
@@ -358,7 +358,7 @@ Notre système de cache réduit considérablement le nombre d'appels API réels.
 
 ---
 
-##  Sécurité & Credentials
+## Sécurité & Credentials
 
 Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface, stockés dans le localStorage du navigateur.
 
@@ -366,7 +366,7 @@ Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface
 
 ---
 
-##  Déploiement
+## Déploiement
 
 L'application peut être déployée sur **Vercel** sans configuration complexe. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
 
@@ -374,7 +374,7 @@ L'application peut être déployée sur **Vercel** sans configuration complexe. 
 
 ---
 
-##  Documentation
+## Documentation
 
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide complet de déploiement sur Vercel
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration détaillée des identifiants
@@ -384,7 +384,7 @@ L'application peut être déployée sur **Vercel** sans configuration complexe. 
 
 ---
 
-##  Scripts NPM
+## Scripts NPM
 
 | Commande | Description |
 |----------|-------------|
@@ -396,16 +396,16 @@ L'application peut être déployée sur **Vercel** sans configuration complexe. 
 
 ---
 
-##  Tests
+## Tests
 
 **Scénarios de test complets** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
 **Tests Rapides** (2 minutes) :
 
-1.  Vérifier l'affichage du modal au premier lancement
-2.  Configurer des credentials de test
-3.  Naviguer vers "Nexus Mods" et vérifier le chargement
-4.  Rafraîchir (F5) et vérifier la persistance des credentials
+1. Vérifier l'affichage du modal au premier lancement
+2. Configurer des credentials de test
+3. Naviguer vers "Nexus Mods" et vérifier le chargement
+4. Rafraîchir (F5) et vérifier la persistance des credentials
 
 ### Tests Automatisés
 
@@ -415,35 +415,35 @@ npm test
 
 ---
 
-##  Changelog
+## Changelog
 
 **Historique complet des versions** : voir [CHANGELOG.md](./CHANGELOG.md)
 
 ### Version 3.0.0 (6 Nov 2025)
 
--  Affichage des vrais noms de jeux avec icônes officielles
--  Renommage `BootstrapPage` → `ActuUpdatePage`
--  Suppression de `TailwindPage` et `useWeather` (non utilisés)
--  Amélioration du layout des cartes de mods
--  Correction du bug de reconnexion après suppression des credentials
+- Affichage des vrais noms de jeux avec icônes officielles
+- Renommage `BootstrapPage` → `ActuUpdatePage`
+- Suppression de `TailwindPage` et `useWeather` (non utilisés)
+- Amélioration du layout des cartes de mods
+- Correction du bug de reconnexion après suppression des credentials
 
 ### Version 2.0.0 (5 Nov 2025)
 
--  Configuration des credentials dans l'interface utilisateur
--  Stockage local sécurisé (localStorage)
--  Support multi-utilisateurs
--  Architecture serverless compatible Vercel
+- Configuration des credentials dans l'interface utilisateur
+- Stockage local sécurisé (localStorage)
+- Support multi-utilisateurs
+- Architecture serverless compatible Vercel
 
 ### Version 1.0.0 (Initial)
 
--  Interface de base avec React
--  Intégration API Nexus Mods
--  Page d'actualités des mods
--  Page de gestion des mods suivis
+- Interface de base avec React
+- Intégration API Nexus Mods
+- Page d'actualités des mods
+- Page de gestion des mods suivis
 
 ---
 
-##  Contribution
+## Contribution
 
 Les contributions sont les bienvenues ! Pour contribuer :
 
@@ -462,13 +462,13 @@ Les contributions sont les bienvenues ! Pour contribuer :
 
 ---
 
-##  Licence
+## Licence
 
 Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-##  Auteur
+## Auteur
 
 **sonical0**
 - GitHub: [@sonical0](https://github.com/sonical0)
@@ -476,7 +476,7 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-##  Remerciements
+## Remerciements
 
 - **Nexus Mods** pour leur API publique
 - La communauté **React** et **Tailwind CSS**
@@ -484,19 +484,19 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-## � Support & Contact
+## Support & Contact
 
--  **Bugs** : Ouvrez une issue sur [GitHub](https://github.com/sonical0/The_Courrier/issues)
--  **Suggestions** : Créez une discussion sur [GitHub Discussions](https://github.com/sonical0/The_Courrier/discussions)
--  **Documentation** : Consultez les fichiers `.md` dans le repository
-
----
-
-**Made with  for the modding community**
+- **Bugs** : Ouvrez une issue sur [GitHub](https://github.com/sonical0/The_Courrier/issues)
+- **Suggestions** : Créez une discussion sur [GitHub Discussions](https://github.com/sonical0/The_Courrier/discussions)
+- **Documentation** : Consultez les fichiers `.md` dans le repository
 
 ---
 
-##  Liens Utiles
+**Made with for the modding community**
+
+---
+
+## Liens Utiles
 
 - [Nexus Mods](https://www.nexusmods.com) - Plateforme de mods
 - [API Nexus Mods Documentation](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0) - Documentation API
