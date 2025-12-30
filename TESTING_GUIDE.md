@@ -16,7 +16,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 ## Tests Manuels
 
-###  Test 1 : Première utilisation (aucun credential)
+### Test 1 : Première utilisation (aucun credential)
 
 1. Ouvrir l'application dans un navigateur neuf (ou vider le localStorage)
 2. **Résultat attendu** : La popup de configuration s'affiche automatiquement
@@ -26,7 +26,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 6. Cliquer sur "Enregistrer"
 7. **Résultat attendu** : La popup se ferme et le badge utilisateur apparaît dans la navbar
 
-###  Test 2 : Validation des champs
+### Test 2 : Validation des champs
 
 1. Afficher la popup de configuration
 2. Laisser le username vide et cliquer sur "Enregistrer"
@@ -34,7 +34,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 4. Remplir le username mais laisser l'API key vide
 5. **Résultat attendu** : Message d'erreur "La clé API est requise"
 
-###  Test 3 : Modification des credentials
+### Test 3 : Modification des credentials
 
 1. Être connecté avec des credentials valides
 2. Cliquer sur le bouton " Config" dans la navbar
@@ -45,7 +45,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 7. Cliquer à nouveau sur " Config" puis sur "Annuler"
 8. **Résultat attendu** : La popup se ferme sans modification
 
-###  Test 4 : Suppression des credentials
+### Test 4 : Suppression des credentials
 
 1. Être connecté avec des credentials valides
 2. Cliquer sur le bouton "" dans la navbar
@@ -53,7 +53,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 4. Confirmer la suppression
 5. **Résultat attendu** : Le badge utilisateur disparaît et la popup de configuration réapparaît
 
-###  Test 5 : Navigation entre les pages
+### Test 5 : Navigation entre les pages
 
 1. Configurer des credentials valides
 2. Naviguer vers "Nexus Mods"
@@ -62,14 +62,14 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 5. **Résultat attendu** : Les actualités se chargent correctement
 6. Le badge utilisateur reste visible sur toutes les pages
 
-###  Test 6 : Credentials invalides
+### Test 6 : Credentials invalides
 
 1. Configurer des credentials avec une API key invalide
 2. Naviguer vers "Nexus Mods" ou "Actus Mods"
 3. **Résultat attendu** : Un message d'erreur s'affiche
 4. Le message suggère de reconfigurer via le bouton " Config"
 
-###  Test 7 : Persistance (localStorage)
+### Test 7 : Persistance (localStorage)
 
 1. Configurer des credentials valides
 2. Rafraîchir la page (F5)
@@ -78,7 +78,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 5. Fermer et rouvrir le navigateur
 6. **Résultat attendu** : Les credentials sont toujours présents
 
-###  Test 8 : Requêtes API
+### Test 8 : Requêtes API
 
 1. Ouvrir la console développeur (F12)
 2. Aller dans l'onglet "Network"
@@ -88,7 +88,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
    - `X-Nexus-Username`: votre username
    - `X-Nexus-ApiKey`: votre API key
 
-###  Test 9 : Untrack d'un mod
+### Test 9 : Untrack d'un mod
 
 1. Être sur la page "Nexus Mods" avec des credentials valides
 2. Sélectionner un jeu dans la liste déroulante
@@ -97,7 +97,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 5. Confirmer la suppression
 6. **Résultat attendu** : Le mod disparaît de la liste
 
-###  Test 10 : Rafraîchir les données
+### Test 10 : Rafraîchir les données
 
 1. Être sur "Actus Mods" ou "Nexus Mods"
 2. Cliquer sur le bouton "Rafraîchir"

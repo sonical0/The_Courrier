@@ -1,30 +1,30 @@
-#  Guide de Déploiement
+# Guide de Déploiement
 
 Ce guide vous explique comment déployer **The Courrier** sur **Vercel**.
 
 ---
 
-##  Prérequis
+## Prérequis
 
 Avant de déployer, assurez-vous d'avoir :
 
--  Un compte GitHub avec votre projet poussé sur la branche `main`
--  Le projet buildé avec succès en local (`npm run build`)
--  Les dépendances installées (`npm install`)
+- Un compte GitHub avec votre projet poussé sur la branche `main`
+- Le projet buildé avec succès en local (`npm run build`)
+- Les dépendances installées (`npm install`)
 
 > **Note** : La clé API Nexus Mods n'est **plus requise côté serveur**. Les utilisateurs configurent leurs propres identifiants directement dans l'application via le modal au premier lancement.
 
 ---
 
-##  Déploiement sur Vercel
+## Déploiement sur Vercel
 
-### 1⃣ Créer un compte et importer le projet
+### 1. Créer un compte et importer le projet
 
 1. Allez sur [vercel.com](https://vercel.com) et créez un compte (ou connectez-vous)
 2. Cliquez sur **"Add New..."** → **"Project"**
 3. Importez votre repo GitHub **The_Courrier**
 
-### 2⃣ Configuration du build
+### 2. Configuration du build
 
 Vercel devrait détecter automatiquement qu'il s'agit d'une app React :
 
@@ -32,21 +32,21 @@ Vercel devrait détecter automatiquement qu'il s'agit d'une app React :
 - **Build Command** : `npm run build`
 - **Output Directory** : `build`
 
-### 3⃣ Configurer les variables d'environnement (Optionnel)
+### 3. Configurer les variables d'environnement (Optionnel)
 
 Dans la page d'import, avant de déployer :
 
 1. Dépliez la section **"Environment Variables"**
 2. **Cette étape est maintenant optionnelle** ! Deux options s'offrent à vous :
 
-#### Option A : Configuration par l'utilisateur (Recommandé )
+#### Option A : Configuration par l'utilisateur (Recommandé)
 
 Ne configurez **aucune variable d'environnement**. Les utilisateurs entreront leur propre nom d'utilisateur et clé API au premier lancement de l'application via un modal.
 
 **Avantages** :
--  Chaque utilisateur utilise son propre compte Nexus Mods
--  Pas de limite de rate-limit partagée
--  Meilleure sécurité : credentials stockés localement dans le navigateur
+- Chaque utilisateur utilise son propre compte Nexus Mods
+- Pas de limite de rate-limit partagée
+- Meilleure sécurité : credentials stockés localement dans le navigateur
 
 #### Option B : Configuration serveur (Ancienne méthode)
 
@@ -65,13 +65,13 @@ Si vous voulez que tous les utilisateurs utilisent le même compte Nexus Mods, a
 - **Password** : `The Courrier0` (pour se connecter sur nexusmods.com)
 - **API Key** : `UWM49C/gfBy+QCvaL2pe9p+C8PLiNji+HjObvGWuxsI9qKW3X1I=--LjVbDPG5bU/U59Ph--lzlQfxo4wC5kS6KTnG0IMw==`
 
->  Ces credentials sont publics et destinés aux tests uniquement. Ne les utilisez pas en production.
+> Ces credentials sont publics et destinés aux tests uniquement. Ne les utilisez pas en production.
 
-### 4⃣ Déployer
+### 4. Déployer
 
 Cliquez sur **"Deploy"** et attendez que le build se termine (2-3 minutes).
 
-### 5⃣ Tester
+### 5. Tester
 
 Une fois déployé, votre site sera accessible sur une URL du type :
 
@@ -91,7 +91,7 @@ https://your-app-name.vercel.app
 
 ---
 
-##  Structure des Fonctions Serverless
+## Structure des Fonctions Serverless
 
 Les fonctions sont dans `/api/nexus/` et sont automatiquement accessibles :
 
@@ -103,7 +103,7 @@ Les fonctions sont dans `/api/nexus/` et sont automatiquement accessibles :
 
 ---
 
-##  Test en Local avec les Fonctions Serverless
+## Test en Local avec les Fonctions Serverless
 
 ### Avec le CLI Vercel
 
@@ -128,13 +128,13 @@ npm run server
 
 ---
 
-##  Sécurité
+## Sécurité
 
--  **Stockage local** : Les identifiants sont stockés uniquement dans le localStorage du navigateur de chaque utilisateur
--  **Pas de serveur** : Aucune clé API n'est stockée sur Vercel
--  **Proxy sécurisé** : Les fonctions serverless relaient les requêtes sans stocker les credentials
--  **Headers de sécurité** : X-Frame-Options, X-Content-Type-Options, Referrer-Policy configurés
--  **Isolation utilisateur** : Chaque utilisateur utilise son propre compte Nexus Mods
+- **Stockage local** : Les identifiants sont stockés uniquement dans le localStorage du navigateur de chaque utilisateur
+- **Pas de serveur** : Aucune clé API n'est stockée sur Vercel
+- **Proxy sécurisé** : Les fonctions serverless relaient les requêtes sans stocker les credentials
+- **Headers de sécurité** : X-Frame-Options, X-Content-Type-Options, Referrer-Policy configurés
+- **Isolation utilisateur** : Chaque utilisateur utilise son propre compte Nexus Mods
 
 > **Important** : Ne jamais commiter de fichier `.env` contenant des clés API dans votre dépôt Git.
 
@@ -142,7 +142,7 @@ npm run server
 
 ---
 
-##  Dépannage
+## Dépannage
 
 ### Erreur "Missing NEXUS_API_KEY"
 
@@ -186,7 +186,7 @@ npm run build
 
 ---
 
-## � Déploiements Automatiques
+## Déploiements Automatiques
 
 Vercel déploie automatiquement à chaque push sur la branche configurée (par défaut `main`).
 
@@ -196,7 +196,7 @@ Vercel déploie automatiquement à chaque push sur la branche configurée (par d
 
 ---
 
-##  Support
+## Support
 
 - [Documentation Vercel Functions](https://vercel.com/docs/functions)
 - [API Nexus Mods](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0)
@@ -204,7 +204,7 @@ Vercel déploie automatiquement à chaque push sur la branche configurée (par d
 
 ---
 
-##  Conclusion
+## Conclusion
 
-Bon déploiement ! 
+Bon déploiement !
 

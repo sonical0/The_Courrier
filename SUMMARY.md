@@ -239,18 +239,18 @@ The_Courrier/### Pour supprimer les credentials
 
 ### Test Rapide (2 minutes)
 
-1.  Lancer l'application
-2.  Vérifier que la popup s'affiche
-3.  Entrer des credentials de test
-4.  Vérifier que le badge utilisateur apparaît
-5.  Naviguer vers "Nexus Mods" et vérifier le chargement
-6.  Rafraîchir la page (F5) - les credentials doivent persister
+1. Lancer l'application
+2. Vérifier que la popup s'affiche
+3. Entrer des credentials de test
+4. Vérifier que le badge utilisateur apparaît
+5. Naviguer vers "Nexus Mods" et vérifier le chargement
+6. Rafraîchir la page (F5) - les credentials doivent persister
 
 ### Test Complet
 
 Voir [TESTING_GUIDE.md](./TESTING_GUIDE.md) pour tous les scénarios de test.
 
-##  Structure des Fichiers
+## Structure des Fichiers
 
 Pour une vue d'ensemble de l'architecture :
 
@@ -273,7 +273,7 @@ The_Courrier/
 
 >  **Changements récents :** Voir [CHANGELOG.md](./CHANGELOG.md) pour la liste complète des fichiers créés, modifiés et supprimés.
 
-##  Prochaines Étapes Possibles
+## Prochaines Étapes Possibles
 
 Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implémentées.
 
@@ -311,7 +311,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - HTTPS est obligatoire en production pour la sécurité
 - Les headers CORS sont pré-configurés pour Vercel et Netlify
 
-##  Dépannage Rapide
+## Dépannage Rapide
 
 **La popup ne s'affiche pas**  
 → Vider le cache du navigateur et localStorage
@@ -325,9 +325,9 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 **Headers non envoyés aux API**  
 → Vérifier que `useNexusMods(credentials)` reçoit bien les credentials
 
-> � Pour plus de solutions, consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+> Pour plus de solutions, consultez [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
-##  Ressources
+## Ressources
 
 ### Documentation du Projet
 
@@ -344,25 +344,25 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-##  État Actuel
+## État Actuel
 
 **Version 3.0.0** - 6 Novembre 2025
 
 ### Fonctionnalités Actives
 
--  Configuration personnelle des identifiants Nexus
--  Affichage des vrais noms de jeux avec icônes
--  Page des actualités de mods (ActuUpdatePage)
--  Gestion complète des mods suivis
--  Stockage local sécurisé
--  Cache intelligent multi-niveaux
--  Support Vercel et Netlify
+- Configuration personnelle des identifiants Nexus
+- Affichage des vrais noms de jeux avec icônes
+- Page des actualités de mods (ActuUpdatePage)
+- Gestion complète des mods suivis
+- Stockage local sécurisé
+- Cache intelligent multi-niveaux
+- Support Vercel et Netlify
 
 ### Statut
 
--  **Production Ready** - Prêt pour déploiement
--  **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials
--  **Documentation complète** - Guides utilisateurs et développeurs
+- **Production Ready** - Prêt pour déploiement
+- **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials
+- **Documentation complète** - Guides utilisateurs et développeurs
 
 >  **Historique complet :** Consultez [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques des versions précédentes.
 
