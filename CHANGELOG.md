@@ -1,5 +1,76 @@
 # Changelog - The Courrier
 
+## Version 3.3.1 - Automatisation Documentation (21 Janvier 2026)
+
+### Documentation
+
+#### Règles d'Automatisation
+- Ajout de règles automatiques pour la mise à jour du CHANGELOG.md
+- Matrice de décision pour les mises à jour conditionnelles
+- Workflow automatique pour les agents IA
+- 5 règles d'automatisation définies dans DOCUMENTATION_GUIDE.md
+- Guide rapide créé : QUICK_UPDATE_GUIDE.md
+
+#### Règles de Style Professionnel
+- Suppression des emojis dans la documentation technique
+- Exception pour guides utilisateurs (lisibilité)
+- Documentation technique strictement professionnelle
+- Standards de style définis dans DOCUMENTATION_GUIDE.md
+
+#### Améliorations
+- Section "Documentation Updates" ajoutée à copilot-instructions.md
+- Matrice de mise à jour conditionnelle (type de changement → fichiers à modifier)
+- Checklist automatique pour éviter les oublis
+- Guide de numérotation sémantique des versions (Major.Minor.Patch)
+- Workflow en arbre de décision pour les agents IA
+
+### Fichiers Modifiés
+- .github/copilot-instructions.md - Ajout sections "Documentation Updates" et "Style Guidelines"
+- .github/DOCUMENTATION_GUIDE.md - Ajout "Automatic Update Workflow", "Automation Rules", "Style Guidelines"
+- .github/QUICK_UPDATE_GUIDE.md - Nouveau fichier (sans emojis)
+- CHANGELOG.md - Mise à jour historique (ce fichier)
+- README.md - Lien vers QUICK_UPDATE_GUIDE.md
+- PRE_DEPLOYMENT_CHECK.md - Mise à jour version 3.3.1
+
+### Impact Technique
+- Les agents IA peuvent maintenant mettre à jour automatiquement la documentation
+- Chaque type de changement déclenche la mise à jour des fichiers appropriés
+- Réduction du risque d'oubli de mise à jour du CHANGELOG
+- Workflow standardisé : CHANGELOG d'abord, puis fichiers conditionnels
+- Documentation professionnelle sans emojis superflus
+
+---
+
+## Version 3.3.0 - Synchronisation Dev/Production (21 Janvier 2026)
+
+### Corrections Critiques
+
+#### Synchronisation Serverless
+- Correction de `api/nexus/validate.mjs` pour accepter les credentials via headers
+- Mise à jour de `api/nexus/tracked.mjs` avec tri sémantique des versions (1.13 > 1.12 > 1.9)
+- Uniformisation des headers CORS entre toutes les fonctions serverless
+- Correction du typo dans la gestion d'erreurs de tracked.mjs
+
+#### Documentation
+- Ajout de [.github/copilot-instructions.md](../.github/copilot-instructions.md) pour guider les agents IA
+- Mise à jour des patterns de synchronisation dev/prod
+- Déduplication des fichiers .md
+
+### Fichiers Modifiés
+- api/nexus/validate.mjs - Support credentials headers + CORS
+- api/nexus/tracked.mjs - Tri sémantique versions + correction erreur
+- .github/copilot-instructions.md - Guide complet pour agents IA
+- CHANGELOG.md - Mise à jour historique (ce fichier)
+- SUMMARY.md - Suppression duplications
+- PRE_DEPLOYMENT_CHECK.md - Mise à jour checklist
+
+### Impact Technique
+- Les fonctions serverless Vercel comportent maintenant exactement comme le serveur dev Express
+- Pas de régression : tous les appels API continuent de fonctionner
+- Amélioration de la maintenabilité : 7 blocs de code à maintenir synchronisés documentés
+
+---
+
 ## Version 3.2.0 - Affichage des Catégories de Mods (30 Décembre 2025)
 
 ### Nouvelles Fonctionnalités
