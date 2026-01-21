@@ -3,7 +3,7 @@ import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 
-export default function ActuUpdatePage({ credentials }) {
+export default function ActuUpdatePage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
   const { isNew, updateLastVisit } = useLastVisit();
   const [period, setPeriod] = useState(7);

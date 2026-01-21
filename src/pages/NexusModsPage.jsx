@@ -2,8 +2,9 @@ import { useMemo, useState, useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
+import SteamGameInfo from "../components/SteamGameInfo";
 
-export default function NexusModsPage({ credentials }) {
+export default function NexusModsPage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
   const { isNew, updateLastVisit } = useLastVisit();
   const [gameKey, setGameKey] = useState("ALL");
@@ -142,6 +143,17 @@ export default function NexusModsPage({ credentials }) {
           Rafraîchir
         </button>
       </div>
+
+      {/* Afficher les infos Steam du jeu sélectionné */}
+      {gameKey && gameKey !== "ALL" && getSteamInfo && (() => {
+        const selectedGame = games.find(g => (g.domain || g.gameId || g.name) === gameKey);
+        const steamInfo = selectedGame ? getSteamInfo(selectedGame.domain) : null;
+        return steamInfo ? (
+          <div className="mb-6">
+            <SteamGameInfo domain={selectedGame.domain} steamInfo={steamInfo} />
+          </div>
+        ) : null;
+      })()}
 
       {mods.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

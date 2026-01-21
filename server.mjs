@@ -430,6 +430,167 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
   }
 });
 
+// Steam API proxy endpoint
+app.get("/api/steam/game/:appId", async (req, res) => {
+  const { appId } = req.params;
+
+  if (!appId || isNaN(appId)) {
+    return res.status(400).json({ 
+      success: false, 
+      error: "Invalid Steam App ID" 
+    });
+  }
+
+  const ck = `steam:${appId}`;
+  const cached = cacheGet(ck);
+  if (cached) {
+    return res.json(cached);
+  }
+
+  try {
+    // 1. Steam Store API pour les infos de base
+    const storeUrl = `https://store.steampowered.com/api/appdetails?appids=${appId}`;
+    const storeRes = await fetch(storeUrl);
+    
+    if (!storeRes.ok) {
+      throw new Error(`Steam Store API error: ${storeRes.status}`);
+    }
+
+    const storeData = await storeRes.json();
+    
+    if (!storeData[appId] || !storeData[appId].success) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Game not found on Steam" 
+      });
+    }
+
+    const gameData = storeData[appId].data;
+
+    // 2. Steam Web API officielle pour données en temps réel
+    let buildId = null;
+    let lastUpdate = null;
+    let version = null;
+    const steamApiKey = process.env.STEAM_API_KEY;
+
+    // Méthode 1: Utiliser Steam Web API pour obtenir les vraies mises à jour du jeu
+    try {
+      // GetNewsForApp - Filtrer uniquement les annonces officielles de mise à jour
+      const newsUrl = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=${appId}&count=20&maxlength=300&format=json`;
+      const newsRes = await fetch(newsUrl);
+      
+      if (newsRes.ok) {
+        const newsData = await newsRes.json();
+        if (newsData.appnews && newsData.appnews.newsitems && newsData.appnews.newsitems.length > 0) {
+          // Chercher uniquement les annonces de Steam (feedname: steam_community_announcements)
+          // et qui mentionnent vraiment des mises à jour de jeu
+          const updateNews = newsData.appnews.newsitems.find(item => {
+            const isOfficial = item.feedname === 'steam_community_announcements';
+            const title = item.title.toLowerCase();
+            const contents = (item.contents || '').toLowerCase();
+            
+            // Mots-clés indiquant une vraie mise à jour de jeu
+            const isGameUpdate = 
+              title.includes('patch') && (title.includes('1.') || title.includes('2.') || title.includes('v1') || title.includes('v2')) ||
+              contents.includes('changelog') ||
+              contents.includes('bug fix') ||
+              contents.includes('update is now live') ||
+              contents.includes('version');
+            
+            return isOfficial && isGameUpdate;
+          });
+          
+          if (updateNews && updateNews.date) {
+            lastUpdate = updateNews.date * 1000;
+            // Ne pas utiliser le titre comme version
+            console.log(`📰 Found official update for ${appId} at ${new Date(lastUpdate).toISOString()}`);
+          }
+        }
+      }
+    } catch (newsError) {
+      console.warn(`Steam News API failed for ${appId}:`, newsError.message);
+    }
+
+    // Méthode 2: SteamCMD pour Build ID (toujours nécessaire car Steam Web API ne l'expose pas)
+    try {
+      const cmdUrl = `https://api.steamcmd.net/v1/info/${appId}`;
+      const cmdRes = await fetch(cmdUrl, {
+        headers: {
+          'User-Agent': 'The-Courrier/1.0'
+        }
+      });
+      
+      if (cmdRes.ok) {
+        const cmdData = await cmdRes.json();
+        
+        if (cmdData.data && cmdData.data[appId]) {
+          const appInfo = cmdData.data[appId];
+          const branches = appInfo.depots?.branches;
+          
+          if (branches && branches.public) {
+            buildId = branches.public.buildid || null;
+            
+            // Si on n'a pas trouvé de date via les news, utiliser SteamCMD comme fallback
+            if (!lastUpdate) {
+              if (appInfo.common && appInfo.common.time_updated) {
+                const timestamp = parseInt(appInfo.common.time_updated);
+                lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+              } else if (branches.public.timeupdated) {
+                const timestamp = parseInt(branches.public.timeupdated);
+                lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+              }
+            }
+            
+            if (!version && branches.public.description) {
+              version = branches.public.description;
+            }
+          }
+          
+          console.log(`✅ Combined Steam data for ${appId}:`, {
+            buildId,
+            version,
+            lastUpdate,
+            lastUpdateFormatted: lastUpdate ? new Date(lastUpdate).toISOString() : null,
+            source: lastUpdate > (Date.now() - 365*24*60*60*1000) ? 'Steam News API (recent)' : 'SteamCMD (may be stale)'
+          });
+        }
+      }
+    } catch (cmdError) {
+      console.warn(`SteamCMD API failed for ${appId}:`, cmdError.message);
+    }
+
+    // Fallback: si on n'a pas pu obtenir les vraies infos
+    if (!buildId || !lastUpdate) {
+      const releaseDate = gameData.release_date?.date;
+      lastUpdate = releaseDate ? new Date(releaseDate).getTime() : Date.now();
+      buildId = `${lastUpdate}`;
+    }
+
+    const result = {
+      success: true,
+      appId: parseInt(appId),
+      name: gameData.name,
+      buildId: buildId,
+      version: version || "Not available",
+      lastUpdate: lastUpdate,
+      releaseDate: gameData.release_date?.date || null,
+      shortDescription: gameData.short_description || "",
+      headerImage: gameData.header_image || null,
+      developers: gameData.developers || [],
+      publishers: gameData.publishers || [],
+    };
+
+    cacheSet(ck, result, 6 * 60 * 60_000); // 6 hours cache
+    res.json(result);
+  } catch (error) {
+    console.error(`Error fetching Steam data for ${appId}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || "Internal server error" 
+    });
+  }
+});
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const clientBuild = path.join(__dirname, "build");
 app.use(express.static(clientBuild));
