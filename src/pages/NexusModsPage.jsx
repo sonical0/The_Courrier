@@ -2,8 +2,9 @@ import { useMemo, useState, useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
+import SteamGameInfo from "../components/SteamGameInfo";
 
-export default function NexusModsPage({ credentials }) {
+export default function NexusModsPage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
   const { isNew, updateLastVisit } = useLastVisit();
   const [gameKey, setGameKey] = useState("ALL");

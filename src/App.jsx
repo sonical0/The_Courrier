@@ -7,6 +7,8 @@ import useNexusCredentials from "./components/useNexusCredentials";
 import useNexusMods from "./components/useNexusMods";
 import useLastVisit from "./components/useLastVisit";
 import useTheme from "./components/useTheme";
+import useSteamGames from "./components/useSteamGames";
+import GameUpdateAlert from "./components/GameUpdateAlert";
 
 export default function App() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
@@ -15,6 +17,14 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  
+  // Intégration Steam pour suivre les versions de jeux
+  const { 
+    alerts: steamAlerts, 
+    dismissAlert, 
+    dismissAllAlerts, 
+    getSteamInfo 
+  } = useSteamGames(games);
 
   // Calculer le nombre de nouveaux mods
   const newModsCount = useMemo(() => {
@@ -226,6 +236,13 @@ export default function App() {
           onCancel={hasCredentials ? () => setShowModal(false) : undefined}
         />
 
+        {/* Alertes de mise à jour Steam */}
+        <GameUpdateAlert
+          alerts={steamAlerts}
+          onDismiss={dismissAlert}
+          onDismissAll={dismissAllAlerts}
+        />
+
         <main>
           {loading ? (
             <div className="container mx-auto px-4 py-8 text-center">
@@ -233,8 +250,8 @@ export default function App() {
             </div>
           ) : (
             <Routes>
-              <Route path="/" element={<ActuUpdatePage credentials={credentials} />} />
-              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
+              <Route path="/" element={<ActuUpdatePage credentials={credentials} getSteamInfo={getSteamInfo} />} />
+              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} getSteamInfo={getSteamInfo} />} />
             </Routes>
           )}
         </main>
