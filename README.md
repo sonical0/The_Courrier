@@ -220,6 +220,17 @@ src/
     │   ├── Affichage conditionnel       # Auto au 1er lancement
     │   └── Gestion de l'annulation
     │
+    ├── EnhancedChangelog.jsx            # Composant d'affichage des changelogs
+    │   ├── Affichage version actuelle vs précédente
+    │   ├── Formatage des changements
+    │   ├── Limite d'affichage (maxLines)
+    │   └── Lien vers changelog complet
+    │
+    ├── ChangelogUtils.js                # Utilitaires pour changelogs
+    │   ├── Parsing des versions
+    │   ├── Tri sémantique
+    │   └── Formatage du texte
+    │
     ├── useNexusCredentials.js           # Hook de gestion des credentials
     │   ├── Lecture du localStorage
     │   ├── Sauvegarde sécurisée
@@ -233,6 +244,12 @@ src/
     │   ├── Catégories des mods          # Mapping par jeu
     │   ├── Gestion des jeux             # Groupement par domaine
     │   └── Injection des credentials    # Headers HTTP personnalisés
+    │
+    ├── useLastVisit.js                  # Hook de gestion des badges NEW
+    │   ├── Stockage timestamp dernière visite
+    │   ├── Comparaison avec updatedAt mods
+    │   ├── Comptage nouveaux mods
+    │   └── Mise à jour timestamp
     │
     └── useTheme.js                      # Hook de gestion du thème
         ├── Détection automatique        # Préférence système
@@ -447,34 +464,6 @@ npm test
 
 ---
 
-## Changelog
-
-**Historique complet des versions** : voir [CHANGELOG.md](./CHANGELOG.md)
-
-### Version 3.0.0 (6 Nov 2025)
-
-- Affichage des vrais noms de jeux avec icônes officielles
-- Renommage `BootstrapPage` → `ActuUpdatePage`
-- Suppression de `TailwindPage` et `useWeather` (non utilisés)
-- Amélioration du layout des cartes de mods
-- Correction du bug de reconnexion après suppression des credentials
-
-### Version 2.0.0 (5 Nov 2025)
-
-- Configuration des credentials dans l'interface utilisateur
-- Stockage local sécurisé (localStorage)
-- Support multi-utilisateurs
-- Architecture serverless compatible Vercel
-
-### Version 1.0.0 (Initial)
-
-- Interface de base avec React
-- Intégration API Nexus Mods
-- Page d'actualités des mods
-- Page de gestion des mods suivis
-
----
-
 ## Contribution
 
 Les contributions sont les bienvenues ! Pour contribuer :
@@ -497,6 +486,26 @@ Les contributions sont les bienvenues ! Pour contribuer :
 ## Licence
 
 Voir [LICENSE](./LICENSE) pour plus de détails.
+
+---
+
+## Documentation
+
+### Quick Reference
+- **[.github/QUICK_UPDATE_GUIDE.md](./.github/QUICK_UPDATE_GUIDE.md)** - Quick guide for making changes
+
+### User Documentation
+- **[SUMMARY.md](./SUMMARY.md)** - User-friendly overview and quick start guide
+- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Test credentials and manual test scenarios
+
+### Developer Documentation
+- **[CHANGELOG.md](./CHANGELOG.md)** - Complete version history (source of truth)
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Vercel deployment instructions
+- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Technical deep-dive on credentials system
+- **[ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)** - How to add new game categories
+- **[PRE_DEPLOYMENT_CHECK.md](./PRE_DEPLOYMENT_CHECK.md)** - Pre-deployment checklist
+- **[.github/copilot-instructions.md](./.github/copilot-instructions.md)** - AI agent development guide
+- **[.github/DOCUMENTATION_GUIDE.md](./.github/DOCUMENTATION_GUIDE.md)** - Documentation maintenance guide
 
 ---
 

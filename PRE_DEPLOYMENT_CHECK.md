@@ -1,152 +1,86 @@
-#  Checklist Pré-Déploiement - The Courrier
+# Checklist Pré-Déploiement - The Courrier
 
-**Date de vérification** : 7 Novembre 2025  
-
-**Version** : 3.0.0  
-
+**Date de vérification** : 21 Janvier 2026  
+**Version** : 3.3.1  
 **Plateforme de déploiement prévue** : Vercel
 
+> **Documentation complète** : voir [README.md](./README.md), [DEPLOYMENT.md](./DEPLOYMENT.md), [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
+> **Guide rapide** : voir [.github/QUICK_UPDATE_GUIDE.md](./.github/QUICK_UPDATE_GUIDE.md)
 
+---
 
-> **Documentation complète** : voir [README.md](./README.md), [DEPLOYMENT.md](./DEPLOYMENT.md), [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)---
+## Checklist de Vérification
 
+### 1. Code et Build
 
+- [ ] `npm install` fonctionne sans erreur
+- [ ] `npm run build` se termine avec succès
+- [ ] `npm run server` démarre Express sur port 4000
+- [ ] `npm start` démarre React dev server
+- [ ] Aucun fichier `.env` commité dans le repo
+- [ ] `.gitignore` contient `.env`
 
----##  Checklist de Vérification
+### 2. Configuration Serverless
 
+- [ ] Fonctions Vercel dans `/api/nexus/` (validate.mjs, tracked.mjs, untrack.mjs)
+- [ ] `vercel.json` configuré avec rewrites pour DELETE /tracked/:domain/:modId
+- [ ] Headers CORS identiques dans toutes les fonctions (voir CHANGELOG.md 3.3.0)
+- [ ] `nexusHeaders(username, apiKey)` accepte paramètres dans toutes les fonctions
 
+### 3. Synchronisation Dev/Prod
 
-##  Checklist Rapide###  1. Pitch du Projet -  VALIDÉ
+**CRITIQUE** : Vérifier que ces 7 blocs sont identiques entre server.mjs et api/nexus/tracked.mjs
 
+- [ ] `CATEGORIES_BY_GAME` constant (5 jeux configurés)
+- [ ] `toEpoch()` utility function
+- [ ] `nexusHeaders(username, apiKey)` helper
+- [ ] `getCategoryName(domain, categoryId)` function
+- [ ] `withPool(items, limit, fn)` concurrency helper
+- [ ] `getGameInfo(domain, username, apiKey)` game metadata fetcher
+- [ ] Changelog version sorting (semantic: 1.13 > 1.12 > 1.9)
 
+> **Référence** : voir [.github/copilot-instructions.md](../.github/copilot-instructions.md) section "Code Synchronization"
 
-###  Documentation
+### 4. Sécurité
+
+- [ ] Aucune clé API hardcodée dans le code
+- [ ] Headers CORS configurés dans les fonctions serverless
+- [ ] Headers de sécurité : X-Frame-Options, X-Content-Type-Options, Referrer-Policy
+- [ ] localStorage utilisé pour credentials côté client
+- [ ] Credentials transitent via headers `X-Nexus-Username`/`X-Nexus-ApiKey`
+
+> **Détails sécurité** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
+
+### 5. Tests
+
+- [ ] Test local : modal s'affiche au premier lancement
+- [ ] Test local : credentials persistent après F5
+- [ ] Test local : navigation fonctionne (/, /nexus-mods)
+- [ ] Test build : `npm run build` réussit
+- [ ] Test déploiement : site accessible après deploy
+- [ ] Test API : validate, tracked, untrack fonctionnent
+
+> **Tests complets** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+
+### 6. Documentation
 
 - [ ] README.md complet et à jour
 - [ ] DEPLOYMENT.md avec instructions Vercel
+- [ ] CHANGELOG.md contient version 3.3.0
 - [ ] Tous les fichiers .md cohérents (pas de doublons)
-- [ ] Guide d'obtention de clé API clair
-- [ ] Architecture bien documentée
+- [ ] .github/copilot-instructions.md à jour
 
-**Localisation** : README.md lignes 8-22
+### 7. API et Cache
 
-###  Versions et Cohérence
-
----
-
-- [ ] Versions synchronisées dans tous les .md (3.0.0 – 6 Nov 2025)
-
-- [ ] Endpoints API alignés entre frontend et backend### � 2. Stack Technique -  VALIDÉ
-
-- [ ] Terminologie uniforme : "credentials", "localStorage", "headers `X-Nexus-*`", "serverless functions"
-
-Documentation complète de la stack dans README.md :
-
-###  Code et Build
-
-#### Frontend
-
-- [ ] `npm install` fonctionne sans erreur-  React 19.2.0
-
-- [ ] `npm run build` se termine avec succès-  React Router 7.9.4
-
-- [ ] Aucun fichier `.env` commité dans le repo-  Tailwind CSS 3.4.18
-
-- [ ] `.gitignore` contient `.env`-  Bootstrap 5.3.8
-
-- [ ] Scripts npm fonctionnels (`npm start`, `npm run server`, `npm test`)-  JavaScript (ES6+)
-
-
-
-###  Configuration Serverless#### Backend
-
--  Node.js 18+
-
-- [ ] Fonctions Vercel dans `/api/nexus/` (validate.mjs, tracked.mjs, untrack.mjs)-  Express 4.19.2
-
-- [ ] Fonctions Netlify dans `/netlify/functions/` (nexus-validate.mjs, nexus-tracked.mjs, nexus-untrack.mjs)-  node-fetch 3.3.2
-
-- [ ] `vercel.json` configuré avec rewrites-  Serverless Functions (Vercel/Netlify)
-
-- [ ] `netlify.toml` configuré avec redirects
-
-#### Outils
-
-###  Sécurité-  Create React App 5.0.1
-
--  Git
-
-- [ ] Aucune clé API hardcodée dans le code
-
-- [ ] Headers CORS configurés dans les fonctions serverless**Localisation** : README.md lignes 26-40
-
-- [ ] Headers de sécurité : X-Frame-Options, X-Content-Type-Options, Referrer-Policy
-
-- [ ] localStorage utilisé pour credentials côté client---
-
-
-
-> **Détails sécurité** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)###  3. Comment Lancer le Projet -  VALIDÉ
-
-
-
-###  TestsGuide complet avec démarche détaillée :
-
-
-
-- [ ] Test local : modal s'affiche au premier lancement#### Obtenir la clé API
-
-- [ ] Test local : credentials persistent après F5-  Instructions pas-à-pas pour créer un compte Nexus Mods
-
-- [ ] Test local : navigation fonctionne (/, /nexus-mods)-  Navigation vers la page API Access
-
-- [ ] Test build : `npm run build` réussit-  Génération de la clé API
-
-- [ ] Test déploiement : site accessible après deploy-  Avertissement de sécurité
-
-
-
-> **Tests complets** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)**Localisation** : README.md lignes 58-69
-
-
-
-###  API et Cache#### Installation
-
-```bash
-
-- [ ] Cache configuré : 60s (liste mods), 10min (détails mod), 24h (infos jeu)git clone https://github.com/sonical0/The_Courrier.git
-
-- [ ] TTL cohérent dans toutes les fonctions serverlesscd The_Courrier
-
-- [ ] Endpoints exposés : `/api/nexus/validate`, `/api/nexus/tracked`, `/api/nexus/untrack`npm install
-
-```
+- [ ] Cache configuré : 60s (liste mods), 10min (détails mod), 24h (infos jeu)
+- [ ] TTL cohérent dans toutes les fonctions serverless
+- [ ] Endpoints exposés : `/api/nexus/validate`, `/api/nexus/tracked`, `/api/nexus/untrack`
 
 ---
 
-#### Lancement
+## Actions Avant Déploiement
 
-##  Actions Avant Déploiement-  **Option 1** : Dev avec serveur local (2 terminaux)
-
--  **Option 2** : Build production
-
-### 1. Tests Locaux
-
-**Localisation** : README.md lignes 71-98
-
-```bash
-
-# Terminal 1 : Backend#### Premier lancement
-
-npm run server-  Explication du modal de configuration
-
--  Étapes de saisie des credentials
-
-# Terminal 2 : Frontend-  Information sur le stockage local
-
-npm start
-
-**Localisation** : README.md lignes 100-111
+### 1. Tests Locaux Complets
 
 # Vérifier : http://localhost:3000
 
@@ -204,183 +138,60 @@ Suivre les instructions dans [DEPLOYMENT.md](./DEPLOYMENT.md)    └── useTh
 
 #### Services & API
 -  Backend local (server.mjs - port 4000)
--  Fonctions Vercel (api/nexus/)
--  Détails des endpoints
 
-#### Flux de Données
+```bash
+# Terminal 1: Start backend
+npm run server
 
-----  Schéma complet du flux utilisateur → localStorage → API → Nexus
+# Terminal 2: Start frontend
+npm start
 
--  Explication du système de cache (TTL, clés)
-
-##  Dépannage
-
-**Localisation** : README.md lignes 250-290
-
-**Problème rencontré ?** Consultez :
-
----
-
-- [DEPLOYMENT.md](./DEPLOYMENT.md) - Section Dépannage
-
-- [TESTING_GUIDE.md](./TESTING_GUIDE.md) - Scénarios d'erreur###  5. Endpoints API -  VALIDÉ
-
-- [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md) - Configuration avancée
-
-Liste complète et documentation des endpoints :
-
----
-
-#### Endpoints Nexus Mods Utilisés
-
-##  Validation Finale
-
-| Endpoint | Usage |
-
-**Le projet est prêt si tous les points sont cochés **|----------|-------|
-
-| `/v1/users/validate.json` | Validation credentials |
-
-- Architecture documentée : [README.md](./README.md)| `/v1/user/tracked_mods.json` | Liste mods suivis |
-
-- Déploiement documenté : [DEPLOYMENT.md](./DEPLOYMENT.md)| `/v1/games/{domain}/mods/{id}.json` | Détails mod |
-
-- Tests documentés : [TESTING_GUIDE.md](./TESTING_GUIDE.md)| `/v1/games/{domain}/mods/{id}/changelogs.json` | Changelogs |
-
-- Credentials documentés : [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)| `/v1/games/{domain}.json` | Infos jeu |
-
-- Historique documenté : [CHANGELOG.md](./CHANGELOG.md)
-
-** Chaque endpoint inclut** :
-
-** Prêt pour le déploiement !**- Méthode HTTP
-
-- Usage détaillé
-- Lien direct vers la documentation officielle
-
-**Localisation** : README.md lignes 294-305
-
-#### Nos Endpoints (Proxy)
-
-| Endpoint | Méthode | Description |
-|----------|---------|-------------|
-| `/api/nexus/validate` | POST | Vérifie credentials |
-| `/api/nexus/tracked` | GET | Liste enrichie mods |
-| `/api/nexus/tracked/:domain/:modId` | DELETE | Untrack mod |
-
-**Localisation** : README.md lignes 307-315
-
-#### Documentation Complète
-- Lien vers la documentation officielle Swagger Hub
-- Explication de l'authentification (headers)
-- Information sur les rate limits
-
-**Localisation** : README.md lignes 317-338
-
----
-
-## Cohérence entre les Fichiers
-
-### Versions Synchronisées
-
-Tous les fichiers documentent la même version :
-- README.md → Version 3.0.0 (6 Nov 2025)
-- CHANGELOG.md → Version 3.0.0 (6 Nov 2025)
-- SUMMARY.md → Version 3.0.0 (6 Nov 2025)
-- DEPLOYMENT.md → Mis à jour avec nouvelle architecture
-
-### Architecture Credentials Cohérente
-
-Tous les documents mentionnent correctement :
-- Configuration par utilisateur (localStorage) - **RECOMMANDÉ**
-- Configuration serveur (variables d'environnement) - **OPTIONNEL**
-- Headers HTTP personnalisés : `X-Nexus-Username`, `X-Nexus-ApiKey`
-
-**Fichiers vérifiés** :
-- README.md
-- DEPLOYMENT.md
-- CREDENTIALS_CONFIG.md
-- SUMMARY.md
-
-### Endpoints API Cohérents
-
-Tous les documents utilisent les mêmes endpoints :
-- `/api/nexus/validate`
-- `/api/nexus/tracked`
-- `/api/nexus/tracked/:domain/:modId`
-
-**Fichiers vérifiés** :
-- README.md
-- useNexusMods.js
-- api/nexus/*.mjs 
-
-### Scripts NPM Cohérents
-
-package.json et documentation alignés :
-- `npm start` → Port 3000 (React)
-- `npm run server` → Port 4000 (Express)
-- `npm run build` → Build production
-- `npm test` → Tests
-
----
-
-## Sécurité Pré-Déploiement
-
-### Vérifications de Sécurité
-
-- Aucun fichier `.env` dans le repo
-- `.gitignore` contient `.env`
-- Aucune clé API hardcodée dans le code
-- Headers CORS configurés dans les fonctions serverless
-- Documentation sur les limitations de sécurité (localStorage)
-
-### Points d'Attention
-
-1. **localStorage** : Les credentials sont visibles dans les DevTools
-   - Documenté dans README.md
-   - Alternatives suggérées (chiffrement, tokens)
-
-2. **Rate Limits** : API Nexus Mods limitée
-   - Système de cache implémenté (60s / 10min / 24h)
-   - Documenté dans README.md
-
-3. **CORS** : Headers configurés
-   - `Access-Control-Allow-Headers` inclut les headers personnalisés
-   - Vérifié dans api/nexus/*.mjs
-
----
-
-## Fichiers Prêts pour le Déploiement
-
-### Configuration Vercel
-
-**Fichier** : `vercel.json`
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "rewrites": [...],
-  "headers": [...]
-}
+# Terminal 3: Run tests (optional)
+npm test
 ```
 
-**Fonctions Serverless** : `/api/nexus/`
-- validate.mjs
-- tracked.mjs
-- untrack.mjs
+### 2. Vérifier le Build
+
+```bash
+npm run build
+# Should complete without errors
+```
+
+### 3. Validation Finale
+
+**Le projet est prêt si tous les points sont cochés :**
+
+- Architecture documentée : [README.md](./README.md)
+- Déploiement documenté : [DEPLOYMENT.md](./DEPLOYMENT.md)
+- Tests documentés : [TESTING_GUIDE.md](./TESTING_GUIDE.md)
+- Credentials documentés : [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
+- Historique documenté : [CHANGELOG.md](./CHANGELOG.md)
+- Guide IA : [.github/copilot-instructions.md](../.github/copilot-instructions.md)
 
 ---
 
-## Résumé de la Documentation
+## Documentation
 
-| Document | Statut | Rôle |
-|----------|--------|------|
-| **README.md** | COMPLET | Documentation principale avec pitch, stack, architecture, API |
-| **DEPLOYMENT.md** | À JOUR | Guide de déploiement Vercel |
-| **CREDENTIALS_CONFIG.md** | COHÉRENT | Configuration avancée des credentials |
-| **TESTING_GUIDE.md** | COHÉRENT | Scénarios de test manuels et auto |
-| **CHANGELOG.md** | À JOUR | Historique technique des versions |
-| **SUMMARY.md** | À JOUR | Vue d'ensemble et guide utilisateur |
+### Statut des Fichiers
+
+| Document | Rôle | Dernière MàJ |
+|----------|------|--------------|
+| README.md | Documentation principale + pitch | 21 Jan 2026 |
+| CHANGELOG.md | Historique des versions (source unique) | 21 Jan 2026 |
+| DEPLOYMENT.md | Guide déploiement Vercel | 21 Jan 2026 |
+| TESTING_GUIDE.md | Tests manuels + credentials test | 21 Jan 2026 |
+| CREDENTIALS_CONFIG.md | Configuration avancée credentials | 7 Nov 2025 |
+| SUMMARY.md | Vue d'ensemble utilisateur | 21 Jan 2026 |
+| ADDING_GAME_CATEGORIES.md | Ajout catégories jeux | 30 Déc 2025 |
+| PRE_DEPLOYMENT_CHECK.md | Checklist (ce fichier) | 21 Jan 2026 |
+| .github/copilot-instructions.md | Guide agents IA | 21 Jan 2026 |
+
+### Cohérence Vérifiée
+
+- Version actuelle : **3.3.0 (21 Janvier 2026)**
+- Terminologie uniforme : credentials, localStorage, headers `X-Nexus-*`, serverless functions
+- Endpoints API identiques dans tout le projet
+- Scripts npm cohérents
 
 ---
 
@@ -388,48 +199,32 @@ package.json et documentation alignés :
 
 ### Avant le Déploiement
 
-1. **Tests locaux** : Lancer `npm start` et `npm run server` pour vérifier
-2. **Build local** : Exécuter `npm run build` pour s'assurer qu'il n'y a pas d'erreurs
-3. **Variables d'environnement** : Décider si vous utilisez des credentials serveur (optionnel)
-4. **Git** : Vérifier que tous les fichiers sont commités
-5. **Branch** : Utiliser la branche `test` ou merger vers `main`
+1. Lancer tous les tests locaux
+2. Exécuter `npm run build` sans erreur
+3. Vérifier que `.env` n'est pas commité
+4. Vérifier la synchronisation dev/prod (7 blocs critiques)
+5. Commiter tous les changements
 
 ### Après le Déploiement
 
-1. **Tester le modal** : Vérifier que le modal s'affiche au premier lancement
-2. **Tester les credentials** : Entrer vos identifiants Nexus Mods
-3. **Tester la navigation** : Vérifier les deux pages (Actus, Nexus Mods)
-4. **Tester la persistance** : Rafraîchir (F5) et vérifier que les credentials restent
-5. **Tester untrack** : Essayer de ne plus suivre un mod
-6. **Vérifier les logs** : Consulter les logs des fonctions serverless en cas d'erreur
+1. Tester le modal de configuration au premier lancement
+2. Entrer les credentials de test (voir TESTING_GUIDE.md)
+3. Vérifier la navigation entre les pages
+4. Tester la persistance (F5)
+5. Vérifier les logs Vercel en cas d'erreur
 
 ---
 
-##  CONCLUSION
+## Conclusion
 
-** Le projet est PRÊT pour le déploiement sur Vercel !**
+**Le projet est PRÊT pour le déploiement sur Vercel !**
 
-Tous les éléments demandés sont présents et cohérents :
--  Pitch du projet clairement défini
--  Stack technique complètement documentée
--  Procédure de lancement détaillée avec obtention de la clé API
--  Architecture technique exhaustive (sitemap, composants, services)
--  Liste complète des endpoints API avec liens vers la documentation
--  Cohérence entre tous les fichiers .md
+Tous les éléments sont présents et synchronisés :
+- Code dev/prod synchronisé (version 3.3.0)
+- Documentation complète et dédupliquée
+- Tests manuels documentés avec credentials publics
+- Architecture claire avec guide pour agents IA
 
-**Prochaine étape** : Déployer sur Vercel en suivant les instructions dans DEPLOYMENT.md !
+**Prochaine étape** : Suivre [DEPLOYMENT.md](./DEPLOYMENT.md) pour déployer !
 
----
-
-**Checklist Finale** :
-- [x] README.md complet et à jour
-- [x] DEPLOYMENT.md avec instructions Vercel
-- [x] Tous les fichiers .md cohérents
-- [x] Code nettoyé et organisé
-- [x] Configuration serverless prête
-- [x] Documentation API complète
-- [x] Guide d'obtention de clé API clair
-- [x] Architecture bien documentée
-
-** Bon déploiement !**
 

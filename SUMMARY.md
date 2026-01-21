@@ -65,39 +65,15 @@ Ce guide se concentre sur l'utilisation pratique. Pour plus de détails :
 
 ### Développement Local
 
-## Déploiement (Vercel & Netlify)
+```bash
+npm install
+npm run server  # Démarre Express sur le port 4000
+npm start       # Démarre React dev server (proxy vers 4000)
+```
 
-**The Courrier** est conçu pour être déployé facilement sur Vercel ou Netlify, sans configuration complexe.
+## Déploiement
 
-### Déploiement sur Vercel
-
-1. **Importer le projet**
-   - Créez un compte sur [vercel.com](https://vercel.com)
-   - Importez le repo GitHub
-
-2. **Build automatique**
-   - Vercel détecte l'app React
-   - Build command : `npm run build`
-   - Output directory : `build`
-
-3. **Fonctions serverless**
-   - Dossier : `/api/nexus/`
-   - Les endpoints sont automatiquement exposés
-
-4. **Variables d'environnement (optionnelles)**
-   - `NEXUS_API_KEY`, `NEXUS_USERNAME`, `NEXUS_APP_NAME`
-   - Par défaut, chaque utilisateur configure ses propres credentials dans l'interface
-
-5. **Déployer**
-   - Cliquez sur "Deploy"
-   - Accédez à votre app sur `https://your-app-name.vercel.app`
-
----
-
-### Déploiement sur Netlify
-
-1. **Importer le projet**
-   - Créez un compte sur [netlify.com](https://netlify.com)
+Consultez [DEPLOYMENT.md](./DEPLOYMENT.md) pour les instructions complètes de déploiement sur Vercel.
    - Importez le repo GitHub
 
 2. **Build automatique**
