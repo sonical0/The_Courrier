@@ -2,16 +2,24 @@ import { useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useDashboardStats from "../components/useDashboardStats";
 import useLastVisit from "../components/useLastVisit";
+import useGameVersions from "../components/useGameVersions";
 
 export default function DashboardPage({ credentials }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
   const { updateLastVisit } = useLastVisit();
   const stats = useDashboardStats(games, modsForGame);
+  const { updatedGames, checkForUpdates, dismissUpdate, dismissAllUpdates } = useGameVersions();
 
   useEffect(() => {
     const timer = setTimeout(() => updateLastVisit(), 2000);
     return () => clearTimeout(timer);
   }, [updateLastVisit]);
+
+  useEffect(() => {
+    if (games && games.length > 0) {
+      checkForUpdates(games);
+    }
+  }, [games, checkForUpdates]);
 
   if (loading) {
     return (
@@ -106,6 +114,83 @@ export default function DashboardPage({ credentials }) {
         </button>
       </div>
 
+      {/* Game Version Updates Alert */}
+      {updatedGames && updatedGames.length > 0 && (
+        <section className="mb-8">
+          <div className="pico-card p-6 border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20">
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">🎮</span>
+                <div>
+                  <h3 className="text-xl font-bold text-orange-800 dark:text-orange-300">
+                    Mise à jour de jeu détectée !
+                  </h3>
+                  <p className="text-sm text-orange-700 dark:text-orange-400">
+                    {updatedGames.length} jeu{updatedGames.length > 1 ? 'x ont' : ' a'} reçu une mise à jour de version
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={dismissAllUpdates}
+                className="px-3 py-1 rounded bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors text-sm"
+              >
+                Tout masquer
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {updatedGames.map((game, idx) => (
+                <div 
+                  key={idx}
+                  className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-800"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    {game.gameId && (
+                      <img 
+                        src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${game.gameId}.jpg`}
+                        alt={game.gameName}
+                        className="w-12 h-12 rounded object-cover border-2 border-orange-300 dark:border-orange-600"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800 dark:text-white mb-1">
+                        {game.gameName}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded line-through">
+                          v{game.previousVersion}
+                        </span>
+                        <span className="text-slate-400">→</span>
+                        <span className="px-2 py-0.5 bg-orange-500 text-white rounded font-medium">
+                          v{game.currentVersion}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                        ⚠️ Vérifiez la compatibilité de vos mods
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => dismissUpdate(game.gameKey)}
+                    className="ml-4 px-3 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm"
+                  >
+                    Masquer
+                  </button>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-4 p-3 bg-orange-100 dark:bg-orange-900/30 rounded text-sm text-orange-800 dark:text-orange-300">
+              💡 <strong>Conseil :</strong> Les mises à jour de jeux peuvent nécessiter des mises à jour de certains mods (SKSE, F4SE, etc.). 
+              Vérifiez les mods essentiels de votre liste.
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Core Statistics */}
       <section className="mb-8">
         <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Vue d'ensemble</h3>
@@ -138,6 +223,71 @@ export default function DashboardPage({ credentials }) {
           />
         </div>
       </section>
+
+      {/* Games with Recent Updates */}
+      {stats.gamesWithUpdates && stats.gamesWithUpdates.length > 0 && (
+        <section className="mb-8">
+          <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
+            🎮 Jeux avec mises à jour récentes (7 derniers jours)
+          </h3>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {stats.gamesWithUpdates.map((game, idx) => (
+              <div key={idx} className="pico-card p-6 border-l-4 border-green-500">
+                <div className="flex items-start gap-4 mb-4">
+                  {game.gameId && (
+                    <img 
+                      src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${game.gameId}.jpg`}
+                      alt={game.gameName}
+                      className="w-16 h-16 rounded object-cover border-2 border-slate-300 dark:border-slate-600"
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
+                      {game.gameName}
+                    </h4>
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                      <span className="font-semibold text-green-600 dark:text-green-400">
+                        {game.updateCount} mise{game.updateCount > 1 ? 's' : ''} à jour
+                      </span>
+                      {' · '}
+                      {game.totalMods} mod{game.totalMods > 1 ? 's' : ''} suivi{game.totalMods > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {game.recentMods.map((mod, modIdx) => (
+                    <div 
+                      key={modIdx}
+                      className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-slate-800 dark:text-white truncate">
+                          {mod.name || `Mod ${mod.id}`}
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {new Date(Number(mod.updatedAt) * 1000).toLocaleDateString()} · v{mod.version || '?'}
+                        </p>
+                      </div>
+                      <a
+                        href={mod.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-pico-primary hover:underline ml-2 flex-shrink-0"
+                      >
+                        Voir →
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Recent Activity */}
       <section className="mb-8">

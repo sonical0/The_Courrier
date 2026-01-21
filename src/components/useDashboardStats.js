@@ -119,6 +119,36 @@ export default function useDashboardStats(games, modsForGame) {
       });
     }
 
+    // Games with recent updates (last 7 days)
+    const gamesWithUpdates = [];
+    for (const game of games) {
+      const key = game.domain || game.gameId || game.name;
+      const gameMods = modsForGame(key);
+      const recentMods = gameMods.filter(m => Number(m.updatedAt || 0) >= sevenDaysAgo);
+      
+      if (recentMods.length > 0) {
+        // Find the most recent update for this game
+        const mostRecentInGame = recentMods.sort((a, b) => 
+          Number(b.updatedAt || 0) - Number(a.updatedAt || 0)
+        )[0];
+        
+        gamesWithUpdates.push({
+          gameId: game.gameId,
+          gameName: game.name || game.domain,
+          gameDomain: game.domain,
+          updateCount: recentMods.length,
+          totalMods: gameMods.length,
+          mostRecentMod: mostRecentInGame,
+          recentMods: recentMods.slice(0, 5) // Top 5 most recent
+        });
+      }
+    }
+    
+    // Sort by most recent update
+    gamesWithUpdates.sort((a, b) => 
+      Number(b.mostRecentMod.updatedAt || 0) - Number(a.mostRecentMod.updatedAt || 0)
+    );
+
     return {
       totalMods,
       totalGames,
@@ -135,6 +165,7 @@ export default function useDashboardStats(games, modsForGame) {
       gameDistribution,
       avgDaysSinceUpdate,
       timeline,
+      gamesWithUpdates,
     };
   }, [games, modsForGame]);
 }
