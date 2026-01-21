@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import ActuUpdatePage from "./pages/ActuUpdatePage";
 import NexusModsPage from "./pages/NexusModsPage.jsx";
+import IncompatibilityPage from "./pages/IncompatibilityPage.jsx";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
 import useNexusMods from "./components/useNexusMods";
@@ -79,6 +80,12 @@ export default function App() {
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
                   >
                     Liste des Mods
+                  </Link>
+                  <Link
+                    to="/incompatibility"
+                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                  >
+                    🔍 Incompatibilités
                   </Link>
                 </div>
 
@@ -163,6 +170,17 @@ export default function App() {
                   >
                     Liste des Mods
                   </Link>
+                  <Link
+                    to="/incompatibility"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                      theme === 'dark'
+                        ? 'bg-slate-700 text-white hover:bg-slate-600'
+                        : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                    }`}
+                  >
+                    🔍 Incompatibilités
+                  </Link>
                   <button
                     onClick={() => {
                       toggleTheme();
@@ -235,6 +253,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<ActuUpdatePage credentials={credentials} />} />
               <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
+              <Route path="/incompatibility" element={<IncompatibilityPage credentials={credentials} />} />
             </Routes>
           )}
         </main>
