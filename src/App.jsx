@@ -51,7 +51,7 @@ export default function App() {
         <header className="bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-700">
           <div className="container mx-auto px-4">
             <nav className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-3">
+              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer no-underline">
                 <img
                   src="/logo512.png"
                   alt="The Courrier Logo"
@@ -60,7 +60,7 @@ export default function App() {
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                   The Courrier
                 </h1>
-              </div>
+              </Link>
 
               <div className="hidden xl:flex items-center gap-6">
                 <div className="flex gap-4">
