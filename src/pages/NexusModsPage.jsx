@@ -144,6 +144,17 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
         </button>
       </div>
 
+      {/* Afficher les infos Steam du jeu sélectionné */}
+      {gameKey && gameKey !== "ALL" && getSteamInfo && (() => {
+        const selectedGame = games.find(g => (g.domain || g.gameId || g.name) === gameKey);
+        const steamInfo = selectedGame ? getSteamInfo(selectedGame.domain) : null;
+        return steamInfo ? (
+          <div className="mb-6">
+            <SteamGameInfo domain={selectedGame.domain} steamInfo={steamInfo} />
+          </div>
+        ) : null;
+      })()}
+
       {mods.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {mods.map((m) => (

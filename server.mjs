@@ -467,55 +467,96 @@ app.get("/api/steam/game/:appId", async (req, res) => {
 
     const gameData = storeData[appId].data;
 
-    // 2. SteamAPI (xpaw.me) pour les build IDs et dates réelles
+    // 2. Steam Web API officielle pour données en temps réel
     let buildId = null;
     let lastUpdate = null;
     let version = null;
+    const steamApiKey = process.env.STEAM_API_KEY;
 
+    // Méthode 1: Utiliser Steam Web API pour obtenir les vraies mises à jour du jeu
     try {
-      const apiUrl = `https://api.steamcmd.net/v1/info/${appId}`;
-      const apiRes = await fetch(apiUrl, {
+      // GetNewsForApp - Filtrer uniquement les annonces officielles de mise à jour
+      const newsUrl = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=${appId}&count=20&maxlength=300&format=json`;
+      const newsRes = await fetch(newsUrl);
+      
+      if (newsRes.ok) {
+        const newsData = await newsRes.json();
+        if (newsData.appnews && newsData.appnews.newsitems && newsData.appnews.newsitems.length > 0) {
+          // Chercher uniquement les annonces de Steam (feedname: steam_community_announcements)
+          // et qui mentionnent vraiment des mises à jour de jeu
+          const updateNews = newsData.appnews.newsitems.find(item => {
+            const isOfficial = item.feedname === 'steam_community_announcements';
+            const title = item.title.toLowerCase();
+            const contents = (item.contents || '').toLowerCase();
+            
+            // Mots-clés indiquant une vraie mise à jour de jeu
+            const isGameUpdate = 
+              title.includes('patch') && (title.includes('1.') || title.includes('2.') || title.includes('v1') || title.includes('v2')) ||
+              contents.includes('changelog') ||
+              contents.includes('bug fix') ||
+              contents.includes('update is now live') ||
+              contents.includes('version');
+            
+            return isOfficial && isGameUpdate;
+          });
+          
+          if (updateNews && updateNews.date) {
+            lastUpdate = updateNews.date * 1000;
+            // Ne pas utiliser le titre comme version
+            console.log(`📰 Found official update for ${appId} at ${new Date(lastUpdate).toISOString()}`);
+          }
+        }
+      }
+    } catch (newsError) {
+      console.warn(`Steam News API failed for ${appId}:`, newsError.message);
+    }
+
+    // Méthode 2: SteamCMD pour Build ID (toujours nécessaire car Steam Web API ne l'expose pas)
+    try {
+      const cmdUrl = `https://api.steamcmd.net/v1/info/${appId}`;
+      const cmdRes = await fetch(cmdUrl, {
         headers: {
           'User-Agent': 'The-Courrier/1.0'
         }
       });
       
-      if (apiRes.ok) {
-        const apiData = await apiRes.json();
+      if (cmdRes.ok) {
+        const cmdData = await cmdRes.json();
         
-        if (apiData.data && apiData.data[appId]) {
-          const appInfo = apiData.data[appId];
-          const depots = appInfo.depots;
-          const branches = depots?.branches;
+        if (cmdData.data && cmdData.data[appId]) {
+          const appInfo = cmdData.data[appId];
+          const branches = appInfo.depots?.branches;
           
-          // Utiliser la date de changement la plus récente disponible
-          // 1. Essayer common.time_updated
-          // 2. Sinon, utiliser branches.public.timeupdated
-          if (appInfo.common && appInfo.common.time_updated) {
-            const timestamp = parseInt(appInfo.common.time_updated);
-            lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
-          } else if (branches && branches.public && branches.public.timeupdated) {
-            const timestamp = parseInt(branches.public.timeupdated);
-            lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
-          }
-          
-          // Build ID depuis la branche publique
           if (branches && branches.public) {
             buildId = branches.public.buildid || null;
-            version = branches.public.description || null;
+            
+            // Si on n'a pas trouvé de date via les news, utiliser SteamCMD comme fallback
+            if (!lastUpdate) {
+              if (appInfo.common && appInfo.common.time_updated) {
+                const timestamp = parseInt(appInfo.common.time_updated);
+                lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+              } else if (branches.public.timeupdated) {
+                const timestamp = parseInt(branches.public.timeupdated);
+                lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+              }
+            }
+            
+            if (!version && branches.public.description) {
+              version = branches.public.description;
+            }
           }
           
-          console.log(`Steam info for ${appId}:`, {
+          console.log(`✅ Combined Steam data for ${appId}:`, {
             buildId,
-            commonTimeUpdated: appInfo.common?.time_updated,
-            publicTimeUpdated: branches?.public?.timeupdated,
+            version,
             lastUpdate,
-            lastUpdateFormatted: lastUpdate ? new Date(lastUpdate).toISOString() : null
+            lastUpdateFormatted: lastUpdate ? new Date(lastUpdate).toISOString() : null,
+            source: lastUpdate > (Date.now() - 365*24*60*60*1000) ? 'Steam News API (recent)' : 'SteamCMD (may be stale)'
           });
         }
       }
-    } catch (apiError) {
-      console.warn(`SteamAPI fetch failed for ${appId}, using fallback:`, apiError.message);
+    } catch (cmdError) {
+      console.warn(`SteamCMD API failed for ${appId}:`, cmdError.message);
     }
 
     // Fallback: si on n'a pas pu obtenir les vraies infos

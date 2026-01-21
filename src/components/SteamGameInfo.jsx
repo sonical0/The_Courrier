@@ -35,12 +35,6 @@ export default function SteamGameInfo({ domain, steamInfo }) {
       </div>
       
       <div className="space-y-1 text-xs text-blue-700 dark:text-blue-400">
-        {steamInfo.version && steamInfo.version !== "Not available" && (
-          <div className="flex justify-between">
-            <span className="font-medium">Version:</span>
-            <span>{steamInfo.version}</span>
-          </div>
-        )}
         {steamInfo.buildId && (
           <div className="flex justify-between">
             <span className="font-medium">Build ID:</span>
