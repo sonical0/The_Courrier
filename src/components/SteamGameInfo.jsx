@@ -29,8 +29,8 @@ export default function SteamGameInfo({ domain, steamInfo }) {
         <h6 className="text-sm font-bold text-blue-800 dark:text-blue-300">
           Infos Steam
         </h6>
-        <span className="ml-auto text-[10px] text-blue-600 dark:text-blue-500 italic">
-          (peut être obsolète)
+        <span className="ml-auto text-[10px] text-orange-600 dark:text-orange-400 italic font-semibold">
+          ⚠️ Données possiblement obsolètes
         </span>
       </div>
       
@@ -47,16 +47,28 @@ export default function SteamGameInfo({ domain, steamInfo }) {
         </div>
       </div>
       
-      {steamInfo.appId && (
-        <a
-          href={`https://store.steampowered.com/app/${steamInfo.appId}`}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-block mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline"
-        >
-          Voir sur Steam →
-        </a>
-      )}
+      <div className="mt-2 flex gap-3 text-xs">
+        {steamInfo.appId && (
+          <>
+            <a
+              href={`https://store.steampowered.com/app/${steamInfo.appId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Voir sur Steam →
+            </a>
+            <a
+              href={`https://steamdb.info/app/${steamInfo.appId}/`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-green-600 dark:text-green-400 hover:underline font-semibold"
+            >
+              📊 SteamDB (dates précises)
+            </a>
+          </>
+        )}
+      </div>
     </div>
   );
 }

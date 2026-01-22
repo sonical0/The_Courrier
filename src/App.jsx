@@ -287,8 +287,8 @@ export default function App() {
           ) : (
             <Routes>
               <Route path="/" element={<DashboardPage credentials={credentials} />} />
-              <Route path="/actus" element={<ActuUpdatePage credentials={credentials} />} />
-              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
+              <Route path="/actus" element={<ActuUpdatePage credentials={credentials} getSteamInfo={getSteamInfo} />} />
+              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} getSteamInfo={getSteamInfo} />} />
               <Route path="/incompatibility" element={<IncompatibilityPage credentials={credentials} />} />
             </Routes>
           )}

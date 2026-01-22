@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
+import SteamGameInfo from "../components/SteamGameInfo";
 
 export default function ActuUpdatePage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
@@ -229,6 +230,16 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
               />
             )}
           </div>
+          
+          {/* Afficher les infos Steam pour le jeu */}
+          {getSteamInfo && gameData?.domain && (() => {
+            const steamInfo = getSteamInfo(gameData.domain);
+            return steamInfo ? (
+              <div className="mb-4">
+                <SteamGameInfo domain={gameData.domain} steamInfo={steamInfo} />
+              </div>
+            ) : null;
+          })()}
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {mods.map((m) => (
