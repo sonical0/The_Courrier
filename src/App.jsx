@@ -1,12 +1,16 @@
 import { useState, useMemo } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import DashboardPage from "./pages/DashboardPage";
 import ActuUpdatePage from "./pages/ActuUpdatePage";
 import NexusModsPage from "./pages/NexusModsPage.jsx";
+import IncompatibilityPage from "./pages/IncompatibilityPage.jsx";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
 import useNexusMods from "./components/useNexusMods";
 import useLastVisit from "./components/useLastVisit";
 import useTheme from "./components/useTheme";
+import useSteamGames from "./components/useSteamGames";
+import GameUpdateAlert from "./components/GameUpdateAlert";
 
 export default function App() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
@@ -15,6 +19,14 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  
+  // Intégration Steam pour suivre les versions de jeux
+  const { 
+    alerts: steamAlerts, 
+    dismissAlert, 
+    dismissAllAlerts, 
+    getSteamInfo 
+  } = useSteamGames(games);
 
   // Calculer le nombre de nouveaux mods
   const newModsCount = useMemo(() => {
@@ -50,7 +62,7 @@ export default function App() {
         <header className="bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-700">
           <div className="container mx-auto px-4">
             <nav className="flex items-center justify-between py-4">
-              <div className="flex items-center gap-3">
+              <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer no-underline">
                 <img
                   src="/logo512.png"
                   alt="The Courrier Logo"
@@ -59,12 +71,12 @@ export default function App() {
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
                   The Courrier
                 </h1>
-              </div>
+              </Link>
 
               <div className="hidden xl:flex items-center gap-6">
                 <div className="flex gap-4">
                   <Link
-                    to="/"
+                    to="/actus"
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium relative"
                   >
                     Mise à jour
@@ -79,6 +91,12 @@ export default function App() {
                     className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
                   >
                     Liste des Mods
+                  </Link>
+                  <Link
+                    to="/incompatibility"
+                    className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                  >
+                    🔍 Incompatibilités
                   </Link>
                 </div>
 
@@ -137,7 +155,7 @@ export default function App() {
                     : 'border-slate-200 bg-white'
                 }`}>
                   <Link
-                    to="/"
+                    to="/actus"
                     onClick={() => setIsMenuOpen(false)}
                     className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium relative ${
                       theme === 'dark'
@@ -162,6 +180,17 @@ export default function App() {
                     }`}
                   >
                     Liste des Mods
+                  </Link>
+                  <Link
+                    to="/incompatibility"
+                    onClick={() => setIsMenuOpen(false)}
+                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                      theme === 'dark'
+                        ? 'bg-slate-700 text-white hover:bg-slate-600'
+                        : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
+                    }`}
+                  >
+                    🔍 Incompatibilités
                   </Link>
                   <button
                     onClick={() => {
@@ -226,6 +255,13 @@ export default function App() {
           onCancel={hasCredentials ? () => setShowModal(false) : undefined}
         />
 
+        {/* Alertes de mise à jour Steam */}
+        <GameUpdateAlert
+          alerts={steamAlerts}
+          onDismiss={dismissAlert}
+          onDismissAll={dismissAllAlerts}
+        />
+
         <main>
           {loading ? (
             <div className="container mx-auto px-4 py-8 text-center">
@@ -233,8 +269,10 @@ export default function App() {
             </div>
           ) : (
             <Routes>
-              <Route path="/" element={<ActuUpdatePage credentials={credentials} />} />
-              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} />} />
+              <Route path="/" element={<DashboardPage credentials={credentials} />} />
+              <Route path="/actus" element={<ActuUpdatePage credentials={credentials} getSteamInfo={getSteamInfo} />} />
+              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} getSteamInfo={getSteamInfo} />} />
+              <Route path="/incompatibility" element={<IncompatibilityPage credentials={credentials} />} />
             </Routes>
           )}
         </main>

@@ -226,8 +226,21 @@ app.get("/api/nexus/validate", async (req, res) => {
 
 app.post("/api/nexus/clear-cache", (req, res) => {
   CACHE.clear();
-  console.log("🗑️ Cache vidé");
+  console.log("🗑️ Cache vidé (Nexus + Steam)");
   res.json({ success: true, message: "Cache vidé avec succès" });
+});
+
+app.post("/api/steam/clear-cache", (req, res) => {
+  // Clear only Steam cache entries
+  let cleared = 0;
+  for (const key of CACHE.keys()) {
+    if (key.startsWith('steam:')) {
+      CACHE.delete(key);
+      cleared++;
+    }
+  }
+  console.log(`🗑️ ${cleared} entrées Steam supprimées du cache`);
+  res.json({ success: true, message: `${cleared} entrées Steam supprimées`, cleared });
 });
 
 
@@ -427,6 +440,183 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
     res.json({ success: true, message: "Mod retiré de la liste suivie" });
   } catch (e) {
     res.status(500).json({ error: String(e.message || e) });
+  }
+});
+
+// Steam API proxy endpoint
+app.get("/api/steam/game/:appId", async (req, res) => {
+  const { appId } = req.params;
+
+  if (!appId || isNaN(appId)) {
+    return res.status(400).json({ 
+      success: false, 
+      error: "Invalid Steam App ID" 
+    });
+  }
+
+  const ck = `steam:${appId}`;
+  const cached = cacheGet(ck);
+  if (cached) {
+    return res.json(cached);
+  }
+
+  try {
+    // 1. Steam Store API pour les infos de base
+    const storeUrl = `https://store.steampowered.com/api/appdetails?appids=${appId}`;
+    const storeRes = await fetch(storeUrl);
+    
+    if (!storeRes.ok) {
+      throw new Error(`Steam Store API error: ${storeRes.status}`);
+    }
+
+    const storeData = await storeRes.json();
+    
+    if (!storeData[appId] || !storeData[appId].success) {
+      return res.status(404).json({ 
+        success: false, 
+        error: "Game not found on Steam" 
+      });
+    }
+
+    const gameData = storeData[appId].data;
+
+    // 2. Steam Web API officielle pour données en temps réel
+    let buildId = null;
+    let lastUpdate = null;
+    let version = null;
+    const steamApiKey = process.env.STEAM_API_KEY;
+
+    // Méthode 1: SteamCMD pour Build ID et date (source primaire)
+    try {
+      const cmdUrl = `https://api.steamcmd.net/v1/info/${appId}`;
+      const cmdRes = await fetch(cmdUrl, {
+        headers: {
+          'User-Agent': 'The-Courrier/1.0'
+        }
+      });
+      
+      if (cmdRes.ok) {
+        const cmdData = await cmdRes.json();
+        
+        if (cmdData.data && cmdData.data[appId]) {
+          const appInfo = cmdData.data[appId];
+          const branches = appInfo.depots?.branches;
+          const depots = appInfo.depots?.depots;
+          
+          // Chercher la date la plus récente dans les manifests des dépôts
+          let newestManifestTime = 0;
+          if (depots && typeof depots === 'object') {
+            for (const depotId in depots) {
+              const depot = depots[depotId];
+              if (depot?.manifests?.public?.gid) {
+                // Essayer d'extraire un timestamp du manifest
+                const manifestGid = depot.manifests.public.gid;
+                // Les manifests peuvent avoir des timestamps dans leurs métadonnées
+                if (depot.manifests.public.lastupdate) {
+                  const ts = parseInt(depot.manifests.public.lastupdate);
+                  if (ts > newestManifestTime) newestManifestTime = ts;
+                }
+              }
+            }
+          }
+          
+          console.log(`🔍 RAW SteamCMD data for ${appId}:`, {
+            hasBranches: !!branches,
+            hasPublicBranch: !!branches?.public,
+            timeupdated: branches?.public?.timeupdated,
+            buildid: branches?.public?.buildid,
+            common_time_updated: appInfo.common?.time_updated,
+            newestManifestTime: newestManifestTime || 'none found'
+          });
+          
+          if (branches && branches.public) {
+            buildId = branches.public.buildid || null;
+            
+            // Priorité 1: Plus récent entre manifest et branch timeupdated
+            const branchTime = branches.public.timeupdated ? parseInt(branches.public.timeupdated) : 0;
+            const manifestTime = newestManifestTime;
+            
+            const useTime = Math.max(branchTime, manifestTime);
+            
+            if (useTime > 0) {
+              lastUpdate = useTime > 9999999999 ? useTime : useTime * 1000;
+              console.log(`✅ Using ${useTime === branchTime ? 'branch' : 'manifest'} time: ${new Date(lastUpdate).toISOString()}`);
+            }
+            // Fallback: common.time_updated
+            else if (appInfo.common && appInfo.common.time_updated) {
+              const timestamp = parseInt(appInfo.common.time_updated);
+              lastUpdate = timestamp > 9999999999 ? timestamp : timestamp * 1000;
+              console.log(`✅ Using common.time_updated: ${new Date(lastUpdate).toISOString()}`);
+            }
+            
+            if (!version && branches.public.description) {
+              version = branches.public.description;
+            }
+          }
+          
+          console.log(`✅ SteamCMD data for ${appId}:`, {
+            buildId,
+            version,
+            lastUpdate,
+            lastUpdateFormatted: lastUpdate ? new Date(lastUpdate).toISOString() : null,
+          });
+        }
+      }
+    } catch (cmdError) {
+      console.warn(`SteamCMD API failed for ${appId}:`, cmdError.message);
+    }
+
+    // Méthode 2: Steam News API comme source complémentaire (pas de remplacement si déjà trouvé)
+    if (!lastUpdate) {
+      try {
+        const newsUrl = `https://api.steampowered.com/ISteamNews/GetNewsForApp/v0002/?appid=${appId}&count=10&maxlength=300&format=json`;
+        const newsRes = await fetch(newsUrl);
+        
+        if (newsRes.ok) {
+          const newsData = await newsRes.json();
+          if (newsData.appnews && newsData.appnews.newsitems && newsData.appnews.newsitems.length > 0) {
+            // Prendre la date de la news la plus récente
+            const latestNews = newsData.appnews.newsitems[0];
+            if (latestNews && latestNews.date) {
+              lastUpdate = latestNews.date * 1000;
+              console.log(`📰 Using latest news date for ${appId}: ${new Date(lastUpdate).toISOString()}`);
+            }
+          }
+        }
+      } catch (newsError) {
+        console.warn(`Steam News API failed for ${appId}:`, newsError.message);
+      }
+    }
+
+    // Fallback: si on n'a pas pu obtenir les vraies infos
+    if (!buildId || !lastUpdate) {
+      const releaseDate = gameData.release_date?.date;
+      lastUpdate = releaseDate ? new Date(releaseDate).getTime() : Date.now();
+      buildId = `${lastUpdate}`;
+    }
+
+    const result = {
+      success: true,
+      appId: parseInt(appId),
+      name: gameData.name,
+      buildId: buildId,
+      version: version || "Not available",
+      lastUpdate: lastUpdate,
+      releaseDate: gameData.release_date?.date || null,
+      shortDescription: gameData.short_description || "",
+      headerImage: gameData.header_image || null,
+      developers: gameData.developers || [],
+      publishers: gameData.publishers || [],
+    };
+
+    cacheSet(ck, result, 2 * 60 * 60_000); // 2 hours cache (réduit de 6h)
+    res.json(result);
+  } catch (error) {
+    console.error(`Error fetching Steam data for ${appId}:`, error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message || "Internal server error" 
+    });
   }
 });
 
