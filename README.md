@@ -1,8 +1,8 @@
 # The Courrier
 
-> **WebApp de veille technologique pour les mods Nexus Mods**
+> **WebApp de veille technologique pour les mods Nexus Mods avec intégration Steam**
 
-Une application web moderne permettant de suivre et monitorer les mises à jour de vos mods favoris sur Nexus Mods. Profitez d'une interface épurée pour consulter les actualités, changelogs et gérer vos mods suivis par jeu.
+Une application web moderne permettant de suivre et monitorer les mises à jour de vos mods favoris sur Nexus Mods. Profitez d'une interface épurée pour consulter les actualités, changelogs et gérer vos mods suivis par jeu. Inclut un tableau de bord complet, l'intégration Steam pour suivre les versions de jeux, et la détection d'incompatibilités entre mods.
 
 [![React](https://img.shields.io/badge/React-19.2.0-blue.svg)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.18-38B2AC.svg)](https://tailwindcss.com/)
@@ -18,8 +18,14 @@ Une application web moderne permettant de suivre et monitorer les mises à jour 
 - **Analyser** les changelogs et historiques de versions
 - **Organiser** leurs mods par jeu avec une interface intuitive
 - **Être informés** des dernières nouveautés de la communauté modding
+- **Suivre** les versions de jeux Steam et recevoir des alertes de mise à jour
+- **Détecter** les incompatibilités potentielles entre mods
 
 Contrairement à l'interface standard de Nexus Mods, The Courrier offre une expérience optimisée pour la veille avec :
+- Tableau de bord centralisé avec statistiques et aperçu global
+- Intégration Steam pour suivre les versions de jeux (Build ID, dates de MAJ)
+- Alertes visuelles pour les mises à jour de jeux
+- Détection d'incompatibilités entre mods avec suggestions de résolution
 - Filtrage temporel avancé (7/15/30 jours, année)
 - Affichage enrichi avec noms de jeux, icônes et catégories
 - Badges "NEW" pour identifier les nouveautés
@@ -35,7 +41,6 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 - **React 19.2.0** - Framework JavaScript pour interfaces utilisateur
 - **React Router 7.9.4** - Navigation côté client (SPA)
 - **Tailwind CSS 3.4.18** - Framework CSS utility-first pour le design
-- **Bootstrap 5.3.8** - Composants UI complémentaires
 - **JavaScript (ES6+)** - Langage principal
 
 ### Backend
@@ -53,21 +58,21 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ## Captures d'écran
 
-### Homepage - Premier lancement (Mode clair)
-![Homepage premier lancement](./screenshots/homepage-first-launch-light.png)
-*Page d'accueil au premier lancement avec modal de configuration des identifiants*
+### Dashboard - Premier lancement (Mode clair)
+![Dashboard premier lancement](./screenshots/homepage-first-launch-light.png)
+*Tableau de bord au premier lancement avec modal de configuration des identifiants*
 
-### Homepage - Mises à jour récentes
-![Page d'accueil](./screenshots/homepage.png)
-*Suivez les mises à jour de vos mods favoris avec un filtrage temporel avancé*
+### Dashboard - Vue d'ensemble
+![Tableau de bord](./screenshots/homepage.png)
+*Tableau de bord avec statistiques, mises à jour récentes et intégration Steam*
 
 ### Liste des mods - Desktop (Mode clair)
 ![Liste des mods desktop](./screenshots/mods-list-desktop-light.png)
-*Vue desktop de la liste des mods avec layout optimisé pour grands écrans*
+*Vue desktop de la liste des mods avec layout optimisé, tri et filtrage avancés*
 
 ### Liste des mods par jeu
 ![Liste des mods](./screenshots/mods-list.png)
-*Gérez tous vos mods suivis, organisés par jeu*
+*Gérez tous vos mods suivis, organisés par jeu avec informations Steam*
 
 ### Configuration des identifiants
 ![Modal de configuration](./screenshots/credentials-modal.png)
@@ -80,17 +85,22 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 ### Actualités des Mods (ActuUpdatePage)
 - Affichage des mods récemment mis à jour
 - Filtrage par période (7, 15, 30 jours, année passée)
+- Filtrage et tri (par jeu, par date, par nom, par auteur)
 - **Noms réels des jeux** avec icônes officielles Nexus Mods
 - **Catégories des mods** affichées avec l'auteur
+- **Intégration Steam** : affichage des informations de version de jeu
 - Changelogs détaillés avec version précédente
-- Liens directs vers les pages Nexus Mods
+- Liens directs vers les pages Nexus Mods et profils auteurs
 
 ### Mods Suivis (NexusModsPage)
 - Vue par jeu de tous vos mods suivis
 - **Badge catégorie** avec icône pour chaque mod
+- **Tri et filtrage** par jeu, date, nom ou auteur
+- **Informations Steam du jeu sélectionné** (version, Build ID, date MAJ)
 - Gestion des mods (ne plus suivre)
 - Informations détaillées (version, auteur, changelog)
 - Dates de mise à jour
+- Liens vers profils auteurs Nexus Mods
 
 ### Catégories de Mods
 - Système de catégories pour 5 jeux majeurs :
@@ -101,6 +111,29 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
   - Fallout 4 (46 catégories)
 - Outils fournis pour ajouter facilement de nouveaux jeux
 - Voir [ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md) pour les détails
+
+### Intégration Steam
+- Suivi des versions de jeux Steam en temps réel
+- Mapping automatique Nexus domain → Steam AppID
+- Alertes visuelles pour les mises à jour de jeux
+- Affichage des Build IDs et dates de dernière MAJ
+- Cache intelligent (2h) pour limiter les appels API
+- Jeux supportés : Skyrim SE, Skyrim, Fallout 4, Cyberpunk 2077, Baldur's Gate 3
+- Système d'alertes dismissables avec persistance
+
+### Tableau de Bord (DashboardPage)
+- Vue d'ensemble de votre collection de mods
+- Statistiques globales (total mods, jeux suivis, mises à jour récentes)
+- Dernières actualités de vos mods
+- Intégration des alertes Steam pour les jeux
+- Accès rapide aux fonctionnalités principales
+
+### Détection d'Incompatibilités (IncompatibilityPage)
+- Analyse des mods installés pour détecter les conflits potentiels
+- Suggestions de résolution basées sur la communauté
+- Ordre de chargement recommandé
+- Liens vers patches de compatibilité
+- Ressources et documentation pour résoudre les problèmes
 
 ### Configuration
 - Interface de configuration des identifiants Nexus Mods
@@ -186,8 +219,10 @@ Vos identifiants sont stockés localement dans votre navigateur et ne sont jamai
 L'application utilise **React Router** pour la navigation côté client (Single Page Application) :
 
 ```
-/                           → ActuUpdatePage (page d'accueil)
+/                           → DashboardPage (tableau de bord)
+/actus                      → ActuUpdatePage (mises à jour récentes)
 /nexus-mods                 → NexusModsPage (gestion des mods suivis)
+/incompatibility            → IncompatibilityPage (détection d'incompatibilités)
 ```
 
 ### Structure des Composants
@@ -198,20 +233,35 @@ src/
 │   ├── Router & Routes                  # Configuration du routing
 │   ├── Header avec navigation           # Barre de navigation persistante
 │   ├── Gestion des credentials          # Hook useNexusCredentials
-│   └── Gestion du thème                 # Hook useTheme (dark/light)
+│   ├── Gestion du thème                 # Hook useTheme (dark/light)
+│   └── Intégration Steam                # Hook useSteamGames + alertes
 │
 ├── pages/
+│   ├── DashboardPage.jsx                # Page d'accueil / Tableau de bord
+│   │   ├── Statistiques globales        # Nombre total de mods, jeux, etc.
+│   │   ├── Mods récents                 # Dernières mises à jour
+│   │   ├── Informations Steam           # Versions de jeux et alertes
+│   │   └── Vue d'ensemble               # Résumé de l'activité
+│   │
 │   ├── ActuUpdatePage.jsx               # Page des actualités de mods
 │   │   ├── Filtrage temporel            # 7j/15j/30j/année
+│   │   ├── Filtrage et tri              # Par jeu, date, nom, auteur
 │   │   ├── Affichage des mods mis à jour
+│   │   ├── Informations Steam du jeu    # Version, Build ID, date MAJ
 │   │   ├── Changelogs enrichis          # Version actuelle vs précédente
-│   │   └── Liens vers Nexus Mods
+│   │   └── Liens vers Nexus Mods        # Mods et profils auteurs
 │   │
-│   └── NexusModsPage.jsx                # Page de gestion des mods suivis
-│       ├── Dropdown de sélection de jeu # Organisé par domaine de jeu
-│       ├── Liste des mods par jeu       # Filtrée dynamiquement
-│       ├── Détails des mods             # Version, auteur, changelog
-│       └── Action "Ne plus suivre"      # Untrack avec confirmation
+│   ├── NexusModsPage.jsx                # Page de gestion des mods suivis
+│   │   ├── Dropdown de sélection de jeu # Organisé par domaine de jeu
+│   │   ├── Liste des mods par jeu       # Filtrée dynamiquement
+│   │   ├── Détails des mods             # Version, auteur, changelog
+│   │   ├── Informations Steam du jeu    # SteamGameInfo component
+│   │   └── Action "Ne plus suivre"      # Untrack avec confirmation
+│   │
+│   └── IncompatibilityPage.jsx          # Détection d'incompatibilités
+│       ├── Analyse des mods chargés     # Détection de conflits
+│       ├── Suggestions de résolution    # Ordre de chargement, patches
+│       └── Liens vers ressources        # Documentation et forums
 │
 └── components/
     ├── CredentialsModal.jsx             # Modal de configuration Nexus Mods
@@ -251,6 +301,33 @@ src/
     │   ├── Comptage nouveaux mods
     │   └── Mise à jour timestamp
     │
+    ├── useSteamGames.js                 # Hook d'intégration Steam
+    │   ├── Mapping Nexus domain → Steam AppID
+    │   ├── Récupération infos jeux Steam  # Versions, dates de MAJ
+    │   ├── Détection de mises à jour      # Comparaison versions
+    │   ├── Gestion des alertes            # Système de notifications
+    │   └── Cache et persistance           # localStorage + rate limiting
+    │
+    ├── useDashboardStats.js             # Hook de statistiques dashboard
+    │   ├── Calcul stats globales          # Total mods, jeux, etc.
+    │   ├── Groupement par catégorie       # Distribution des mods
+    │   └── Tendances temporelles          # Activité récente
+    │
+    ├── useGameVersions.js               # Hook de gestion des versions
+    │   ├── Tracking des versions de jeux
+    │   ├── Historique des changements
+    │   └── Comparaisons de versions
+    │
+    ├── SteamGameInfo.jsx                # Composant d'affichage infos Steam
+    │   ├── Carte avec infos jeu           # Nom, image, version
+    │   ├── Date de dernière MAJ           # Build ID et timestamp
+    │   └── Liens vers Steam Store         # Navigation externe
+    │
+    ├── GameUpdateAlert.jsx              # Composant d'alertes Steam
+    │   ├── Notifications de MAJ           # Toast/banner pour nouvelles versions
+    │   ├── Actions (voir détails, fermer) # Interactions utilisateur
+    │   └── Persistance des dismissals     # Ne plus afficher
+    │
     └── useTheme.js                      # Hook de gestion du thème
         ├── Détection automatique        # Préférence système
         ├── Toggle manuel                # Bouton jour/nuit
@@ -267,11 +344,15 @@ server.mjs                               # Serveur Express pour dev local
 ├── Gestion des catégories               # Mapping statique pour 5 jeux
 │   ├── getCategoryName()                # Récupération catégorie par ID
 │   └── CATEGORIES_BY_GAME               # Mapping domain -> ID -> nom
-├── Endpoints :
+├── Endpoints Nexus :
 │   ├── GET  /api/nexus/validate         # Validation des credentials
 │   ├── GET  /api/nexus/tracked          # Liste des mods suivis
-│   └── DELETE /api/nexus/tracked/:domain/:modId
-└── Proxy vers API Nexus Mods
+│   ├── DELETE /api/nexus/tracked/:domain/:modId
+│   └── POST /api/nexus/clear-cache      # Vider le cache Nexus
+├── Endpoints Steam :
+│   ├── GET  /api/steam/game/:appId      # Infos jeu Steam
+│   └── POST /api/steam/clear-cache      # Vider le cache Steam uniquement
+└── Proxy vers API Nexus Mods et Steam
 ```
 
 #### Fonctions Serverless (Production - Vercel)
@@ -287,6 +368,14 @@ api/nexus/
 │   └── Enrichissement avec changelogs
 └── untrack.mjs                          # DELETE /api/nexus/untrack
     └── Query params: domain, modId
+
+api/steam/game/
+└── [appId].mjs                          # GET /api/steam/game/:appId
+    ├── Cache 2h pour les infos Steam
+    ├── Steam Store API                  # Infos de base du jeu
+    ├── SteamCMD API                     # Build ID et dates réelles
+    ├── Steam News API                   # Fallback pour dates
+    └── Données enrichies                # Version, dernière MAJ, images
 ```
 
 ### Flux de Données
@@ -333,9 +422,11 @@ api/nexus/
 |--------|-----|--------------|
 | Liste des mods suivis | 60 secondes | `tracked:{username}` |
 | Détails d'un mod | 10 minutes | `mod:{username}:{domain}:{id}` |
-| Informations de jeu | 24 heures | `game:{domain}` |
+| Informations de jeu Nexus | 24 heures | `game:{domain}` |
+| Informations de jeu Steam | 2 heures | `steam:{appId}` |
 
-Le cache est en mémoire côté serveur et réinitialisé à chaque redémarrage de fonction serverless.
+Le cache est en mémoire côté serveur (Nexus) et réinitialisé à chaque redémarrage de fonction serverless.
+Le cache Steam est également en mémoire avec une durée réduite (2h) pour assurer des informations récentes sur les versions de jeux.
 
 ### Système de Catégories
 
@@ -372,6 +463,7 @@ L'application utilise l'API publique officielle de Nexus Mods v1. Tous les appel
 | `/api/nexus/validate` | POST | `/v1/users/validate.json` | Vérifie les credentials utilisateur |
 | `/api/nexus/tracked` | GET | `/v1/user/tracked_mods.json` + enrichissement | Récupère et enrichit la liste des mods suivis |
 | `/api/nexus/tracked/:domain/:modId` | DELETE | - | Retire un mod de la liste de suivi |
+| `/api/steam/game/:appId` | GET | Steam Store API + SteamCMD API | Récupère infos de jeu Steam (version, date MAJ, Build ID) |
 
 ### Authentification
 
@@ -400,10 +492,25 @@ L'API Nexus Mods impose des limites :
 
 Notre système de cache réduit considérablement le nombre d'appels API réels.
 
+### Steam API
+
+L'application utilise également plusieurs sources Steam pour obtenir des informations sur les versions de jeux :
+
+| Endpoint Steam | Usage | Cache |
+|----------------|-------|-------|
+| `store.steampowered.com/api/appdetails` | Informations de base du jeu (nom, description, images) | 2 heures |
+| `api.steamcmd.net/v1/info/:appid` | Build ID réel et date de dernière MAJ | 2 heures |
+| `api.steampowered.com/ISteamNews/GetNewsForApp` | Fallback pour dates de MAJ | 2 heures |
+
+> **Note** : L'intégration Steam ne nécessite pas de clé API pour les endpoints publics utilisés.
+
 ### Documentation Complète
 
  **Documentation officielle Nexus Mods API v1** :
 [https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0)
+
+ **Documentation Steam Web API** :
+[https://partner.steamgames.com/doc/webapi](https://partner.steamgames.com/doc/webapi)
 
 ---
 
@@ -411,7 +518,7 @@ Notre système de cache réduit considérablement le nombre d'appels API réels.
 
 Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface, stockés dans le localStorage du navigateur.
 
-**Configuration détaillée des identifiants** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
+⚠️ **Configuration détaillée des identifiants** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
 
 ---
 
@@ -503,6 +610,10 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 - **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Vercel deployment instructions
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Technical deep-dive on credentials system
 - **[ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)** - How to add new game categories
+- **[STEAM_INTEGRATION.md](./STEAM_INTEGRATION.md)** - Complete Steam integration guide
+- **[STEAM_IMPLEMENTATION_SUMMARY.md](./STEAM_IMPLEMENTATION_SUMMARY.md)** - Implementation summary
+- **[STEAM_TEST_GUIDE.md](./STEAM_TEST_GUIDE.md)** - Testing guide for Steam features
+- **[INCOMPATIBILITY_CHECKER.md](./INCOMPATIBILITY_CHECKER.md)** - Incompatibility detection guide
 - **[PRE_DEPLOYMENT_CHECK.md](./PRE_DEPLOYMENT_CHECK.md)** - Pre-deployment checklist
 - **[.github/copilot-instructions.md](./.github/copilot-instructions.md)** - AI agent development guide
 - **[.github/DOCUMENTATION_GUIDE.md](./.github/DOCUMENTATION_GUIDE.md)** - Documentation maintenance guide
@@ -520,6 +631,7 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 ## Remerciements
 
 - **Nexus Mods** pour leur API publique
+- **Steam / Valve** pour les APIs publiques Steam Store et SteamCMD
 - La communauté **React** et **Tailwind CSS**
 - Tous les contributeurs du projet
 
@@ -533,17 +645,25 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-**Made with for the modding community**
+**Made with ❤️ for the modding community**
 
 ---
 
 ## Liens Utiles
 
+### Plateformes
 - [Nexus Mods](https://www.nexusmods.com) - Plateforme de mods
-- [API Nexus Mods Documentation](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0) - Documentation API
+- [Steam](https://store.steampowered.com) - Plateforme de distribution de jeux
+
+### APIs & Documentation
+- [API Nexus Mods Documentation](https://app.swaggerhub.com/apis-docs/NexusMods/nexus-mods_public_api_params_in_form_data/1.0) - Documentation API officielle
+- [Steam Web API](https://partner.steamgames.com/doc/webapi) - Documentation Steam API
+- [SteamCMD API](https://steamapi.xpaw.me) - API pour informations de build
+
+### Technologies
 - [React Documentation](https://react.dev) - Framework frontend
-- [Tailwind CSS](https://tailwindcss.com) - Framework CSS
-- [Vercel](https://vercel.com) - Plateforme de déploiement
+- [Tailwind CSS](https://tailwindcss.com) - Framework CSS utility-first
+- [Vercel](https://vercel.com) - Plateforme de déploiement serverless
 
 
 ````
