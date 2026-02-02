@@ -25,19 +25,18 @@ console.log(JSON.stringify(categories, null, 2));
 
 3. Copiez le résultat JSON de la console
 
-4. Ouvrez `server.mjs` et ajoutez votre jeu dans `CATEGORIES_BY_GAME` :
+4. Ouvrez [src/data/nexus-categories.json](src/data/nexus-categories.json) et ajoutez votre jeu :
 
-```javascript
-const CATEGORIES_BY_GAME = {
-  // ... jeux existants ...
-  
-  starfield: {
-    1: 'Starfield',
-    2: 'Miscellaneous',
-    3: 'Armor',
+```json
+{
+  "skyrimspecialedition": { ... },
+  "starfield": {
+    "1": "Starfield",
+    "2": "Miscellaneous",
+    "3": "Armor"
     // ... collez vos catégories ici ...
   }
-};
+}
 ```
 
 5. Redémarrez le serveur !
@@ -54,25 +53,25 @@ const CATEGORIES_BY_GAME = {
 
 Pour **Starfield**, après extraction :
 
-```javascript
-starfield: {
-  1: 'Starfield',
-  2: 'Miscellaneous', 
-  3: 'Armor',
-  4: 'Audio',
-  5: 'Character Presets',
-  6: 'Clothing',
-  7: 'Companions',
-  8: 'Creatures',
-  9: 'Gameplay',
-  10: 'Locations',
-  11: 'Miscellaneous',
-  12: 'Modders Resources',
-  13: 'Ships',
-  14: 'User Interface',
-  15: 'Utilities',
-  16: 'Visuals and Graphics',
-  17: 'Weapons'
+```json
+"starfield": {
+  "1": "Starfield",
+  "2": "Miscellaneous",
+  "3": "Armor",
+  "4": "Audio",
+  "5": "Character Presets",
+  "6": "Clothing",
+  "7": "Companions",
+  "8": "Creatures",
+  "9": "Gameplay",
+  "10": "Locations",
+  "11": "Miscellaneous",
+  "12": "Modders Resources",
+  "13": "Ships",
+  "14": "User Interface",
+  "15": "Utilities",
+  "16": "Visuals and Graphics",
+  "17": "Weapons"
 }
 ```
 

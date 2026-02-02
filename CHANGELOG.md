@@ -1,5 +1,43 @@
 # Changelog - The Courrier
 
+## Version 3.4.1 - Optimisations Performance (02 Février 2026)
+
+### Améliorations
+
+#### Synchronisation Steam API
+- Harmonisation complète de la logique Steam entre server.mjs et api/steam/game/[appId].mjs
+- Ajout du cache (TTL 2h) à la fonction serverless Steam
+- Élimination de la duplication de logique (170 lignes optimisées)
+- Fichiers modifiés : server.mjs, api/steam/game/[appId].mjs
+
+#### Optimisation Logs
+- Ajout variable DEBUG pour contrôler les logs en production
+- 14 occurrences de console.log conditionnelles
+- Logs désactivés en production, actifs en développement uniquement
+- Variable : NODE_ENV === 'development'
+
+### Impact Technique
+- Réduction de la duplication de code : -170 lignes
+- Cache Steam en prod : réduction des appels API
+- Performance Vercel améliorée (moins de logs)
+- Maintenance simplifiée : une seule logique Steam à maintenir
+
+## Version 3.4.0 - Centralisation Catégories (02 Février 2026)
+
+### Améliorations
+
+#### Refactoring Catégories
+- Centralisation des catégories Nexus Mods dans un fichier JSON unique
+- Élimination de la duplication de code entre server.mjs et api/nexus/tracked.mjs
+- Création du fichier src/data/nexus-categories.json comme source de vérité
+- Fichiers modifiés : server.mjs, api/nexus/tracked.mjs, ADDING_GAME_CATEGORIES.md
+
+### Impact Technique
+- Maintenance simplifiée : une seule modification pour mettre à jour les catégories
+- Réduction du risque d'incohérence entre dev et prod
+- Pas d'impact sur les performances (lecture fichier au démarrage)
+- ADDING_GAME_CATEGORIES.md reste valide : ajouter les catégories dans le JSON au lieu du code
+
 ## Version 3.3.1 - Automatisation Documentation (21 Janvier 2026)
 
 ### Documentation
