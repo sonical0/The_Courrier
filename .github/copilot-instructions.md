@@ -52,7 +52,6 @@ const toEpoch = (v) => {
 **Dev server ([server.mjs](../server.mjs)) and serverless functions ([api/nexus/](../api/nexus/)) must stay in sync.** Changes to one require updating the other.
 
 Duplicated code to keep synchronized:
-- `CATEGORIES_BY_GAME` constant (server.mjs + api/nexus/tracked.mjs)
 - `toEpoch()` utility function (all 3 files)
 - `nexusHeaders()` helper (all 3 files - must accept username/apiKey params)
 - `getCategoryName()` function (server.mjs + api/nexus/tracked.mjs)
@@ -61,9 +60,9 @@ Duplicated code to keep synchronized:
 - Changelog version sorting logic (semantic versioning, not alphabetical)
 
 ### Category System
-Game mod categories are hardcoded maps in `CATEGORIES_BY_GAME`. To add a new game:
+Game mod categories are centralized in [src/data/nexus-categories.json](../src/data/nexus-categories.json). To add a new game:
 1. Follow [ADDING_GAME_CATEGORIES.md](../ADDING_GAME_CATEGORIES.md) extraction script
-2. Add category map to BOTH server.mjs and api/nexus/tracked.mjs
+2. Add category mapping to the JSON file (automatically used by both server.mjs and api/nexus/tracked.mjs)
 3. Use game's `domain_name` as key (e.g., `skyrimspecialedition`)
 
 ### Caching Strategy
@@ -174,14 +173,15 @@ When modifying serverless functions, update BOTH:
 - `server.mjs` (dev)
 - `api/nexus/*.mjs` (prod)
 
-Verify these 7 blocks stay identical:
-1. `CATEGORIES_BY_GAME`
-2. `toEpoch()`
-3. `nexusHeaders(username, apiKey)`
-4. `getCategoryName()`
-5. `withPool()`
-6. `getGameInfo()`
-7. Changelog sorting logic
+Verify these 6 blocks stay identical:
+1. `toEpoch()`
+2. `nexusHeaders(username, apiKey)`
+3. `getCategoryName()`
+4. `withPool()`
+5. `getGameInfo()`
+6. Changelog sorting logic
+
+Note: `CATEGORIES_BY_GAME` is now centralized in [src/data/nexus-categories.json](../src/data/nexus-categories.json) and no longer requires manual sync.
 
 ### 4. Update Version References
 - PRE_DEPLOYMENT_CHECK.md header (date + version)
