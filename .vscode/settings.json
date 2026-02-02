@@ -1,0 +1,24 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd \"c:\\\\Users\\\\Alexandre SANCHEZ\\\\Documents\\\\GitHub\\\\The_Courrier\"; node -e \"import\\('fs'\\)\\.then\\(fs => console\\.log\\(JSON\\.parse\\(fs\\.readFileSync\\('\\./src/data/nexus-categories\\.json', 'utf-8'\\)\\)\\.skyrimspecialedition\\['20'\\]\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\Alexandre SANCHEZ\\\\Documents\\\\GitHub\\\\The_Courrier\"; node -e \"import\\('\\./server\\.mjs'\\)\\.then\\(\\(\\) => console\\.log\\('✅ server\\.mjs charge correctement'\\)\\)\" 2>&1 \\| Select-Object -First 20$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\Alexandre SANCHEZ\\\\Documents\\\\GitHub\\\\The_Courrier\"; node -e \"import\\('\\./server\\.mjs'\\)\\.then\\(\\(\\) => console\\.log\\('✅ server\\.mjs charge correctement'\\)\\)\" 2>&1 \\| Select-Object -First 5$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\Alexandre SANCHEZ\\\\Documents\\\\GitHub\\\\The_Courrier\"; node -e \"import\\('\\./server\\.mjs'\\)\\.then\\(\\(\\) => console\\.log\\('✅ server\\.mjs OK'\\)\\)\" 2>&1 \\| Select-Object -First 5$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd \"c:\\\\Users\\\\Alexandre SANCHEZ\\\\Documents\\\\GitHub\\\\The_Courrier\"; node -e \"import\\('\\./api/steam/game/\\[appId\\]\\.mjs'\\)\\.then\\(\\(\\) => console\\.log\\('✅ Serverless function OK'\\)\\)\"$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
