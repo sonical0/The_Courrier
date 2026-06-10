@@ -1,6 +1,6 @@
 {
   "name": "the_courrier",
-  "version": "0.1.0",
+  "version": "3.5.1",
   "private": true,
   "proxy": "http://localhost:4000",
   "dependencies": {

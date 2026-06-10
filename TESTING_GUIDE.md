@@ -37,18 +37,18 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 ### Test 3 : Modification des credentials
 
 1. Être connecté avec des credentials valides
-2. Cliquer sur le bouton " Config" dans la navbar
+2. Cliquer sur le bouton "Config" (icone engrenage) dans la navbar
 3. **Résultat attendu** : La popup s'affiche avec un bouton "Annuler"
 4. Modifier le username ou l'API key
 5. Cliquer sur "Enregistrer"
 6. **Résultat attendu** : Le badge utilisateur se met à jour
-7. Cliquer à nouveau sur " Config" puis sur "Annuler"
+7. Cliquer à nouveau sur "Config" puis sur "Annuler"
 8. **Résultat attendu** : La popup se ferme sans modification
 
 ### Test 4 : Suppression des credentials
 
 1. Être connecté avec des credentials valides
-2. Cliquer sur le bouton "" dans la navbar
+2. Cliquer sur le bouton de suppression (icone corbeille) dans la navbar
 3. **Résultat attendu** : Une confirmation s'affiche
 4. Confirmer la suppression
 5. **Résultat attendu** : Le badge utilisateur disparaît et la popup de configuration réapparaît
@@ -92,7 +92,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 1. Être sur la page "Nexus Mods" avec des credentials valides
 2. Sélectionner un jeu dans la liste déroulante
-3. Cliquer sur " Ne plus suivre" sur un mod
+3. Cliquer sur le bouton "Ne plus suivre" sur un mod
 4. **Résultat attendu** : Une confirmation s'affiche
 5. Confirmer la suppression
 6. **Résultat attendu** : Le mod disparaît de la liste
@@ -103,69 +103,83 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 2. Cliquer sur le bouton "Rafraîchir"
 3. **Résultat attendu** : Les données se rechargent avec les credentials actuels
 
-## Tests Automatisés (à implémenter)
+### Test 11 : Bouton de test de connexion dans la modal credentials
 
-### Tests unitaires
+1. Ouvrir la popup de configuration (bouton "Config" dans la navbar)
+2. Laisser les deux champs vides
+3. **Résultat attendu** : Le bouton "Tester la connexion" est désactivé
+4. Remplir uniquement le champ username
+5. **Résultat attendu** : Le bouton reste désactivé
+6. Remplir également le champ API key avec une clé valide
+7. **Résultat attendu** : Le bouton est activé
+8. Cliquer sur "Tester la connexion"
+9. **Résultat attendu** : Le bouton affiche "Test en cours..." pendant la requête, puis un message de succès avec le nom d'utilisateur Nexus
+10. Modifier l'un des deux champs
+11. **Résultat attendu** : Le message de résultat disparaît immédiatement
+12. Saisir une clé API invalide et cliquer sur "Tester la connexion"
+13. **Résultat attendu** : Un message d'erreur s'affiche en rouge ; la popup reste ouverte
+
+### Test 12 : Recherche de mods
+
+1. Aller sur la page "Liste des Mods" avec au moins deux mods de noms différents
+2. Saisir une partie du nom d'un mod dans le champ de recherche
+3. **Résultat attendu** : Seuls les mods dont le nom contient la saisie s'affichent ; le compteur de résultats est correct
+4. Effacer et saisir le nom d'un auteur connu
+5. **Résultat attendu** : Tous les mods de cet auteur s'affichent
+6. Combiner la recherche avec le filtre jeu
+7. **Résultat attendu** : Les deux filtres s'appliquent simultanément
+
+### Test 13 : Suppression en lot de mods suivis
+
+1. Aller sur la page "Liste des Mods"
+2. Cocher deux ou trois mods via leurs cases à cocher
+3. **Résultat attendu** : La barre d'action sticky apparaît en bas de page avec le compteur correct
+4. Cliquer sur "Tout sélectionner"
+5. **Résultat attendu** : Tous les mods visibles sont cochés
+6. Cliquer sur "Tout désélectionner"
+7. **Résultat attendu** : Toutes les cases sont décochées et la barre disparaît
+8. Cocher à nouveau deux mods, cliquer sur le bouton de suppression de la barre
+9. **Résultat attendu** : Une confirmation unique s'affiche ; après confirmation, les deux mods disparaissent
+
+### Test 14 : Export JSON
+
+1. Aller sur la page "Liste des Mods"
+2. Cliquer sur le bouton "Exporter JSON"
+3. **Résultat attendu** : Un fichier the-courrier-mods-YYYY-MM-DD.json est téléchargé
+4. Ouvrir le fichier et vérifier la structure
+5. **Résultat attendu** : Chaque entrée contient les champs name, author, version, category, url, game, updatedAt en ISO 8601
+
+## Tests Automatisés
+
+### Tests implementes
+
+**src/components/CredentialsModal.test.jsx** (10 tests, React Testing Library)
+
+- Rendu conditionnel selon la prop `show`
+- Etat desactive du bouton de test si les champs sont vides
+- Affichage du message de succes apres une reponse 200 de l'API
+- Affichage du message d'erreur apres une reponse non-200 (clé invalide)
+- Affichage du message d'erreur en cas d'echec reseau
+- Reinitialisation du resultat lors de la modification des champs
+- Appel correct de `onSave` avec les valeurs saisies
+
+Execution : `node_modules/.bin/react-scripts test --watchAll=false --testPathPattern="CredentialsModal"`
+
+### Tests a implementer
 
 ```javascript
-// test/useNexusCredentials.test.js
+// src/components/useNexusCredentials.test.js
 describe('useNexusCredentials', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
-
-  test('should start with no credentials', () => {
-    const { result } = renderHook(() => useNexusCredentials());
-    expect(result.current.hasCredentials).toBe(false);
-  });
-
-  test('should save credentials to localStorage', () => {
-    const { result } = renderHook(() => useNexusCredentials());
-    act(() => {
-      result.current.saveCredentials('testuser', 'testkey123');
-    });
-    expect(result.current.hasCredentials).toBe(true);
-    expect(result.current.credentials.username).toBe('testuser');
-  });
-
-  test('should clear credentials', () => {
-    const { result } = renderHook(() => useNexusCredentials());
-    act(() => {
-      result.current.saveCredentials('testuser', 'testkey123');
-      result.current.clearCredentials();
-    });
-    expect(result.current.hasCredentials).toBe(false);
-  });
+  test('devrait démarrer sans credentials', ...);
+  test('devrait sauvegarder les credentials dans localStorage', ...);
+  test('devrait supprimer les credentials', ...);
 });
-```
 
-### Tests d'intégration
-
-```javascript
-// test/App.integration.test.js
-describe('App Integration', () => {
-  test('should show credentials modal on first load', () => {
-    render(<App />);
-    expect(screen.getByText(/Configuration Nexus Mods/i)).toBeInTheDocument();
-  });
-
-  test('should hide modal after saving credentials', async () => {
-    render(<App />);
-    
-    const usernameInput = screen.getByLabelText(/Nom d'utilisateur/i);
-    const apikeyInput = screen.getByLabelText(/Clé API/i);
-    const saveButton = screen.getByText(/Enregistrer/i);
-
-    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
-    fireEvent.change(apikeyInput, { target: { value: 'testkey123' } });
-    fireEvent.click(saveButton);
-
-    await waitFor(() => {
-      expect(screen.queryByText(/Configuration Nexus Mods/i)).not.toBeInTheDocument();
-    });
-
-    expect(screen.getByText(/testuser/i)).toBeInTheDocument();
-  });
+// src/components/useLastVisit.test.js
+describe('useLastVisit', () => {
+  test('isNew retourne false si le mod est dans seenMods', ...);
+  test('markAsSeen persiste dans localStorage', ...);
+  test('countNew exclut les mods marques comme vus', ...);
 });
 ```
 
@@ -189,7 +203,7 @@ describe('App Integration', () => {
 
 ### Erreur 1 : API Key invalide
 - **Symptôme** : Erreur 401 ou message "Invalid API Key"
-- **Solution** : Reconfigurer avec une clé API valide via " Config"
+- **Solution** : Reconfigurer avec une clé API valide via le bouton "Config" dans la navbar
 
 ### Erreur 2 : localStorage désactivé
 - **Symptôme** : La popup réapparaît à chaque rechargement

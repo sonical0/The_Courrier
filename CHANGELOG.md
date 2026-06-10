@@ -1,5 +1,70 @@
 # Changelog - The Courrier
 
+## Version 3.5.1 - Validation des credentials en temps reel (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Bouton de test de connexion dans la modal credentials
+- Ajout d'un bouton "Tester la connexion" dans CredentialsModal.jsx
+- Appel a l'endpoint /api/nexus/validate avant l'enregistrement des credentials
+- Affichage du resultat inline (succes avec nom d'utilisateur ou message d'erreur)
+- Le bouton est desactive tant que les deux champs sont vides ou pendant le test
+- Le resultat est reinitialise automatiquement a chaque modification des champs
+
+### Tests
+- Ajout de src/components/CredentialsModal.test.jsx (10 tests)
+- Couverture : etat desactive, reponse 200, reponse non-200, erreur reseau, reinitialisation, soumission
+
+### Fichiers Modifies
+- src/components/CredentialsModal.jsx - Ajout bouton de test et gestion de l'etat associe
+- src/components/CredentialsModal.test.jsx - Nouveau fichier de tests
+
+---
+
+## Version 3.5.0 - Securite et nouvelles fonctionnalites (10 Juin 2026)
+
+### Corrections Critiques
+
+#### Isolation de session par utilisateur (securite)
+- Correction du bug de fuite de session entre utilisateurs concurrents sur Vercel
+- Les cles de cache dans api/nexus/tracked.mjs incluent desormais le nom d'utilisateur
+- Avant : cle fixe "tracked" partagee entre tous les utilisateurs sur la meme instance
+- Apres : cle "tracked:{username}" et "mod:{username}:{domain}:{id}"
+- Impact : deux utilisateurs connectes simultanement voient exclusivement leurs propres mods
+
+#### Deduplication du code utilitaire
+- Creation de api/utils/NexusUtils.mjs : module partage entre server.mjs et api/nexus/tracked.mjs
+- Symboles extraits : toEpoch, getCategoryName, withPool, sortVersionsSemantic
+- Elimination de 7 blocs de code dupliques entre les contextes dev et production
+
+### Nouvelles Fonctionnalites
+
+#### Recherche par nom et auteur
+- Ajout d'une barre de recherche textuelle dans NexusModsPage.jsx et ActuUpdatePage.jsx
+- Filtrage insensible a la casse sur mod.name et mod.author
+- Affichage du nombre de resultats sous la barre de recherche
+- Cumul avec les filtres jeu, tri et periode existants
+
+#### Suppression en lot des mods suivis
+- Ajout de cases a cocher sur chaque carte de mod dans NexusModsPage.jsx
+- Barre d'action sticky en bas de page lors d'une selection active
+- Fonctions : compteur, tout selectionner / tout deselectionner, confirmation unique, suppression sequentielle
+- Utilise le hook untrackMod() existant
+
+#### Export JSON
+- Bouton "Exporter JSON" dans NexusModsPage.jsx
+- Telechargement du fichier the-courrier-mods-YYYY-MM-DD.json
+- Champs exportes : name, author, version, category, url, game, updatedAt (ISO 8601)
+
+### Fichiers Modifies
+- api/nexus/tracked.mjs - Correction cles de cache + import NexusUtils
+- api/utils/NexusUtils.mjs - Nouveau fichier (code partage)
+- server.mjs - Import NexusUtils, suppression code duplique
+- src/pages/NexusModsPage.jsx - Recherche, selection en lot, export JSON
+- src/pages/ActuUpdatePage.jsx - Recherche
+
+---
+
 ## Version 3.4.1 - Optimisations Performance (02 Février 2026)
 
 ### Améliorations
@@ -341,7 +406,7 @@ Les modifications sont prêtes pour :
 - **Netlify** : Fonction serverless `netlify/functions/nexus-tracked.mjs` mise à jour
 - **Local** : Serveur Express `server.mjs` mis à jour
 
-###Structure du Projet (Mise à jour)
+### Structure du Projet (Mise à jour)
 
 ```
 src/
