@@ -1,17 +1,20 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
+import useModTags, { TAG_LABELS, TAG_COLORS } from "../components/useModTags";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
 
 export default function NexusModsPage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
   const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
+  const { getTag, toggleTag } = useModTags();
   const [gameKey, setGameKey] = useState("ALL");
   const [untracking, setUntracking] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState("ALL");
+  const [filterTag, setFilterTag] = useState("ALL");
   const [selectedMods, setSelectedMods] = useState(new Set());
   const [batchUntracking, setBatchUntracking] = useState(false);
 
@@ -52,6 +55,12 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
       result = result.filter((m) => m.category === filterCategory);
     }
 
+    if (filterTag === "none") {
+      result = result.filter((m) => !getTag(m.domain, m.id));
+    } else if (filterTag !== "ALL") {
+      result = result.filter((m) => getTag(m.domain, m.id) === filterTag);
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       result = result.filter(
@@ -62,7 +71,7 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
     }
 
     return result;
-  }, [modsBase, sortBy, filterCategory, searchQuery]);
+  }, [modsBase, sortBy, filterCategory, filterTag, searchQuery, getTag]);
 
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
@@ -245,6 +254,23 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
         )}
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Statut
+          </label>
+          <select
+            className="pico-select"
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
+            data-testid="tag-filter"
+          >
+            <option value="ALL">Tous les statuts</option>
+            {Object.entries(TAG_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+            <option value="none">Sans statut</option>
+          </select>
+        </div>
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Trier par
           </label>
           <select
@@ -252,13 +278,13 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="date">📅 Date de mise à jour</option>
-            <option value="name">🔤 Nom</option>
-            <option value="author">👤 Auteur</option>
+            <option value="date">Date de mise a jour</option>
+            <option value="name">Nom</option>
+            <option value="author">Auteur</option>
           </select>
         </div>
         <button className="pico-btn-outline w-fit" onClick={refresh}>
-          Rafraîchir
+          Rafraichir
         </button>
       </div>
 
@@ -283,10 +309,13 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
           {mods.map((m) => {
             const selKey = `${m.domain}:${m.id}`;
             const isSelected = selectedMods.has(selKey);
+            const currentTag = getTag(m.domain, m.id);
+            const tagColor = currentTag ? TAG_COLORS[currentTag] : null;
             return (
               <div
-                className={`pico-card flex flex-col transition-all ${isSelected ? "ring-2 ring-pico-primary" : ""}`}
+                className={`pico-card flex flex-col transition-all ${isSelected ? "ring-2 ring-pico-primary" : tagColor ? tagColor.border : ""}`}
                 key={`${m.domain}-${m.id}`}
+                data-testid={`mod-card-${m.id}`}
               >
                 <label className="flex items-center gap-2 px-3 pt-3 cursor-pointer select-none">
                   <input
@@ -359,6 +388,27 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
                   </div>
 
                   <EnhancedChangelog mod={m} maxLines={6} />
+
+                  <div className="mt-3 mb-2 flex flex-wrap gap-1" data-testid={`tag-buttons-${m.id}`}>
+                    {Object.entries(TAG_LABELS).map(([tagValue, tagLabel]) => {
+                      const isActive = currentTag === tagValue;
+                      const colors = TAG_COLORS[tagValue];
+                      return (
+                        <button
+                          key={tagValue}
+                          className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
+                            isActive
+                              ? colors.btn + " border-transparent"
+                              : "bg-transparent text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600 hover:border-slate-400"
+                          }`}
+                          onClick={() => toggleTag(m.domain, m.id, tagValue)}
+                          title={isActive ? `Retirer le statut "${tagLabel}"` : `Marquer comme "${tagLabel}"`}
+                        >
+                          {tagLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   <div className="mt-auto space-y-2">
                     <div className="flex justify-between items-center">
