@@ -1,5 +1,27 @@
 # Changelog - The Courrier
 
+## Version 3.6.1 - Filtre par categorie (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Filtre par categorie dans la liste des mods et les actualites
+- Ajout d'un selecteur "Categorie" dans NexusModsPage et ActuUpdatePage
+- Le menu est conditionnel : il n'apparait que si au moins un mod possede une categorie
+- Les categories disponibles sont derivees des mods du jeu selectionne, independamment du filtre categorie actif (evite la disparition des options lors du filtrage)
+- Dans ActuUpdatePage, changer de jeu reinitialise automatiquement le filtre categorie
+- Le filtre categorie se combine avec le filtre jeu et la recherche textuelle
+
+### Tests
+- Ajout de src/pages/NexusModsPage.test.jsx (7 tests)
+- Couverture : affichage initial, presence du menu, filtre par categorie specifique, retour a "Toutes les categories", absence du menu si aucune categorie, cumul filtre + recherche
+
+### Fichiers Modifies
+- src/pages/NexusModsPage.jsx - Selecteur de categorie dans la barre de filtres
+- src/pages/ActuUpdatePage.jsx - Selecteur de categorie + reinitialisation au changement de jeu
+- src/pages/NexusModsPage.test.jsx - Nouveau fichier de tests
+
+---
+
 ## Version 3.6.0 - Badge NEW dismissable par mod (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites

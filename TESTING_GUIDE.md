@@ -130,6 +130,28 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 7. Cliquer sur "Tout marquer comme lu (N)" dans l'entete
 8. **Resultat attendu** : tous les badges NEW visibles disparaissent et le bouton disparait
 
+### Test 16 : Filtre par categorie
+
+1. Aller sur la page "Liste des Mods" avec des mods appartenant a des categories differentes
+2. **Resultat attendu** : Le selecteur "Categorie" est visible et contient les categories presentes
+3. Selectionner une categorie, par exemple "Gameplay"
+4. **Resultat attendu** : Seuls les mods de la categorie "Gameplay" sont affiches
+5. Selectionner "Toutes les categories"
+6. **Resultat attendu** : Tous les mods reapparaissent
+7. Selectionner un jeu qui ne possede aucune categorie sur ses mods
+8. **Resultat attendu** : Le selecteur "Categorie" disparait
+9. Combiner le filtre categorie avec une recherche textuelle
+10. **Resultat attendu** : Les deux filtres s'appliquent simultanement
+
+### Test 17 : Filtre par categorie sur la page Actualites
+
+1. Aller sur la page "Actualites des Mods"
+2. **Resultat attendu** : Le selecteur "Categorie" est visible si des mods ont une categorie dans la periode selectionnee
+3. Selectionner une categorie
+4. **Resultat attendu** : Seuls les mods de cette categorie sont affiches dans chaque groupe-jeu
+5. Changer de jeu dans le selecteur "Filtrer par jeu"
+6. **Resultat attendu** : Le filtre categorie se reinitialise a "Toutes les categories" et la liste des categories disponibles se met a jour
+
 ### Test 12 : Recherche de mods
 
 1. Aller sur la page "Liste des Mods" avec au moins deux mods de noms différents
@@ -164,17 +186,20 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 ### Tests implementes
 
-**src/components/CredentialsModal.test.jsx** (10 tests) et **src/components/useLastVisit.test.js** (9 tests), React Testing Library
+**src/components/CredentialsModal.test.jsx** (10 tests), **src/components/useLastVisit.test.js** (9 tests), **src/pages/NexusModsPage.test.jsx** (7 tests) — React Testing Library
 
 - Rendu conditionnel selon la prop `show`
 - Etat desactive du bouton de test si les champs sont vides
 - Affichage du message de succes apres une reponse 200 de l'API
-- Affichage du message d'erreur apres une reponse non-200 (clé invalide)
+- Affichage du message d'erreur apres une reponse non-200 (cle invalide)
 - Affichage du message d'erreur en cas d'echec reseau
 - Reinitialisation du resultat lors de la modification des champs
 - Appel correct de `onSave` avec les valeurs saisies
+- Persistance de `seenMods` dans localStorage via `markAsSeen` et `markAllAsSeen`
+- `countNew` excluant les mods deja vus
+- Filtre par categorie : affichage conditionnel du selecteur, filtrage correct, cumul avec la recherche
 
-Execution : `node_modules/.bin/react-scripts test --watchAll=false --testPathPattern="CredentialsModal"`
+Execution : `node_modules/.bin/react-scripts test --watchAll=false --testPathPattern="(CredentialsModal|useLastVisit|NexusModsPage)"`
 
 ### Tests a implementer
 

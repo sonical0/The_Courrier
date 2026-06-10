@@ -14,7 +14,8 @@
 - **Actualites des mods** : Page dediee aux mises a jour recentes (7j, 15j, 30j, annee)
 - **Affichage enrichi** : Vrais noms de jeux et icones officielles Nexus
 - **Categories des mods** : Affichage des categories pour chaque mod (180+ categories pour 5 jeux)
-- **Badges NEW** : Identifiez les nouveaux mods depuis votre derniere visite
+- **Badges NEW** : Identifiez les nouveaux mods depuis votre derniere visite, dismissables individuellement ou en bloc
+- **Filtre par categorie** : Restreindre l'affichage a une categorie de mod (Gameplay, Armures, etc.)
 - **Recherche** : Filtrage par nom de mod ou auteur en temps reel
 - **Tri avance** : Trier par date, nom ou auteur
 - **Gestion des suivis** : Retrait individuel ou en lot, avec confirmation unique
@@ -172,8 +173,8 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - [x] Suppression en lot des mods suivis
 - [x] Export JSON de la liste des mods
 - [x] Badge NEW dismissable par mod (bouton "Lu" individuel + "Tout marquer comme lu")
+- [x] Filtre par categorie de mod (NexusModsPage et ActuUpdatePage)
 - [ ] Tests unitaires pour useNexusCredentials, useNexusMods
-- [ ] Filtre par categorie de mod
 - [ ] Support de multiples comptes Nexus
 - [ ] Extension a d'autres plateformes (Steam, GOG)
 - [ ] Systeme de notifications navigateur pour les mises a jour
@@ -238,7 +239,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Etat Actuel
 
-**Version 3.6.0** - 10 Juin 2026
+**Version 3.6.1** - 10 Juin 2026
 
 ### Fonctionnalites Actives
 
@@ -252,7 +253,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - Cache multi-niveaux (60s / 10min / 24h / 2h)
 - Stockage local des credentials et preferences
 - Support Vercel (serverless)
-- Tests automatises : CredentialsModal (10 tests)
+- Tests automatises : CredentialsModal (10 tests), useLastVisit (9 tests), NexusModsPage (7 tests)
 
 ### Statut
 
@@ -264,4 +265,4 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-**Derniere mise a jour :** 10 Juin 2026
+**Derniere mise a jour :** 10 Juin 2026 — v3.6.1
