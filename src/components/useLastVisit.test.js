@@ -1,11 +1,24 @@
 import { renderHook, act } from "@testing-library/react";
 import useLastVisit from "./useLastVisit";
+import { getCompressed, setCompressed } from "../utils/compressedStorage";
+
+// Stub compressedStorage avec du JSON plat pour que les assertions sur localStorage restent simples
+jest.mock("../utils/compressedStorage", () => ({
+  getCompressed: jest.fn(),
+  setCompressed: jest.fn(),
+}));
 
 const SEEN_KEY = "courrier_seen_mods";
 const VISIT_KEY = "courrier_last_visit";
 
 beforeEach(() => {
   localStorage.clear();
+  getCompressed.mockImplementation((key) => {
+    try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch { return null; }
+  });
+  setCompressed.mockImplementation((key, data) => {
+    try { localStorage.setItem(key, JSON.stringify(data)); } catch {}
+  });
 });
 
 describe("useLastVisit — isNew", () => {

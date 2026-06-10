@@ -1,5 +1,11 @@
 import { renderHook, act, waitFor } from "@testing-library/react";
 import useNexusMods from "./useNexusMods";
+import { getCompressed, setCompressed } from "../utils/compressedStorage";
+
+jest.mock("../utils/compressedStorage", () => ({
+  getCompressed: jest.fn(),
+  setCompressed: jest.fn(),
+}));
 
 const CREDENTIALS = { username: "alice", apiKey: "key123" };
 
@@ -30,6 +36,11 @@ const RAW_MODS = [
   },
 ];
 
+const CACHED_MODS = [
+  { id: 1, domain: "skyrimse", name: "Mod Alpha", updatedAt: 1000000, gameId: 1704, gameName: "Skyrim Special Edition" },
+  { id: 2, domain: "skyrimse", name: "Mod Beta", updatedAt: 900000, gameId: 1704, gameName: "Skyrim Special Edition" },
+];
+
 function mockFetchSuccess(data = RAW_MODS) {
   jest.spyOn(global, "fetch").mockResolvedValueOnce({
     ok: true,
@@ -49,6 +60,8 @@ function mockFetchError(status = 401, body = "Unauthorized") {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  localStorage.clear();
+  // Pas de cache par défaut : getCompressed retourne undefined → cache miss
 });
 
 describe("useNexusMods — chargement initial", () => {
@@ -168,5 +181,80 @@ describe("useNexusMods — refresh et untrackMod", () => {
       expect(res.success).toBe(false);
       expect(res.error).toBe("network down");
     });
+  });
+});
+
+describe("useNexusMods — cache", () => {
+  beforeEach(() => {
+    getCompressed.mockReset();
+    setCompressed.mockReset();
+  });
+
+  it("cache hit valide → fetch non appelé", async () => {
+    getCompressed.mockReturnValue({ data: CACHED_MODS, fetchedAt: Date.now() });
+    const fetchSpy = jest.spyOn(global, "fetch");
+    const { result } = renderHook(() => useNexusMods(CREDENTIALS));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(result.current.games).toHaveLength(1);
+    expect(result.current.games[0].name).toBe("Skyrim Special Edition");
+  });
+
+  it("cache expiré (11 min) → fetch appelé", async () => {
+    getCompressed.mockReturnValue({ data: CACHED_MODS, fetchedAt: Date.now() - 11 * 60 * 1000 });
+    mockFetchSuccess();
+    const { result } = renderHook(() => useNexusMods(CREDENTIALS));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("cache absent → fetch appelé", async () => {
+    getCompressed.mockReturnValue(null);
+    mockFetchSuccess();
+    const { result } = renderHook(() => useNexusMods(CREDENTIALS));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("refresh() bypasse le cache → fetch appelé malgré cache valide", async () => {
+    getCompressed.mockReturnValue({ data: CACHED_MODS, fetchedAt: Date.now() });
+    const { result } = renderHook(() => useNexusMods(CREDENTIALS));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    // Chargement initial depuis cache, pas de fetch
+    const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValueOnce({
+      ok: true, json: async () => [], text: async () => "",
+    });
+    await act(async () => { await result.current.refresh(); });
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
+
+  it("untrackMod() invalide le cache et force un re-fetch", async () => {
+    getCompressed.mockReturnValue({ data: CACHED_MODS, fetchedAt: Date.now() });
+    const { result } = renderHook(() => useNexusMods(CREDENTIALS));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    const removeItemSpy = jest.spyOn(Storage.prototype, "removeItem");
+    jest.spyOn(global, "fetch")
+      .mockResolvedValueOnce({ ok: true, text: async () => "" })
+      .mockResolvedValueOnce({ ok: true, json: async () => [], text: async () => "" });
+    await act(async () => { await result.current.untrackMod("skyrimse", 1); });
+    expect(removeItemSpy).toHaveBeenCalledWith("courrier_mods_cache_alice");
+    expect(global.fetch).toHaveBeenCalledTimes(2); // DELETE + re-fetch forcé
+    removeItemSpy.mockRestore();
+  });
+
+  it("clé de cache différente par utilisateur → pas de collision", async () => {
+    getCompressed.mockReturnValue(null);
+    mockFetchSuccess();
+    const { result: r1 } = renderHook(() => useNexusMods({ username: "alice", apiKey: "k1" }));
+    await waitFor(() => expect(r1.current.loading).toBe(false));
+
+    mockFetchSuccess();
+    const { result: r2 } = renderHook(() => useNexusMods({ username: "bob", apiKey: "k2" }));
+    await waitFor(() => expect(r2.current.loading).toBe(false));
+
+    const queriedKeys = getCompressed.mock.calls.map((c) => c[0]);
+    expect(queriedKeys).toContain("courrier_mods_cache_alice");
+    expect(queriedKeys).toContain("courrier_mods_cache_bob");
+    expect(new Set(queriedKeys).size).toBeGreaterThan(1);
   });
 });

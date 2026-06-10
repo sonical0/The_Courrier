@@ -1,20 +1,16 @@
 import { useState, useEffect, useCallback } from "react";
+import { getCompressed, setCompressed } from "../utils/compressedStorage";
 
 const STORAGE_KEY = "courrier_last_visit";
 const SEEN_KEY = "courrier_seen_mods";
 
 function loadSeenMods() {
-  try {
-    const raw = localStorage.getItem(SEEN_KEY);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch {}
-  return new Set();
+  const data = getCompressed(SEEN_KEY);
+  return Array.isArray(data) ? new Set(data) : new Set();
 }
 
 function persistSeenMods(set) {
-  try {
-    localStorage.setItem(SEEN_KEY, JSON.stringify([...set]));
-  } catch {}
+  setCompressed(SEEN_KEY, [...set]);
 }
 
 export default function useLastVisit() {

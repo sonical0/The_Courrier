@@ -1,6 +1,11 @@
 import { renderHook, act } from "@testing-library/react";
 import useNexusCredentials from "./useNexusCredentials";
 
+jest.mock("../utils/cryptoStorage", () => ({
+  encryptValue: jest.fn(async (v) => `enc:${v}`),
+  decryptValue: jest.fn(async (v) => (v.startsWith("enc:") ? v.slice(4) : v)),
+}));
+
 const ACCOUNTS_KEY = "nexus_accounts";
 const LEGACY_KEY = "nexus_credentials";
 
