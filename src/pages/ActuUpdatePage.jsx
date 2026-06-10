@@ -10,6 +10,7 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
   const [period, setPeriod] = useState(7);
   const [selectedGame, setSelectedGame] = useState("ALL");
   const [sortBy, setSortBy] = useState("date");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Marquer comme visité après 2 secondes
@@ -25,23 +26,31 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
       const key = g.domain || g.gameId || g.name;
       return key === selectedGame;
     });
-    
+
+
     for (const g of gamesToShow) {
       const key = g.domain || g.gameId || g.name;
       let mods = modsForGame(key).filter(
         (m) => Number(m.updatedAt || 0) >= cutoff
       );
-      
-      // Tri des mods selon l'option sélectionnée
+
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        mods = mods.filter(
+          (m) =>
+            (m.name || "").toLowerCase().includes(q) ||
+            (m.author || "").toLowerCase().includes(q)
+        );
+      }
+
       if (sortBy === "name") {
         mods.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
       } else if (sortBy === "author") {
         mods.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
       } else {
-        // Par défaut : tri par date (plus récent en premier)
         mods.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
       }
-      
+
       if (mods.length) {
         out.push({
           gameLabel: g.name || g.domain || `Game ${g.gameId || ""}`.trim(),
@@ -55,7 +64,7 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         Number(b.mods[0]?.updatedAt || 0) - Number(a.mods[0]?.updatedAt || 0)
     );
     return out;
-  }, [games, modsForGame, cutoff, selectedGame, sortBy]);
+  }, [games, modsForGame, cutoff, selectedGame, sortBy, searchQuery]);
 
   const periodLabel = () => {
     if (period === 7) return "7 derniers jours";
@@ -143,6 +152,22 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
           Rafraîchir
         </button>
       </div>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          className="pico-select w-full"
+          placeholder="🔍 Rechercher par nom ou auteur..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
+      {searchQuery && (
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          {grouped.reduce((acc, g) => acc + g.mods.length, 0)} résultat{grouped.reduce((acc, g) => acc + g.mods.length, 0) !== 1 ? "s" : ""} pour « {searchQuery} »
+        </p>
+      )}
 
       <div className="mb-6 flex flex-col md:flex-row gap-4">
         <div className="flex-1 max-w-md">

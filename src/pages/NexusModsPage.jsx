@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
@@ -10,9 +10,11 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
   const [gameKey, setGameKey] = useState("ALL");
   const [untracking, setUntracking] = useState(null);
   const [sortBy, setSortBy] = useState("date");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedMods, setSelectedMods] = useState(new Set());
+  const [batchUntracking, setBatchUntracking] = useState(false);
 
   useEffect(() => {
-    // Marquer comme visité après 2 secondes
     const timer = setTimeout(() => updateLastVisit(), 2000);
     return () => clearTimeout(timer);
   }, [updateLastVisit]);
@@ -20,7 +22,6 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
   const mods = useMemo(() => {
     let result = [];
     if (!gameKey || gameKey === "ALL") {
-      // Afficher tous les mods de tous les jeux
       for (const g of games) {
         const key = g.domain || g.gameId || g.name;
         result.push(...modsForGame(key));
@@ -28,32 +29,87 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
     } else {
       result = modsForGame(gameKey);
     }
-    
-    // Tri des mods
+
     if (sortBy === "name") {
       result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
     } else if (sortBy === "author") {
       result.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
     } else {
-      // Par défaut : tri par date (plus récent en premier)
       result.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
     }
-    
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (m) =>
+          (m.name || "").toLowerCase().includes(q) ||
+          (m.author || "").toLowerCase().includes(q)
+      );
+    }
+
     return result;
-  }, [gameKey, modsForGame, games, sortBy]);
+  }, [gameKey, modsForGame, games, sortBy, searchQuery]);
 
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
       return;
     }
-    
     setUntracking(modId);
     const result = await untrackMod(domain, modId);
     setUntracking(null);
-    
     if (!result.success) {
       alert(`Erreur lors de la suppression : ${result.error}`);
     }
+  };
+
+  const toggleSelect = useCallback((domain, modId) => {
+    const key = `${domain}:${modId}`;
+    setSelectedMods((prev) => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = () => {
+    if (selectedMods.size === mods.length) {
+      setSelectedMods(new Set());
+    } else {
+      setSelectedMods(new Set(mods.map((m) => `${m.domain}:${m.id}`)));
+    }
+  };
+
+  const handleBatchUntrack = async () => {
+    if (!window.confirm(`Retirer ${selectedMods.size} mod(s) de votre liste de suivi ?`)) return;
+    setBatchUntracking(true);
+    for (const key of selectedMods) {
+      const [domain, modId] = key.split(":");
+      await untrackMod(domain, modId);
+    }
+    setSelectedMods(new Set());
+    setBatchUntracking(false);
+  };
+
+  const handleExport = () => {
+    const allMods = games.flatMap((g) => modsForGame(g.domain || g.gameId || g.name));
+    const data = allMods.map((m) => ({
+      name: m.name,
+      author: m.author,
+      version: m.version,
+      category: m.category || null,
+      url: m.url,
+      game: m.gameName || m.domain,
+      updatedAt: m.updatedAt
+        ? new Date(Number(m.updatedAt) * (String(m.updatedAt).length > 10 ? 1 : 1000)).toISOString()
+        : null,
+    }));
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `the-courrier-mods-${new Date().toISOString().split("T")[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -63,7 +119,7 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
       </div>
     );
   }
-  
+
   if (error) {
     if (error.includes("credentials") || error.includes("401")) {
       return (
@@ -92,7 +148,7 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
       </div>
     );
   }
-  
+
   if (!games.length) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
@@ -102,11 +158,31 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-6">
-        Liste des Mods
-      </h2>
-      
+    <div className="container mx-auto px-4 py-8 pb-24">
+      <div className="flex items-center justify-between mb-6 gap-4">
+        <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
+          Liste des Mods
+        </h2>
+        <button
+          className="pico-btn-outline text-sm"
+          onClick={handleExport}
+          title="Exporter la liste complète en JSON"
+        >
+          ⬇️ Exporter JSON
+        </button>
+      </div>
+
+      {/* Barre de recherche */}
+      <div className="mb-4">
+        <input
+          type="text"
+          className="pico-select w-full"
+          placeholder="🔍 Rechercher par nom ou auteur..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
+      </div>
+
       <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
@@ -144,7 +220,6 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
         </button>
       </div>
 
-      {/* Afficher les infos Steam du jeu sélectionné */}
       {gameKey && gameKey !== "ALL" && getSteamInfo && (() => {
         const selectedGame = games.find(g => (g.domain || g.gameId || g.name) === gameKey);
         const steamInfo = selectedGame ? getSteamInfo(selectedGame.domain) : null;
@@ -155,98 +230,155 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
         ) : null;
       })()}
 
+      {searchQuery && (
+        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
+          {mods.length} résultat{mods.length !== 1 ? "s" : ""} pour « {searchQuery} »
+        </p>
+      )}
+
       {mods.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mods.map((m) => (
-            <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
-              {m.picture && (
-                <img src={m.picture} alt={m.name} className="w-full h-40 object-cover flex-shrink-0" />
-              )}
-              <div className="p-5 flex flex-col flex-grow">
-                <div className="flex items-start gap-2 mb-2">
-                  <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
-                    {m.name || `${m.domain}/${m.id}`}
-                  </h5>
-                  {isNew(m.updatedAt) && (
-                    <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
-                  )}
-                </div>
+          {mods.map((m) => {
+            const selKey = `${m.domain}:${m.id}`;
+            const isSelected = selectedMods.has(selKey);
+            return (
+              <div
+                className={`pico-card flex flex-col transition-all ${isSelected ? "ring-2 ring-pico-primary" : ""}`}
+                key={`${m.domain}-${m.id}`}
+              >
+                <label className="flex items-center gap-2 px-3 pt-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => toggleSelect(m.domain, m.id)}
+                    className="w-4 h-4 accent-pico-primary"
+                  />
+                  <span className="text-xs text-slate-500 dark:text-slate-400">Sélectionner</span>
+                </label>
 
-                {m.summary && (
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{m.summary}</p>
+                {m.picture && (
+                  <img src={m.picture} alt={m.name} className="w-full h-40 object-cover flex-shrink-0" />
                 )}
+                <div className="p-5 flex flex-col flex-grow">
+                  <div className="flex items-start gap-2 mb-2">
+                    <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
+                      {m.name || `${m.domain}/${m.id}`}
+                    </h5>
+                    {isNew(m.updatedAt) && (
+                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                    )}
+                  </div>
 
-                {m.category && (
-                  <div className="mb-3">
-                    <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
-                      📚 {m.category}
+                  {m.summary && (
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{m.summary}</p>
+                  )}
+
+                  {m.category && (
+                    <div className="mb-3">
+                      <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
+                        📚 {m.category}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="mb-3 flex items-center gap-2 flex-wrap">
+                    {m.previousVersion && m.previousVersion !== m.version && (
+                      <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">
+                        {m.previousVersion}
+                      </span>
+                    )}
+                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-sm font-medium">
+                      Version {m.version || "?"}
+                    </span>
+                    <span className="text-sm text-slate-600 dark:text-slate-400">
+                      · par{" "}
+                      {m.author ? (
+                        <a
+                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ""}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-pico-primary hover:underline"
+                        >
+                          {m.author}
+                        </a>
+                      ) : (
+                        "Auteur inconnu"
+                      )}
                     </span>
                   </div>
-                )}
 
-                <div className="mb-3 flex items-center gap-2 flex-wrap">
-                  {m.previousVersion && m.previousVersion !== m.version && (
-                    <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">
-                      {m.previousVersion}
-                    </span>
-                  )}
-                  <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-sm font-medium">
-                    Version {m.version || "?"}
-                  </span>
-                  <span className="text-sm text-slate-600 dark:text-slate-400">
-                    · par{" "}
-                    {m.author ? (
+                  <EnhancedChangelog mod={m} maxLines={6} />
+
+                  <div className="mt-auto space-y-2">
+                    <div className="flex justify-between items-center">
                       <a
-                        href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
+                        href={m.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-pico-primary hover:underline"
+                        className={`pico-btn-primary text-sm ${m.url ? "" : "opacity-50 pointer-events-none"}`}
                       >
-                        {m.author}
+                        Ouvrir sur Nexus
                       </a>
-                    ) : (
-                      "Auteur inconnu"
-                    )}
-                  </span>
-                </div>
-
-                <EnhancedChangelog mod={m} maxLines={6} />
-
-                <div className="mt-auto space-y-2">
-                  <div className="flex justify-between items-center">
-                    <a
-                      href={m.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`pico-btn-primary text-sm ${m.url ? "" : "opacity-50 pointer-events-none"}`}
+                      <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
+                        {m.updatedAt
+                          ? new Date(
+                              Number(m.updatedAt) *
+                              (String(m.updatedAt).length > 10 ? 1 : 1000)
+                            ).toLocaleString()
+                          : "?"}
+                      </span>
+                    </div>
+                    <button
+                      className="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors text-sm font-medium disabled:opacity-50"
+                      onClick={() => handleUntrack(m.domain, m.id, m.name)}
+                      disabled={untracking === m.id}
                     >
-                      Ouvrir sur Nexus
-                    </a>
-                    <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                      {m.updatedAt
-                        ? new Date(
-                            Number(m.updatedAt) *
-                            (String(m.updatedAt).length > 10 ? 1 : 1000)
-                          ).toLocaleString()
-                        : "?"}
-                    </span>
+                      {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
+                    </button>
                   </div>
-                  <button
-                    className="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors text-sm font-medium disabled:opacity-50"
-                    onClick={() => handleUntrack(m.domain, m.id, m.name)}
-                    disabled={untracking === m.id}
-                  >
-                    {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
           {!mods.length && (
             <p className="text-slate-500 dark:text-slate-400 col-span-full">
               Aucun mod pour ce jeu.
             </p>
           )}
+        </div>
+      )}
+
+      {/* Barre d'actions batch sticky */}
+      {selectedMods.size > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-lg px-4 py-3">
+          <div className="container mx-auto flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <span className="font-medium text-slate-700 dark:text-slate-300">
+                {selectedMods.size} mod{selectedMods.size > 1 ? "s" : ""} sélectionné{selectedMods.size > 1 ? "s" : ""}
+              </span>
+              <button
+                className="text-sm text-pico-primary hover:underline"
+                onClick={toggleSelectAll}
+              >
+                {selectedMods.size === mods.length ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <button
+                className="pico-btn-outline text-sm"
+                onClick={() => setSelectedMods(new Set())}
+              >
+                Annuler
+              </button>
+              <button
+                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium disabled:opacity-50"
+                onClick={handleBatchUntrack}
+                disabled={batchUntracking}
+              >
+                {batchUntracking ? "Suppression..." : `🗑️ Retirer la sélection (${selectedMods.size})`}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
