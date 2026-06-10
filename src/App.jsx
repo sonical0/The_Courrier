@@ -387,18 +387,12 @@ export default function App() {
         />
 
         <main>
-          {loading ? (
-            <div className="container mx-auto px-4 py-8 text-center">
-              <p className="text-slate-600 dark:text-slate-400">Chargement...</p>
-            </div>
-          ) : (
-            <Routes>
-              <Route path="/" element={<DashboardPage credentials={credentials} />} />
-              <Route path="/actus" element={<ActuUpdatePage credentials={credentials} getSteamInfo={getSteamInfo} />} />
-              <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} getSteamInfo={getSteamInfo} />} />
-              <Route path="/incompatibility" element={<IncompatibilityPage credentials={credentials} />} />
-            </Routes>
-          )}
+          <Routes>
+            <Route path="/" element={<DashboardPage credentials={credentials} />} />
+            <Route path="/actus" element={<ActuUpdatePage credentials={credentials} getSteamInfo={getSteamInfo} />} />
+            <Route path="/nexus-mods" element={<NexusModsPage credentials={credentials} getSteamInfo={getSteamInfo} />} />
+            <Route path="/incompatibility" element={<IncompatibilityPage credentials={credentials} />} />
+          </Routes>
         </main>
       </div>
     </Router>
