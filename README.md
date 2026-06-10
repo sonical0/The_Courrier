@@ -41,6 +41,7 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 - **React 19.2.0** - Framework JavaScript pour interfaces utilisateur
 - **React Router 7.9.4** - Navigation côté client (SPA)
 - **Tailwind CSS 3.4.18** - Framework CSS utility-first pour le design
+- **lz-string 1.5.0** - Compression localStorage (cache mods + seen_mods)
 - **JavaScript (ES6+)** - Langage principal
 
 ### Backend
@@ -137,7 +138,8 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ### Configuration
 - Interface de configuration des identifiants Nexus Mods
-- Stockage sécurisé dans le navigateur (localStorage)
+- Stockage **chiffré** dans le navigateur — AES-GCM 256 bits via Web Crypto API, clé dérivée PBKDF2 (100 000 itérations)
+- Cache localStorage compressé (LZ-String) pour les mods suivis : 10 min par compte, zero fetch au reload
 - Mode clair/sombre
 - Interface responsive (mobile, tablette, desktop)
 
@@ -418,15 +420,26 @@ api/steam/game/
 
 ### Système de Cache
 
-| Donnée | TTL | Clé de cache |
-|--------|-----|--------------|
+#### Cache serveur (mémoire, Vercel)
+
+| Donnée | TTL | Clé |
+|--------|-----|-----|
 | Liste des mods suivis | 60 secondes | `tracked:{username}` |
 | Détails d'un mod | 10 minutes | `mod:{username}:{domain}:{id}` |
 | Informations de jeu Nexus | 24 heures | `game:{domain}` |
 | Informations de jeu Steam | 2 heures | `steam:{appId}` |
 
-Le cache est en mémoire côté serveur (Nexus) et réinitialisé à chaque redémarrage de fonction serverless.
-Le cache Steam est également en mémoire avec une durée réduite (2h) pour assurer des informations récentes sur les versions de jeux.
+Réinitialisé à chaque redémarrage de fonction serverless.
+
+#### Cache client (localStorage, navigateur)
+
+| Donnée | TTL | Clé localStorage | Format |
+|--------|-----|------------------|--------|
+| Credentials Nexus | permanent | `nexus_accounts` | Chiffré AES-GCM (base64iv.base64cipher) |
+| Mods suivis | 10 minutes | `courrier_mods_cache_{username}` | Compressé LZ-String |
+| Mods vus (badges NEW) | permanent | `courrier_seen_mods` | Compressé LZ-String |
+
+Le cache mods est invalidé automatiquement lors d'un `refresh()` forcé ou d'un untrack. Chaque compte possède sa propre clé de cache (pas de collision multi-compte).
 
 ### Système de Catégories
 
@@ -516,7 +529,7 @@ L'application utilise également plusieurs sources Steam pour obtenir des inform
 
 ## Sécurité & Credentials
 
-Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface, stockés dans le localStorage du navigateur.
+Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface. Les credentials sont **chiffrés en AES-GCM 256 bits** dans le localStorage du navigateur via la Web Crypto API native (zero dépendance externe). La clé est dérivée par PBKDF2 (100 000 itérations, SHA-256) et un IV aléatoire est généré à chaque chiffrement. Les credentials ne quittent jamais le navigateur en clair.
 
 ⚠️ **Configuration détaillée des identifiants** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
 
