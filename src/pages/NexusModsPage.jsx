@@ -1,11 +1,13 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
+import { useOutletContext } from "react-router-dom";
 import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import useModTags, { TAG_LABELS, TAG_COLORS } from "../components/useModTags";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
 
-export default function NexusModsPage({ credentials, getSteamInfo }) {
+export default function NexusModsPage() {
+  const { credentials, getSteamInfo } = useOutletContext();
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
   const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
   const { getTag, toggleTag } = useModTags();
