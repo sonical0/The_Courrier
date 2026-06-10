@@ -40,7 +40,9 @@ async function fetchJson(url, { headers }) {
   const txt = await r.text();
   if (!r.ok) {
     const msg = txt || r.statusText;
-    throw new Error(`HTTP ${r.status} — ${msg}`);
+    const err = new Error(`HTTP ${r.status} — ${msg}`);
+    err.status = r.status;
+    throw err;
   }
   try {
     return JSON.parse(txt);
@@ -231,6 +233,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(enrichedWithGames);
   } catch (error) {
-    return res.status(500).json({ error: error.message || String(error) });
+    const status = error.status || 500;
+    return res.status(status).json({ error: error.message || String(error) });
   }
 }

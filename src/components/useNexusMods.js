@@ -47,6 +47,9 @@ export default function useNexusMods(credentials = null) {
 
       const res = await fetch(`/api/nexus/tracked`, { headers });
       if (!res.ok) {
+        if (res.status === 429) {
+          throw new Error("Nexus Mods limite les requêtes — veuillez patienter quelques minutes puis rafraîchir.");
+        }
         const text = await res.text();
         throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
       }
