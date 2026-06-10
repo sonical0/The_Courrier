@@ -11,6 +11,7 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
   const [selectedGame, setSelectedGame] = useState("ALL");
   const [sortBy, setSortBy] = useState("date");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("ALL");
 
   useEffect(() => {
     // Marquer comme visité après 2 secondes
@@ -33,6 +34,10 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
       let mods = modsForGame(key).filter(
         (m) => Number(m.updatedAt || 0) >= cutoff
       );
+
+      if (filterCategory !== "ALL") {
+        mods = mods.filter((m) => m.category === filterCategory);
+      }
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -64,7 +69,21 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         Number(b.mods[0]?.updatedAt || 0) - Number(a.mods[0]?.updatedAt || 0)
     );
     return out;
-  }, [games, modsForGame, cutoff, selectedGame, sortBy, searchQuery]);
+  }, [games, modsForGame, cutoff, selectedGame, sortBy, searchQuery, filterCategory]);
+
+  const availableCategories = useMemo(() => {
+    const gamesToShow =
+      selectedGame === "ALL"
+        ? games
+        : games.filter((g) => (g.domain || g.gameId || g.name) === selectedGame);
+    const cats = new Set();
+    for (const g of gamesToShow) {
+      modsForGame(g.domain || g.gameId || g.name)
+        .filter((m) => Number(m.updatedAt || 0) >= cutoff)
+        .forEach((m) => { if (m.category) cats.add(m.category); });
+    }
+    return [...cats].sort();
+  }, [games, modsForGame, cutoff, selectedGame]);
 
   const periodLabel = () => {
     if (period === 7) return "7 derniers jours";
@@ -177,7 +196,7 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         </p>
       )}
 
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
+      <div className="mb-6 flex flex-col md:flex-row gap-4 flex-wrap">
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Filtrer par jeu
@@ -185,9 +204,9 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
           <select
             className="pico-select"
             value={selectedGame}
-            onChange={(e) => setSelectedGame(e.target.value)}
+            onChange={(e) => { setSelectedGame(e.target.value); setFilterCategory("ALL"); }}
           >
-            <option value="ALL">🎮 Tous les jeux</option>
+            <option value="ALL">Tous les jeux</option>
             {games.map((g) => (
               <option key={g.key} value={g.domain || g.gameId || g.name}>
                 {g.name}
@@ -195,6 +214,24 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
             ))}
           </select>
         </div>
+        {availableCategories.length > 0 && (
+          <div className="flex-1 max-w-md">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Catégorie
+            </label>
+            <select
+              className="pico-select"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              data-testid="category-filter"
+            >
+              <option value="ALL">Toutes les catégories</option>
+              {availableCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Trier par
@@ -204,9 +241,9 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="date">📅 Date de mise à jour</option>
-            <option value="name">🔤 Nom</option>
-            <option value="author">👤 Auteur</option>
+            <option value="date">Date de mise à jour</option>
+            <option value="name">Nom</option>
+            <option value="author">Auteur</option>
           </select>
         </div>
       </div>
