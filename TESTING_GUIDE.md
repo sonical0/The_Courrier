@@ -130,6 +130,19 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 7. Cliquer sur "Tout marquer comme lu (N)" dans l'entete
 8. **Resultat attendu** : tous les badges NEW visibles disparaissent et le bouton disparait
 
+### Test 21 : Notifications navigateur
+
+1. Cliquer sur "Notifs OFF" dans la navbar
+2. **Resultat attendu** : le navigateur affiche une demande de permission
+3. Accepter la permission
+4. **Resultat attendu** : le bouton passe a "Notifs ON" (bleu)
+5. Rafraichir la page avec des nouveaux mods en attente
+6. **Resultat attendu** : une notification systeme s'affiche avec le nombre de nouveaux mods
+7. Cliquer sur "Notifs ON" pour desactiver
+8. **Resultat attendu** : le bouton repasse a "Notifs OFF", aucune notification au prochain chargement
+9. Tester avec un navigateur qui a bloque les notifications pour ce site
+10. **Resultat attendu** : le bouton est desactive et indiquer "bloquees par le navigateur"
+
 ### Test 19 : Export de configuration
 
 1. Configurer des tags sur quelques mods et passer en mode sombre

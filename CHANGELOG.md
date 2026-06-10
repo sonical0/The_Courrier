@@ -1,5 +1,33 @@
 # Changelog - The Courrier
 
+## Version 3.8.1 - Notifications navigateur (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Notifications navigateur pour les nouveaux mods
+- Notification automatique au chargement si des nouveaux mods sont detectes
+- Bouton "Notifs ON/OFF" dans la navbar desktop et le menu mobile
+- Premier clic declenche la demande de permission navigateur
+- Le bouton est desactive si le navigateur a bloque les notifications
+- Preference persistee dans localStorage (cle courrier_notifications_enabled)
+
+#### Nouveau hook useNotifications
+- requestPermission() : demande la permission navigateur (court-circuite si deja granted)
+- disableNotifications() : desactive sans revoquer la permission
+- notify(title, body) : envoie une notification si activee et permission granted
+- notifyNewMods(count) : message au singulier ou pluriel selon le nombre
+
+### Tests
+- Ajout de src/components/useNotifications.test.js (13 tests)
+- Couverture : initialisation, requestPermission granted/denied/deja-granted, disableNotifications, notify, notifyNewMods singulier/pluriel/zero
+
+### Fichiers Modifies
+- src/components/useNotifications.js - Nouveau hook
+- src/components/useNotifications.test.js - Nouveau fichier de tests
+- src/App.jsx - Integration du hook, bouton navbar, notification automatique
+
+---
+
 ## Version 3.8.0 - Export et import de configuration (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites
