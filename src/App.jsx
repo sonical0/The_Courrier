@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
 import ActuUpdatePage from "./pages/ActuUpdatePage";
@@ -11,6 +11,7 @@ import useLastVisit from "./components/useLastVisit";
 import useTheme from "./components/useTheme";
 import useSteamGames from "./components/useSteamGames";
 import GameUpdateAlert from "./components/GameUpdateAlert";
+import { exportConfig, importConfig } from "./components/useConfigBackup";
 
 export default function App() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
@@ -51,6 +52,23 @@ export default function App() {
   const handleClearCredentials = () => {
     if (window.confirm("Voulez-vous vraiment supprimer vos identifiants Nexus Mods ?")) {
       clearCredentials();
+    }
+  };
+
+  const importInputRef = useRef(null);
+  const [importStatus, setImportStatus] = useState(null);
+
+  const handleImport = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    const result = await importConfig(file);
+    if (result.success) {
+      setImportStatus(`Configuration restauree (${result.restored} element${result.restored > 1 ? "s" : ""}). Rechargement...`);
+      setTimeout(() => window.location.reload(), 1200);
+    } else {
+      setImportStatus(`Erreur : ${result.error}`);
+      setTimeout(() => setImportStatus(null), 4000);
     }
   };
 
@@ -121,6 +139,28 @@ export default function App() {
                 >
                   ⚙️ Config
                 </button>
+
+                <button
+                  className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                  onClick={exportConfig}
+                  title="Exporter la configuration (tags, mods vus, theme)"
+                >
+                  Exporter
+                </button>
+                <button
+                  className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                  onClick={() => importInputRef.current?.click()}
+                  title="Importer une configuration sauvegardee"
+                >
+                  Importer
+                </button>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".json,application/json"
+                  className="hidden"
+                  onChange={handleImport}
+                />
 
                 {hasCredentials && (
                   <button
@@ -217,6 +257,31 @@ export default function App() {
                     ⚙️ Config
                   </button>
 
+                  <div className="flex gap-2">
+                    <button
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        theme === "dark"
+                          ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                      onClick={() => { exportConfig(); setIsMenuOpen(false); }}
+                      title="Exporter la configuration"
+                    >
+                      Exporter config
+                    </button>
+                    <button
+                      className={`flex-1 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                        theme === "dark"
+                          ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                      onClick={() => { importInputRef.current?.click(); setIsMenuOpen(false); }}
+                      title="Importer une configuration"
+                    >
+                      Importer config
+                    </button>
+                  </div>
+
                   <div className="flex items-center justify-between pt-2">
                     {hasCredentials ? (
                       <>
@@ -254,6 +319,12 @@ export default function App() {
           onSave={handleSaveCredentials}
           onCancel={hasCredentials ? () => setShowModal(false) : undefined}
         />
+
+        {importStatus && (
+          <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg bg-slate-800 text-white text-sm font-medium">
+            {importStatus}
+          </div>
+        )}
 
         {/* Alertes de mise à jour Steam */}
         <GameUpdateAlert
