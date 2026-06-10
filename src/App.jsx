@@ -15,7 +15,7 @@ import { exportConfig, importConfig } from "./components/useConfigBackup";
 import useNotifications from "./components/useNotifications";
 
 export default function App() {
-  const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
+  const { credentials, loading, saveCredentials, clearCredentials, hasCredentials, accounts, activeAccountId, switchAccount, removeAccount } = useNexusCredentials();
   const { loading: modsLoading, games, modsForGame } = useNexusMods(credentials);
   const { countNew } = useLastVisit();
   const { supported: notifSupported, enabled: notifEnabled, permission: notifPermission, requestPermission, disableNotifications, notifyNewMods } = useNotifications();
@@ -367,6 +367,10 @@ export default function App() {
           show={shouldShowModal}
           onSave={handleSaveCredentials}
           onCancel={hasCredentials ? () => setShowModal(false) : undefined}
+          accounts={accounts}
+          activeAccountId={activeAccountId}
+          onSwitch={(id) => { switchAccount(id); setShowModal(false); }}
+          onRemove={removeAccount}
         />
 
         {importStatus && (

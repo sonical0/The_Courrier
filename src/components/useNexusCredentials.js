@@ -1,59 +1,130 @@
 import { useState, useEffect } from "react";
 
-const STORAGE_KEY = "nexus_credentials";
+const ACCOUNTS_KEY = "nexus_accounts";
+const LEGACY_KEY = "nexus_credentials";
+
+function generateId() {
+  return Math.random().toString(36).slice(2, 11);
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(ACCOUNTS_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed.accounts)) return parsed;
+    }
+  } catch {}
+
+  // Migration format legacy
+  try {
+    const legacy = localStorage.getItem(LEGACY_KEY);
+    if (legacy) {
+      const creds = JSON.parse(legacy);
+      if (creds.username && creds.apiKey) {
+        const id = generateId();
+        const state = { activeId: id, accounts: [{ id, username: creds.username, apiKey: creds.apiKey }] };
+        localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(state));
+        localStorage.removeItem(LEGACY_KEY);
+        return state;
+      }
+    }
+  } catch {}
+
+  return { activeId: null, accounts: [] };
+}
+
+function persistState(state) {
+  try {
+    localStorage.setItem(ACCOUNTS_KEY, JSON.stringify(state));
+  } catch {}
+}
 
 export default function useNexusCredentials() {
-  const [credentials, setCredentials] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState({ activeId: null, accounts: [], loading: true });
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed.username && parsed.apiKey) {
-          setCredentials(parsed);
-        }
-      }
-    } catch (e) {
-      console.error("Erreur lors du chargement des credentials:", e);
-    } finally {
-      setLoading(false);
-    }
+    const loaded = loadState();
+    setState({ ...loaded, loading: false });
   }, []);
 
+  const activeAccount = state.accounts.find((a) => a.id === state.activeId) || null;
+  const credentials = activeAccount ? { username: activeAccount.username, apiKey: activeAccount.apiKey } : null;
+
+  // Ajoute un nouveau compte ou met a jour un existant (meme username), set comme actif
   const saveCredentials = (username, apiKey) => {
     try {
-      const creds = { username, apiKey };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(creds));
-      setCredentials(creds);
+      setState((prev) => {
+        const existing = prev.accounts.find((a) => a.username === username);
+        let accounts;
+        let activeId;
+        if (existing) {
+          accounts = prev.accounts.map((a) => a.id === existing.id ? { ...a, apiKey } : a);
+          activeId = existing.id;
+        } else {
+          const id = generateId();
+          accounts = [...prev.accounts, { id, username, apiKey }];
+          activeId = id;
+        }
+        const next = { ...prev, accounts, activeId };
+        persistState({ activeId: next.activeId, accounts: next.accounts });
+        return next;
+      });
       return true;
-    } catch (e) {
-      console.error("Erreur lors de la sauvegarde des credentials:", e);
+    } catch {
       return false;
     }
   };
 
+  // Supprime le compte actif, bascule sur le premier compte restant
   const clearCredentials = () => {
     try {
-      localStorage.removeItem(STORAGE_KEY);
-      setCredentials(null);
+      setState((prev) => {
+        const accounts = prev.accounts.filter((a) => a.id !== prev.activeId);
+        const activeId = accounts.length > 0 ? accounts[0].id : null;
+        const next = { ...prev, accounts, activeId };
+        persistState({ activeId: next.activeId, accounts: next.accounts });
+        return next;
+      });
       return true;
-    } catch (e) {
-      console.error("Erreur lors de la suppression des credentials:", e);
+    } catch {
       return false;
     }
   };
 
-  const hasCredentials = () => {
-    return credentials && credentials.username && credentials.apiKey;
+  const switchAccount = (id) => {
+    setState((prev) => {
+      if (!prev.accounts.find((a) => a.id === id)) return prev;
+      const next = { ...prev, activeId: id };
+      persistState({ activeId: next.activeId, accounts: next.accounts });
+      return next;
+    });
+  };
+
+  const removeAccount = (id) => {
+    setState((prev) => {
+      const accounts = prev.accounts.filter((a) => a.id !== id);
+      const activeId =
+        prev.activeId === id
+          ? accounts.length > 0 ? accounts[0].id : null
+          : prev.activeId;
+      const next = { ...prev, accounts, activeId };
+      persistState({ activeId: next.activeId, accounts: next.accounts });
+      return next;
+    });
   };
 
   return {
+    // backward compat
     credentials,
-    loading,
+    loading: state.loading,
     saveCredentials,
     clearCredentials,
-    hasCredentials: hasCredentials(),
+    hasCredentials: !!(credentials?.username && credentials?.apiKey),
+    // multi-compte
+    accounts: state.accounts,
+    activeAccountId: state.activeId,
+    switchAccount,
+    removeAccount,
   };
 }
