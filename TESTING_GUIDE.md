@@ -119,6 +119,17 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 12. Saisir une clé API invalide et cliquer sur "Tester la connexion"
 13. **Résultat attendu** : Un message d'erreur s'affiche en rouge ; la popup reste ouverte
 
+### Test 15 : Badge NEW dismissable
+
+1. Configurer une derniere visite ancienne (vider localStorage ou attendre un rafraichissement avec de nouvelles MAJ)
+2. Ouvrir la page "Liste des Mods" — des mods doivent afficher le badge NEW
+3. Cliquer sur le bouton "Lu" a cote d'un badge NEW
+4. **Resultat attendu** : le badge NEW disparait immediatement sur cette carte uniquement
+5. Rafraichir la page
+6. **Resultat attendu** : le mod reste marque comme lu (badge absent)
+7. Cliquer sur "Tout marquer comme lu (N)" dans l'entete
+8. **Resultat attendu** : tous les badges NEW visibles disparaissent et le bouton disparait
+
 ### Test 12 : Recherche de mods
 
 1. Aller sur la page "Liste des Mods" avec au moins deux mods de noms différents
@@ -153,7 +164,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 ### Tests implementes
 
-**src/components/CredentialsModal.test.jsx** (10 tests, React Testing Library)
+**src/components/CredentialsModal.test.jsx** (10 tests) et **src/components/useLastVisit.test.js** (9 tests), React Testing Library
 
 - Rendu conditionnel selon la prop `show`
 - Etat desactive du bouton de test si les champs sont vides

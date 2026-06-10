@@ -166,13 +166,13 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ### Ameliorations Fonctionnelles
 
-- [x] Tests unitaires pour CredentialsModal (10 tests, React Testing Library)
+- [x] Tests unitaires pour CredentialsModal (10 tests) et useLastVisit (9 tests)
 - [x] Validation de la cle API en temps reel dans la modal
 - [x] Recherche par nom et auteur (NexusModsPage, ActuUpdatePage)
 - [x] Suppression en lot des mods suivis
 - [x] Export JSON de la liste des mods
-- [ ] Tests unitaires pour useNexusCredentials, useLastVisit, useNexusMods
-- [ ] Badge NEW dismissable par mod (mark as read)
+- [x] Badge NEW dismissable par mod (bouton "Lu" individuel + "Tout marquer comme lu")
+- [ ] Tests unitaires pour useNexusCredentials, useNexusMods
 - [ ] Filtre par categorie de mod
 - [ ] Support de multiples comptes Nexus
 - [ ] Extension a d'autres plateformes (Steam, GOG)
@@ -238,7 +238,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Etat Actuel
 
-**Version 3.5.1** - 10 Juin 2026
+**Version 3.6.0** - 10 Juin 2026
 
 ### Fonctionnalites Actives
 

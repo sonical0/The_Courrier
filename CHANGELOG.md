@@ -1,5 +1,32 @@
 # Changelog - The Courrier
 
+## Version 3.6.0 - Badge NEW dismissable par mod (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Marquage individuel et en lot des mods comme lus
+- Ajout d'un bouton "Lu" a cote de chaque badge NEW dans NexusModsPage et ActuUpdatePage
+- Ajout d'un bouton "Tout marquer comme lu (N)" dans les entetes des deux pages, visible uniquement quand au moins un nouveau mod est present
+- Les mods marques comme lus perdent leur badge NEW immediatement sans attendre la prochaine visite
+- Les mods vus sont persistes dans localStorage (cle courrier_seen_mods) et survivent aux rechargements de page
+
+#### Extension du hook useLastVisit
+- Nouveaux exports : seenMods (Set), markAsSeen(domain, modId), markAllAsSeen(mods)
+- isNew(modUpdatedAt, domain, modId) : accepte desormais domain et modId pour exclure les mods vus
+- countNew(mods) : exclut les mods presents dans seenMods
+
+### Tests
+- Ajout de src/components/useLastVisit.test.js (9 tests)
+- Couverture : isNew avec seenMods, markAsSeen persistance, markAllAsSeen bulk, countNew avec exclusion
+
+### Fichiers Modifies
+- src/components/useLastVisit.js - Extension avec seenMods, markAsSeen, markAllAsSeen
+- src/components/useLastVisit.test.js - Nouveau fichier de tests
+- src/pages/NexusModsPage.jsx - Bouton "Lu" par carte + bouton "Tout marquer comme lu"
+- src/pages/ActuUpdatePage.jsx - Bouton "Lu" par carte + bouton "Tout marquer comme lu"
+
+---
+
 ## Version 3.5.1 - Validation des credentials en temps reel (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites
