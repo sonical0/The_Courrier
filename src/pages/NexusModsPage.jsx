@@ -6,7 +6,7 @@ import SteamGameInfo from "../components/SteamGameInfo";
 
 export default function NexusModsPage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
-  const { isNew, updateLastVisit } = useLastVisit();
+  const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
   const [gameKey, setGameKey] = useState("ALL");
   const [untracking, setUntracking] = useState(null);
   const [sortBy, setSortBy] = useState("date");
@@ -159,17 +159,28 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
 
   return (
     <div className="container mx-auto px-4 py-8 pb-24">
-      <div className="flex items-center justify-between mb-6 gap-4">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
           Liste des Mods
         </h2>
-        <button
-          className="pico-btn-outline text-sm"
-          onClick={handleExport}
-          title="Exporter la liste complète en JSON"
-        >
-          ⬇️ Exporter JSON
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {countNew(mods) > 0 && (
+            <button
+              className="pico-btn-outline text-sm"
+              onClick={() => markAllAsSeen(mods)}
+              title="Marquer tous les mods visibles comme lus"
+            >
+              Tout marquer comme lu ({countNew(mods)})
+            </button>
+          )}
+          <button
+            className="pico-btn-outline text-sm"
+            onClick={handleExport}
+            title="Exporter la liste complète en JSON"
+          >
+            Exporter JSON
+          </button>
+        </div>
       </div>
 
       {/* Barre de recherche */}
@@ -264,8 +275,17 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
                     <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
                       {m.name || `${m.domain}/${m.id}`}
                     </h5>
-                    {isNew(m.updatedAt) && (
-                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                    {isNew(m.updatedAt, m.domain, m.id) && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
+                        <button
+                          className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors"
+                          onClick={() => markAsSeen(m.domain, m.id)}
+                          title="Marquer comme lu"
+                        >
+                          Lu
+                        </button>
+                      </div>
                     )}
                   </div>
 
