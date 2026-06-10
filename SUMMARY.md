@@ -16,6 +16,7 @@
 - **Categories des mods** : Affichage des categories pour chaque mod (180+ categories pour 5 jeux)
 - **Badges NEW** : Identifiez les nouveaux mods depuis votre derniere visite, dismissables individuellement ou en bloc
 - **Filtre par categorie** : Restreindre l'affichage a une categorie de mod (Gameplay, Armures, etc.)
+- **Tags/statuts** : Marquer chaque mod comme Installe, A installer, En pause ou Archive ; filtre par statut dans la liste
 - **Recherche** : Filtrage par nom de mod ou auteur en temps reel
 - **Tri avance** : Trier par date, nom ou auteur
 - **Gestion des suivis** : Retrait individuel ou en lot, avec confirmation unique
@@ -174,6 +175,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - [x] Export JSON de la liste des mods
 - [x] Badge NEW dismissable par mod (bouton "Lu" individuel + "Tout marquer comme lu")
 - [x] Filtre par categorie de mod (NexusModsPage et ActuUpdatePage)
+- [x] Tags/statuts sur les mods (Installe, A installer, En pause, Archive) avec persistance et filtre
 - [ ] Tests unitaires pour useNexusCredentials, useNexusMods
 - [ ] Support de multiples comptes Nexus
 - [ ] Extension a d'autres plateformes (Steam, GOG)
@@ -239,7 +241,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Etat Actuel
 
-**Version 3.6.1** - 10 Juin 2026
+**Version 3.7.0** - 10 Juin 2026
 
 ### Fonctionnalites Actives
 
@@ -253,7 +255,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - Cache multi-niveaux (60s / 10min / 24h / 2h)
 - Stockage local des credentials et preferences
 - Support Vercel (serverless)
-- Tests automatises : CredentialsModal (10 tests), useLastVisit (9 tests), NexusModsPage (7 tests)
+- Tests automatises : CredentialsModal (10 tests), useLastVisit (9 tests), NexusModsPage (7 tests), useModTags (9 tests)
 
 ### Statut
 
@@ -265,4 +267,4 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-**Derniere mise a jour :** 10 Juin 2026 — v3.6.1
+**Derniere mise a jour :** 10 Juin 2026 — v3.7.0

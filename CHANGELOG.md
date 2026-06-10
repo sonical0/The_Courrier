@@ -1,5 +1,37 @@
 # Changelog - The Courrier
 
+## Version 3.7.0 - Systeme de tags/statuts sur les mods (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Tags de statut sur chaque mod suivi
+- Quatre statuts disponibles : Installe, A installer, En pause, Archive
+- Boutons de statut sur chaque carte de mod dans la liste des mods
+- Cliquer sur le statut actif le retire (toggle)
+- Bordure coloree sur la carte selon le statut actif (vert/bleu/jaune/rouge)
+- Les statuts sont persistes dans localStorage (cle courrier_mod_tags)
+
+#### Filtre par statut
+- Selecteur "Statut" dans la barre de filtres de NexusModsPage
+- Options : Tous les statuts, Installe, A installer, En pause, Archive, Sans statut
+- Cumulable avec le filtre jeu, le filtre categorie et la recherche textuelle
+
+#### Nouveau hook useModTags
+- Exports : getTag(domain, id), setTag(domain, id, tag), clearTag(domain, id), toggleTag(domain, id, tag)
+- Persistance automatique dans localStorage a chaque modification
+- Constantes exportees : TAG_LABELS (labels d'affichage), TAG_COLORS (classes Tailwind par statut)
+
+### Tests
+- Ajout de src/components/useModTags.test.js (9 tests)
+- Couverture : getTag lecture/persistance, setTag ecrasement, clearTag suppression, toggleTag on/off/switch
+
+### Fichiers Modifies
+- src/components/useModTags.js - Nouveau hook
+- src/components/useModTags.test.js - Nouveau fichier de tests
+- src/pages/NexusModsPage.jsx - Boutons de statut, bordure coloree, filtre statut
+
+---
+
 ## Version 3.6.1 - Filtre par categorie (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites

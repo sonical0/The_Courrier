@@ -130,6 +130,22 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 7. Cliquer sur "Tout marquer comme lu (N)" dans l'entete
 8. **Resultat attendu** : tous les badges NEW visibles disparaissent et le bouton disparait
 
+### Test 18 : Tags/statuts sur les mods
+
+1. Aller sur la page "Liste des Mods" avec au moins deux mods charges
+2. Sur une carte, cliquer sur le bouton "Installe"
+3. **Resultat attendu** : le bouton "Installe" apparait en vert actif et la bordure de la carte devient verte
+4. Rafraichir la page
+5. **Resultat attendu** : le statut est conserve (persistance localStorage)
+6. Cliquer a nouveau sur le bouton "Installe" actif
+7. **Resultat attendu** : le statut est retire, la bordure disparait (toggle off)
+8. Cliquer sur "A installer", puis "En pause", puis "Archive" sur des cartes differentes
+9. **Resultat attendu** : chaque carte affiche la couleur correspondante (bleu/jaune/rouge)
+10. Dans le selecteur "Statut", choisir "Installe"
+11. **Resultat attendu** : seuls les mods tagues "Installe" sont affiches
+12. Choisir "Sans statut"
+13. **Resultat attendu** : seuls les mods sans aucun statut sont affiches
+
 ### Test 16 : Filtre par categorie
 
 1. Aller sur la page "Liste des Mods" avec des mods appartenant a des categories differentes
@@ -198,8 +214,9 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 - Persistance de `seenMods` dans localStorage via `markAsSeen` et `markAllAsSeen`
 - `countNew` excluant les mods deja vus
 - Filtre par categorie : affichage conditionnel du selecteur, filtrage correct, cumul avec la recherche
+- Tags : lecture/ecriture/suppression, toggle on/off/switch, persistance localStorage
 
-Execution : `node_modules/.bin/react-scripts test --watchAll=false --testPathPattern="(CredentialsModal|useLastVisit|NexusModsPage)"`
+Execution : `node_modules/.bin/react-scripts test --watchAll=false --testPathPattern="(CredentialsModal|useLastVisit|NexusModsPage|useModTags)"`
 
 ### Tests a implementer
 
