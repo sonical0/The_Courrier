@@ -1,5 +1,34 @@
 # Changelog - The Courrier
 
+## Version 3.9.0 - Support de multiples comptes Nexus Mods (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Gestion de plusieurs comptes Nexus Mods
+- Stockage de plusieurs comptes dans localStorage (format nexus_accounts)
+- Migration automatique depuis l'ancien format nexus_credentials au premier demarrage
+- Liste des comptes enregistres dans la modal de configuration avec bouton de basculement
+- Suppression d'un compte individuel (bouton visible si au moins 2 comptes existent)
+- Basculement instantane vers un autre compte depuis la liste
+
+#### Nouveau hook useNexusCredentials (refactorise)
+- Nouveaux exports : accounts, activeAccountId, switchAccount(id), removeAccount(id)
+- saveCredentials : ajoute un nouveau compte ou met a jour la cle si meme username
+- clearCredentials : supprime le compte actif et bascule sur le premier compte restant
+- credentials, hasCredentials, loading inchanges (retro-compatibilite totale)
+
+### Tests
+- useNexusCredentials.test.js : 15 tests (ancien : 8)
+- Couverture ajoutee : migration legacy, ajout second compte, mise a jour cle existante, switchAccount, removeAccount
+
+### Fichiers Modifies
+- src/components/useNexusCredentials.js - Refactoring complet multi-comptes
+- src/components/useNexusCredentials.test.js - Tests mis a jour et etendus
+- src/components/CredentialsModal.jsx - Liste des comptes avec basculement/suppression
+- src/App.jsx - Passage des nouvelles props a CredentialsModal
+
+---
+
 ## Version 3.8.1 - Notifications navigateur (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites

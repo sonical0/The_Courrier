@@ -143,6 +143,22 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 9. Tester avec un navigateur qui a bloque les notifications pour ce site
 10. **Resultat attendu** : le bouton est desactive et indiquer "bloquees par le navigateur"
 
+### Test 22 : Multiples comptes Nexus
+
+1. Ouvrir la modal de configuration (bouton "Config" dans la navbar)
+2. Saisir un premier compte (username + API key) et cliquer sur "Enregistrer"
+3. Rouvrir la modal — la section "Comptes enregistres" doit apparaitre avec ce premier compte en surbrillance bleue
+4. Saisir un second compte (username different) et cliquer sur "Enregistrer"
+5. **Resultat attendu** : la liste affiche desormais deux comptes ; le second est en surbrillance bleue (compte actif)
+6. Cliquer sur le premier compte dans la liste
+7. **Resultat attendu** : le premier compte devient actif (surbrillance bleue), les donnees rechargent avec ses credentials
+8. Cliquer sur l'icone de suppression du second compte
+9. **Resultat attendu** : le second compte disparait de la liste ; le premier reste actif
+10. Supprimer le dernier compte restant (bouton "Supprimer les identifiants")
+11. **Resultat attendu** : la section "Comptes enregistres" disparait, la modal retrouve son etat initial
+
+**Migration automatique** : si le localStorage contient une entree `nexus_credentials` (ancien format), elle doit etre migree automatiquement au format `nexus_accounts` au premier chargement, sans perte de donnees.
+
 ### Test 19 : Export de configuration
 
 1. Configurer des tags sur quelques mods et passer en mode sombre
@@ -233,41 +249,30 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 ### Tests implementes
 
-**src/components/CredentialsModal.test.jsx** (10 tests), **src/components/useLastVisit.test.js** (9 tests), **src/pages/NexusModsPage.test.jsx** (7 tests) — React Testing Library
+**83 tests** — React Testing Library :
 
-- Rendu conditionnel selon la prop `show`
-- Etat desactive du bouton de test si les champs sont vides
-- Affichage du message de succes apres une reponse 200 de l'API
-- Affichage du message d'erreur apres une reponse non-200 (cle invalide)
-- Affichage du message d'erreur en cas d'echec reseau
-- Reinitialisation du resultat lors de la modification des champs
-- Appel correct de `onSave` avec les valeurs saisies
-- Persistance de `seenMods` dans localStorage via `markAsSeen` et `markAllAsSeen`
-- `countNew` excluant les mods deja vus
-- Filtre par categorie : affichage conditionnel du selecteur, filtrage correct, cumul avec la recherche
-- Tags : lecture/ecriture/suppression, toggle on/off/switch, persistance localStorage
-- useNexusCredentials : chargement, JSON invalide, saveCredentials, clearCredentials
-- useNexusMods : normalisation, headers, erreurs, modsForGame, refresh, untrackMod
+| Fichier | Tests |
+|---|---|
+| `src/components/CredentialsModal.test.jsx` | 10 |
+| `src/components/useLastVisit.test.js` | 9 |
+| `src/pages/NexusModsPage.test.jsx` | 7 |
+| `src/components/useModTags.test.js` | 9 |
+| `src/components/useNexusCredentials.test.js` | 15 |
+| `src/components/useNexusMods.test.js` | 11 |
+| `src/components/useConfigBackup.test.js` | 9 |
+| `src/components/useNotifications.test.js` | 13 |
+
+Scenarios couverts :
+- CredentialsModal : rendu, validation, test connexion (succes/erreur/reseau), reinitialisation
+- useLastVisit : seenMods persistance, markAsSeen, markAllAsSeen, countNew avec exclusion
+- NexusModsPage : filtre par categorie, affichage conditionnel selecteur, cumul avec recherche
+- useModTags : getTag/setTag/clearTag, toggle on/off/switch, persistance localStorage
+- useNexusCredentials : chargement vide, format nexus_accounts, migration legacy, JSON invalide, saveCredentials (nouveau/existant/second), clearCredentials (seul/multiple), switchAccount, removeAccount
+- useNexusMods : normalisation, headers, erreurs HTTP/reseau, modsForGame filtrage et tri, refresh, untrackMod (succes/echec)
+- useConfigBackup : export (contenu, exclusion credentials), import (succes, JSON invalide, fichier non-JSON)
+- useNotifications : permission denied/granted, enabled/disabled toggle, persistance, notify, notifyNewMods
 
 Execution : `node_modules/.bin/react-scripts test --watchAll=false`
-
-### Tests a implementer
-
-```javascript
-// src/components/useNexusCredentials.test.js
-describe('useNexusCredentials', () => {
-  test('devrait démarrer sans credentials', ...);
-  test('devrait sauvegarder les credentials dans localStorage', ...);
-  test('devrait supprimer les credentials', ...);
-});
-
-// src/components/useLastVisit.test.js
-describe('useLastVisit', () => {
-  test('isNew retourne false si le mod est dans seenMods', ...);
-  test('markAsSeen persiste dans localStorage', ...);
-  test('countNew exclut les mods marques comme vus', ...);
-});
-```
 
 ## Checklist de Validation
 
