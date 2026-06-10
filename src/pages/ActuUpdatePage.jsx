@@ -1,13 +1,11 @@
 import { useMemo, useState, useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
-import useNexusMods from "../components/useNexusMods";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
 
 export default function ActuUpdatePage() {
-  const { credentials, getSteamInfo } = useOutletContext();
-  const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
+  const { getSteamInfo, loading, error, games, modsForGame, refresh } = useOutletContext();
   const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
   const [period, setPeriod] = useState(7);
   const [selectedGame, setSelectedGame] = useState("ALL");
