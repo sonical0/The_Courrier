@@ -1,5 +1,56 @@
 # Changelog - The Courrier
 
+## Version 4.0.0 - Optimisations techniques : chiffrement + cache + compression (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Chiffrement AES-GCM des credentials en localStorage
+- Module `src/utils/cryptoStorage.js` : encryptValue / decryptValue via Web Crypto API (zero dependance)
+- Cle derivee par PBKDF2 (100 000 iterations, SHA-256), IV aleatoire par chiffrement (AES-GCM 256)
+- Format stocke : `<base64iv>.<base64cipher>` dans la cle `nexus_accounts`
+- Migration transparente depuis JSON brut (ancien format) : lu directement, rechiffre au prochain enregistrement
+- Migration automatique depuis l'ancien format `nexus_credentials` : inchangee
+
+#### Cache 10 minutes par utilisateur pour les mods suivis
+- `useNexusMods` : verifie le cache localStorage avant chaque appel a `/api/nexus/tracked`
+- TTL de 10 minutes, cle specifique par username (`courrier_mods_cache_<username>`)
+- Cache bypasse sur `refresh()` et `untrackMod()` (invalidation + re-fetch force)
+- Zero appel reseau au reload si le cache est valide
+
+#### Compression LZ-String des donnees localStorage
+- Module `src/utils/compressedStorage.js` : setCompressed / getCompressed via lz-string
+- Applique a `courrier_seen_mods` (useLastVisit) et `courrier_mods_cache_<username>` (useNexusMods)
+- Migration automatique : getCompressed lit les valeurs JSON brutes existantes via fallback
+
+### Tests
+- `src/utils/cryptoStorage.test.js` : 5 tests (round-trip, IV aleatoire, chaine vide, entree malformee, ciphertext corrompu)
+- `src/utils/compressedStorage.test.js` : 6 tests (round-trip array/objet, cle absente, migration JSON brut, compression reelle, tableau vide)
+- `src/components/useNexusMods.test.js` : +6 tests cache (hit/expiration/absent/bypass refresh/invalidation untrack/isolation user)
+- `src/components/useNexusCredentials.test.js` : mock cryptoStorage ajoute (tests inchanges, 15 tests)
+- `src/components/useLastVisit.test.js` : mock compressedStorage ajoute (tests inchanges, 9 tests)
+- Total : 100 tests (ancien : 83)
+
+### Dependances
+- `lz-string` ^1.5.0 ajoutee aux dependances
+
+### Fichiers Crees
+- `src/utils/cryptoStorage.js`
+- `src/utils/cryptoStorage.test.js`
+- `src/utils/compressedStorage.js`
+- `src/utils/compressedStorage.test.js`
+
+### Fichiers Modifies
+- `src/components/useNexusCredentials.js` - Chiffrement AES-GCM du stockage credentials
+- `src/components/useNexusCredentials.test.js` - Mock cryptoStorage
+- `src/components/useNexusMods.js` - Cache 10min avec compressedStorage
+- `src/components/useNexusMods.test.js` - 6 nouveaux tests cache + mock compressedStorage
+- `src/components/useLastVisit.js` - Compression seen_mods via compressedStorage
+- `src/components/useLastVisit.test.js` - Mock compressedStorage
+- `src/setupTests.js` - Polyfills TextEncoder/TextDecoder et crypto.subtle pour Jest/jsdom
+- `package.json` - Version 4.0.0, dependance lz-string
+
+---
+
 ## Version 3.9.0 - Support de multiples comptes Nexus Mods (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites

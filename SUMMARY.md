@@ -187,8 +187,8 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ### Optimisations Techniques
 
-- [ ] Chiffrement des credentials en localStorage
-- [ ] Compression des données de cache
+- [x] Chiffrement des credentials en localStorage (AES-GCM, PBKDF2, Web Crypto API)
+- [x] Compression des données de cache (LZ-String)
 - [ ] Service Worker pour le mode hors-ligne
 - [ ] Analytics anonymes d'utilisation
 
@@ -244,7 +244,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Etat Actuel
 
-**Version 3.9.0** - 10 Juin 2026
+**Version 4.0.0** - 10 Juin 2026
 
 ### Fonctionnalites Actives
 
@@ -255,10 +255,12 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - Verificateur d'incompatibilites entre mods
 - Integration Steam : suivi des versions de jeux, alertes de mise a jour
 - Isolation de session par utilisateur (securite)
-- Cache multi-niveaux (60s / 10min / 24h / 2h)
+- Chiffrement AES-GCM des credentials en localStorage (Web Crypto API, zero dependance)
+- Cache 10min par utilisateur pour les mods suivis (zero fetch au reload)
+- Compression LZ-String des donnees localStorage (seen_mods + cache mods)
 - Stockage local des credentials et preferences
 - Support Vercel (serverless)
-- Tests automatises : CredentialsModal (10), useLastVisit (9), NexusModsPage (7), useModTags (9), useNexusCredentials (15), useNexusMods (11), useConfigBackup (9), useNotifications (13) — 83 tests au total
+- Tests automatises : CredentialsModal (10), useLastVisit (9), NexusModsPage (7), useModTags (9), useNexusCredentials (15), useNexusMods (17), useConfigBackup (9), useNotifications (13), cryptoStorage (5), compressedStorage (6) — 100 tests au total
 
 ### Statut
 
@@ -270,4 +272,4 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-**Derniere mise a jour :** 10 Juin 2026 — v3.9.0
+**Derniere mise a jour :** 10 Juin 2026 — v4.0.0

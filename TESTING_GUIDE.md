@@ -159,6 +159,37 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 **Migration automatique** : si le localStorage contient une entree `nexus_credentials` (ancien format), elle doit etre migree automatiquement au format `nexus_accounts` au premier chargement, sans perte de donnees.
 
+### Test 23 : Chiffrement des credentials en localStorage
+
+1. Ouvrir l'application dans un navigateur neuf (ou vider le localStorage)
+2. Configurer un compte Nexus (username + API key) et cliquer sur "Enregistrer"
+3. Ouvrir les DevTools > Application > Local Storage
+4. Localiser la cle `nexus_accounts`
+5. **Resultat attendu** : la valeur est une chaine opaque de la forme `<base64iv>.<base64cipher>` (pas de JSON lisible)
+6. Recharger la page (F5)
+7. **Resultat attendu** : les credentials sont correctement recharges ; le badge utilisateur s'affiche normalement
+8. Tester le basculement de compte : ajouter un second compte, basculer, recharger
+9. **Resultat attendu** : le compte actif est conserve apres rechargement
+
+**Migration** : si un ancien `nexus_accounts` en JSON brut est present, il est lu normalement et rechiffre au prochain enregistrement.
+
+### Test 24 : Cache 10 minutes des mods suivis
+
+1. Ouvrir l'application avec des credentials valides
+2. Naviguer vers la page "Liste des Mods"
+3. Ouvrir les DevTools > Network : noter l'appel a `/api/nexus/tracked`
+4. Recharger la page (F5)
+5. **Resultat attendu** : aucun appel reseau vers `/api/nexus/tracked` (chargement depuis le cache)
+6. Ouvrir les DevTools > Application > Local Storage
+7. Localiser la cle `courrier_mods_cache_<username>`
+8. **Resultat attendu** : la valeur est compressee (LZ-String, pas du JSON lisible)
+9. Cliquer sur "Actualiser" dans l'interface
+10. **Resultat attendu** : un appel reseau est effectue (bypass cache force)
+11. Retirer un mod via le bouton de suppression
+12. **Resultat attendu** : le cache est invalide et la liste se rafraichit avec un appel reseau
+
+**Isolation par compte** : basculer vers un autre compte recharge les mods de ce compte (cle de cache differente), pas les mods du premier compte.
+
 ### Test 19 : Export de configuration
 
 1. Configurer des tags sur quelques mods et passer en mode sombre
@@ -249,7 +280,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 ### Tests implementes
 
-**83 tests** — React Testing Library :
+**100 tests** — React Testing Library :
 
 | Fichier | Tests |
 |---|---|
@@ -258,9 +289,11 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 | `src/pages/NexusModsPage.test.jsx` | 7 |
 | `src/components/useModTags.test.js` | 9 |
 | `src/components/useNexusCredentials.test.js` | 15 |
-| `src/components/useNexusMods.test.js` | 11 |
+| `src/components/useNexusMods.test.js` | 17 |
 | `src/components/useConfigBackup.test.js` | 9 |
 | `src/components/useNotifications.test.js` | 13 |
+| `src/utils/cryptoStorage.test.js` | 5 |
+| `src/utils/compressedStorage.test.js` | 6 |
 
 Scenarios couverts :
 - CredentialsModal : rendu, validation, test connexion (succes/erreur/reseau), reinitialisation
@@ -268,9 +301,11 @@ Scenarios couverts :
 - NexusModsPage : filtre par categorie, affichage conditionnel selecteur, cumul avec recherche
 - useModTags : getTag/setTag/clearTag, toggle on/off/switch, persistance localStorage
 - useNexusCredentials : chargement vide, format nexus_accounts, migration legacy, JSON invalide, saveCredentials (nouveau/existant/second), clearCredentials (seul/multiple), switchAccount, removeAccount
-- useNexusMods : normalisation, headers, erreurs HTTP/reseau, modsForGame filtrage et tri, refresh, untrackMod (succes/echec)
+- useNexusMods : normalisation, headers, erreurs HTTP/reseau, modsForGame filtrage et tri, refresh, untrackMod (succes/echec), cache (hit/expiration/absent/bypass refresh/invalidation untrack/isolation par user)
 - useConfigBackup : export (contenu, exclusion credentials), import (succes, JSON invalide, fichier non-JSON)
 - useNotifications : permission denied/granted, enabled/disabled toggle, persistance, notify, notifyNewMods
+- cryptoStorage : round-trip, IV aleatoire, chaine vide, entree malformee, texte chiffre corrompu
+- compressedStorage : round-trip array/objet, cle absente, migration JSON brut, compression reelle, tableau vide
 
 Execution : `node_modules/.bin/react-scripts test --watchAll=false`
 
