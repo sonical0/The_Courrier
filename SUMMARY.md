@@ -176,7 +176,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - [x] Badge NEW dismissable par mod (bouton "Lu" individuel + "Tout marquer comme lu")
 - [x] Filtre par categorie de mod (NexusModsPage et ActuUpdatePage)
 - [x] Tags/statuts sur les mods (Installe, A installer, En pause, Archive) avec persistance et filtre
-- [ ] Tests unitaires pour useNexusCredentials, useNexusMods
+- [x] Tests unitaires pour useNexusCredentials (8 tests) et useNexusMods (11 tests)
 - [ ] Support de multiples comptes Nexus
 - [ ] Extension a d'autres plateformes (Steam, GOG)
 - [ ] Systeme de notifications navigateur pour les mises a jour
@@ -241,7 +241,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Etat Actuel
 
-**Version 3.7.0** - 10 Juin 2026
+**Version 3.7.1** - 10 Juin 2026
 
 ### Fonctionnalites Actives
 
@@ -255,7 +255,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - Cache multi-niveaux (60s / 10min / 24h / 2h)
 - Stockage local des credentials et preferences
 - Support Vercel (serverless)
-- Tests automatises : CredentialsModal (10 tests), useLastVisit (9 tests), NexusModsPage (7 tests), useModTags (9 tests)
+- Tests automatises : CredentialsModal (10), useLastVisit (9), NexusModsPage (7), useModTags (9), useNexusCredentials (8), useNexusMods (11) — 54 tests au total
 
 ### Statut
 
@@ -267,4 +267,4 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-**Derniere mise a jour :** 10 Juin 2026 — v3.7.0
+**Derniere mise a jour :** 10 Juin 2026 — v3.7.1

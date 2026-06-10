@@ -215,8 +215,10 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 - `countNew` excluant les mods deja vus
 - Filtre par categorie : affichage conditionnel du selecteur, filtrage correct, cumul avec la recherche
 - Tags : lecture/ecriture/suppression, toggle on/off/switch, persistance localStorage
+- useNexusCredentials : chargement, JSON invalide, saveCredentials, clearCredentials
+- useNexusMods : normalisation, headers, erreurs, modsForGame, refresh, untrackMod
 
-Execution : `node_modules/.bin/react-scripts test --watchAll=false --testPathPattern="(CredentialsModal|useLastVisit|NexusModsPage|useModTags)"`
+Execution : `node_modules/.bin/react-scripts test --watchAll=false`
 
 ### Tests a implementer
 

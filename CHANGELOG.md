@@ -1,5 +1,35 @@
 # Changelog - The Courrier
 
+## Version 3.7.1 - Tests unitaires useNexusCredentials et useNexusMods (10 Juin 2026)
+
+### Tests
+
+#### useNexusCredentials (8 tests)
+- Chargement depuis localStorage au montage
+- Ignorance d'un objet incomplet (username ou apiKey absent)
+- Ignorance d'un JSON invalide sans plantage
+- saveCredentials : persistance dans l'etat et localStorage, valeur de retour
+- clearCredentials : suppression de l'etat et localStorage, valeur de retour
+
+#### useNexusMods (11 tests)
+- Etat de chargement puis resolution avec mods normalises
+- Envoi des headers X-Nexus-Username / X-Nexus-ApiKey si credentials fournis
+- Absence des headers si credentials null
+- Erreur HTTP : set error, games vide
+- Erreur reseau : set error avec le message d'exception
+- Normalisation : mod_id -> id, domain_name -> domain, champs name/version/author
+- modsForGame : filtre par domaine, retourne vide si domaine inconnu
+- modsForGame : tri decroissant par updatedAt
+- refresh() : second appel fetch, mise a jour de l'etat
+- untrackMod() : appel DELETE + refresh, retour success:true
+- untrackMod() : retour success:false + message en cas d'erreur
+
+### Fichiers Modifies
+- src/components/useNexusCredentials.test.js - Nouveau fichier de tests
+- src/components/useNexusMods.test.js - Nouveau fichier de tests
+
+---
+
 ## Version 3.7.0 - Systeme de tags/statuts sur les mods (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites
