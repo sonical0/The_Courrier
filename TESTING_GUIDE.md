@@ -130,6 +130,24 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 7. Cliquer sur "Tout marquer comme lu (N)" dans l'entete
 8. **Resultat attendu** : tous les badges NEW visibles disparaissent et le bouton disparait
 
+### Test 19 : Export de configuration
+
+1. Configurer des tags sur quelques mods et passer en mode sombre
+2. Cliquer sur le bouton "Exporter" dans la navbar
+3. **Resultat attendu** : un fichier the-courrier-config-YYYY-MM-DD.json est telecharge
+4. Ouvrir le fichier et verifier qu'il contient les tags et le theme
+5. **Resultat attendu** : les credentials Nexus sont absents du fichier
+
+### Test 20 : Import de configuration
+
+1. Modifier le theme et quelques tags, puis exporter la configuration
+2. Vider le localStorage (DevTools > Application > Storage)
+3. Cliquer sur "Importer" et selectionner le fichier exporte
+4. **Resultat attendu** : un bandeau confirme la restauration puis la page se recharge
+5. **Resultat attendu** : les tags et le theme sont restaures
+6. Tenter d'importer un fichier texte ou un JSON malformed
+7. **Resultat attendu** : un bandeau d'erreur s'affiche (disparait apres 4 secondes)
+
 ### Test 18 : Tags/statuts sur les mods
 
 1. Aller sur la page "Liste des Mods" avec au moins deux mods charges

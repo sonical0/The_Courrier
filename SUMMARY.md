@@ -17,6 +17,7 @@
 - **Badges NEW** : Identifiez les nouveaux mods depuis votre derniere visite, dismissables individuellement ou en bloc
 - **Filtre par categorie** : Restreindre l'affichage a une categorie de mod (Gameplay, Armures, etc.)
 - **Tags/statuts** : Marquer chaque mod comme Installe, A installer, En pause ou Archive ; filtre par statut dans la liste
+- **Export/Import config** : Sauvegarder et restaurer les tags, mods vus et theme via un fichier JSON
 - **Recherche** : Filtrage par nom de mod ou auteur en temps reel
 - **Tri avance** : Trier par date, nom ou auteur
 - **Gestion des suivis** : Retrait individuel ou en lot, avec confirmation unique
@@ -177,10 +178,10 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - [x] Filtre par categorie de mod (NexusModsPage et ActuUpdatePage)
 - [x] Tags/statuts sur les mods (Installe, A installer, En pause, Archive) avec persistance et filtre
 - [x] Tests unitaires pour useNexusCredentials (8 tests) et useNexusMods (11 tests)
+- [x] Import/Export de configuration (tags, seenMods, theme — credentials exclus)
 - [ ] Support de multiples comptes Nexus
 - [ ] Extension a d'autres plateformes (Steam, GOG)
 - [ ] Systeme de notifications navigateur pour les mises a jour
-- [ ] Import/Export de configuration
 
 ### Optimisations Techniques
 
@@ -241,7 +242,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ## Etat Actuel
 
-**Version 3.7.1** - 10 Juin 2026
+**Version 3.8.0** - 10 Juin 2026
 
 ### Fonctionnalites Actives
 
@@ -255,7 +256,7 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 - Cache multi-niveaux (60s / 10min / 24h / 2h)
 - Stockage local des credentials et preferences
 - Support Vercel (serverless)
-- Tests automatises : CredentialsModal (10), useLastVisit (9), NexusModsPage (7), useModTags (9), useNexusCredentials (8), useNexusMods (11) — 54 tests au total
+- Tests automatises : CredentialsModal (10), useLastVisit (9), NexusModsPage (7), useModTags (9), useNexusCredentials (8), useNexusMods (11), useConfigBackup (9) — 63 tests au total
 
 ### Statut
 
@@ -267,4 +268,4 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-**Derniere mise a jour :** 10 Juin 2026 — v3.7.1
+**Derniere mise a jour :** 10 Juin 2026 — v3.8.0

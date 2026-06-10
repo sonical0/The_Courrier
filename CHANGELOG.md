@@ -1,5 +1,33 @@
 # Changelog - The Courrier
 
+## Version 3.8.0 - Export et import de configuration (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Export de configuration
+- Bouton "Exporter" dans la navbar (desktop et mobile)
+- Telecharge un fichier the-courrier-config-YYYY-MM-DD.json
+- Contenu : tags de mods, mods vus (seenMods), derniere visite, theme
+- Les credentials Nexus ne sont jamais exportes (securite)
+
+#### Import de configuration
+- Bouton "Importer" dans la navbar (desktop et mobile)
+- Selecteur de fichier JSON, validation de la structure avant restauration
+- Seules les cles reconnues sont restaurees (les cles inconnues sont ignorees)
+- Bandeau de confirmation avec compte des elements restaures, puis rechargement automatique
+- Bandeau d'erreur si le fichier est invalide ou corrompu (disparait apres 4 secondes)
+
+### Tests
+- Ajout de src/components/useConfigBackup.test.js (9 tests)
+- Couverture : structure de l'export, absence des credentials, import restauration, erreurs de format/structure
+
+### Fichiers Modifies
+- src/components/useConfigBackup.js - Nouveau module (exportConfig, importConfig)
+- src/components/useConfigBackup.test.js - Nouveau fichier de tests
+- src/App.jsx - Boutons export/import, gestionnaire d'import, bandeau de statut
+
+---
+
 ## Version 3.7.1 - Tests unitaires useNexusCredentials et useNexusMods (10 Juin 2026)
 
 ### Tests
