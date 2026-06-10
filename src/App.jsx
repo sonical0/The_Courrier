@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import DashboardPage from "./pages/DashboardPage";
 import ActuUpdatePage from "./pages/ActuUpdatePage";
@@ -12,11 +12,13 @@ import useTheme from "./components/useTheme";
 import useSteamGames from "./components/useSteamGames";
 import GameUpdateAlert from "./components/GameUpdateAlert";
 import { exportConfig, importConfig } from "./components/useConfigBackup";
+import useNotifications from "./components/useNotifications";
 
 export default function App() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials } = useNexusCredentials();
   const { loading: modsLoading, games, modsForGame } = useNexusMods(credentials);
   const { countNew } = useLastVisit();
+  const { supported: notifSupported, enabled: notifEnabled, permission: notifPermission, requestPermission, disableNotifications, notifyNewMods } = useNotifications();
   const [showModal, setShowModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -39,6 +41,12 @@ export default function App() {
     }
     return countNew(allMods);
   }, [games, modsForGame, countNew, modsLoading]);
+
+  useEffect(() => {
+    if (!modsLoading && newModsCount > 0) {
+      notifyNewMods(newModsCount);
+    }
+  }, [newModsCount, modsLoading, notifyNewMods]);
 
   const handleSaveCredentials = (username, apiKey) => {
     if (saveCredentials(username, apiKey)) {
@@ -131,6 +139,27 @@ export default function App() {
                 >
                   {theme === "light" ? "🌙 Nuit" : "☀️ Jour"}
                 </button>
+
+                {notifSupported && (
+                  <button
+                    onClick={notifEnabled ? disableNotifications : requestPermission}
+                    className={`px-3 py-2 rounded-lg transition-colors font-medium text-sm ${
+                      notifEnabled
+                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/40"
+                        : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
+                    }`}
+                    title={
+                      notifPermission === "denied"
+                        ? "Notifications bloquees par le navigateur"
+                        : notifEnabled
+                        ? "Desactiver les notifications"
+                        : "Activer les notifications"
+                    }
+                    disabled={notifPermission === "denied"}
+                  >
+                    {notifEnabled ? "Notifs ON" : "Notifs OFF"}
+                  </button>
+                )}
 
                 <button
                   className="px-4 py-2 rounded-lg bg-pico-primary hover:bg-pico-primary-hover text-white transition-colors font-medium"
@@ -246,6 +275,26 @@ export default function App() {
                   >
                     {theme === "light" ? "🌙 Nuit" : "☀️ Jour"}
                   </button>
+                  {notifSupported && (
+                    <button
+                      onClick={() => {
+                        notifEnabled ? disableNotifications() : requestPermission();
+                        setIsMenuOpen(false);
+                      }}
+                      disabled={notifPermission === "denied"}
+                      className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
+                        notifEnabled
+                          ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
+                          : theme === "dark"
+                          ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
+                          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                      }`}
+                      title={notifPermission === "denied" ? "Notifications bloquees" : ""}
+                    >
+                      {notifEnabled ? "Notifications : activees" : "Notifications : desactivees"}
+                    </button>
+                  )}
+
                   <button
                     onClick={() => {
                       setShowModal(true);
