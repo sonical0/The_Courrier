@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState, useCallback } from "react";
+import { setCompressed, getCompressed } from "../utils/compressedStorage";
+
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 function toEpoch(val) {
   if (!val) return 0;
@@ -17,7 +20,22 @@ export default function useNexusMods(credentials = null) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchTracked = useCallback(async () => {
+  const cacheKey = `courrier_mods_cache_${credentials?.username ?? "anon"}`;
+
+  const fetchTracked = useCallback(async (forceRefresh = false) => {
+    // Vérifier le cache si pas de refresh forcé
+    if (!forceRefresh) {
+      const cached = getCompressed(cacheKey);
+      if (cached?.fetchedAt && Array.isArray(cached.data)) {
+        if (Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+          setMods(cached.data);
+          setLoading(false);
+          setError(null);
+          return;
+        }
+      }
+    }
+
     setLoading(true);
     setError(null);
     try {
@@ -72,7 +90,6 @@ export default function useNexusMods(credentials = null) {
           url,
           picture: m.picture_url ?? m.thumbnail_url ?? m.content_preview_link ?? m.picture,
           summary: m.summary ?? m.short_description ?? "",
-          // ajouts enrichissement serveur
           previousVersion: m.previousVersion ?? m.previous_version ?? null,
           changelog: Array.isArray(m.changelog)
             ? m.changelog
@@ -88,17 +105,20 @@ export default function useNexusMods(credentials = null) {
       });
 
       setMods(normalized);
+      setCompressed(cacheKey, { data: normalized, fetchedAt: Date.now() });
     } catch (e) {
       setError(e.message || String(e));
       setMods([]);
     } finally {
       setLoading(false);
     }
-  }, [credentials]);
+  }, [credentials, cacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchTracked();
   }, [fetchTracked]);
+
+  const refresh = useCallback(() => fetchTracked(true), [fetchTracked]);
 
   const games = useMemo(() => {
     const map = new Map();
@@ -131,15 +151,12 @@ export default function useNexusMods(credentials = null) {
 
   const untrackMod = useCallback(async (domain, modId) => {
     try {
-      // Préparer les headers avec les credentials si disponibles
       const headers = { Accept: "application/json" };
       if (credentials?.username && credentials?.apiKey) {
         headers["X-Nexus-Username"] = credentials.username;
         headers["X-Nexus-ApiKey"] = credentials.apiKey;
       }
 
-      // En dev, utilise le proxy de package.json (Create React App)
-      // En prod (Netlify/Vercel), utilise les serverless functions
       const res = await fetch(`/api/nexus/tracked/${domain}/${modId}`, {
         method: "DELETE",
         headers,
@@ -148,13 +165,14 @@ export default function useNexusMods(credentials = null) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
       }
-      // Rafraîchit la liste après suppression
-      await fetchTracked();
+      // Invalider le cache avant le refresh
+      localStorage.removeItem(cacheKey);
+      await fetchTracked(true);
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message || String(e) };
     }
-  }, [fetchTracked, credentials]);
+  }, [fetchTracked, credentials, cacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { loading, error, games, modsForGame, refresh: fetchTracked, untrackMod };
+  return { loading, error, games, modsForGame, refresh, untrackMod };
 }
