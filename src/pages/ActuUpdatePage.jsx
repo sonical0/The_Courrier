@@ -6,7 +6,7 @@ import SteamGameInfo from "../components/SteamGameInfo";
 
 export default function ActuUpdatePage({ credentials, getSteamInfo }) {
   const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
-  const { isNew, updateLastVisit } = useLastVisit();
+  const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
   const [period, setPeriod] = useState(7);
   const [selectedGame, setSelectedGame] = useState("ALL");
   const [sortBy, setSortBy] = useState("date");
@@ -145,12 +145,20 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
           Mise à jour · {periodLabel()}
         </h2>
-        <button 
-          className="pico-btn-outline w-fit"
-          onClick={refresh}
-        >
-          Rafraîchir
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {countNew(grouped.flatMap((g) => g.mods)) > 0 && (
+            <button
+              className="pico-btn-outline text-sm"
+              onClick={() => markAllAsSeen(grouped.flatMap((g) => g.mods))}
+              title="Marquer tous les mods visibles comme lus"
+            >
+              Tout marquer comme lu ({countNew(grouped.flatMap((g) => g.mods))})
+            </button>
+          )}
+          <button className="pico-btn-outline w-fit" onClick={refresh}>
+            Rafraîchir
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -281,8 +289,17 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
                     <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
                       {m.name || `${m.domain}/${m.id}`}
                     </h5>
-                    {isNew(m.updatedAt) && (
-                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                    {isNew(m.updatedAt, m.domain, m.id) && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
+                        <button
+                          className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors"
+                          onClick={() => markAsSeen(m.domain, m.id)}
+                          title="Marquer comme lu"
+                        >
+                          Lu
+                        </button>
+                      </div>
                     )}
                   </div>
                   <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">

@@ -1,9 +1,25 @@
 import { useState, useEffect, useCallback } from "react";
 
 const STORAGE_KEY = "courrier_last_visit";
+const SEEN_KEY = "courrier_seen_mods";
+
+function loadSeenMods() {
+  try {
+    const raw = localStorage.getItem(SEEN_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+}
+
+function persistSeenMods(set) {
+  try {
+    localStorage.setItem(SEEN_KEY, JSON.stringify([...set]));
+  } catch {}
+}
 
 export default function useLastVisit() {
   const [lastVisit, setLastVisit] = useState(null);
+  const [seenMods, setSeenMods] = useState(() => loadSeenMods());
 
   useEffect(() => {
     try {
@@ -15,7 +31,7 @@ export default function useLastVisit() {
         }
       }
     } catch (e) {
-      console.error("Erreur lors du chargement de la dernière visite:", e);
+      console.error("Erreur lors du chargement de la derniere visite:", e);
     }
   }, []);
 
@@ -25,24 +41,51 @@ export default function useLastVisit() {
       localStorage.setItem(STORAGE_KEY, String(now));
       setLastVisit(now);
     } catch (e) {
-      console.error("Erreur lors de la sauvegarde de la dernière visite:", e);
+      console.error("Erreur lors de la sauvegarde de la derniere visite:", e);
     }
   }, []);
 
-  const isNew = useCallback((modUpdatedAt) => {
+  const markAsSeen = useCallback((domain, modId) => {
+    setSeenMods((prev) => {
+      const next = new Set(prev);
+      next.add(`${domain}:${modId}`);
+      persistSeenMods(next);
+      return next;
+    });
+  }, []);
+
+  const markAllAsSeen = useCallback((mods) => {
+    setSeenMods((prev) => {
+      const next = new Set(prev);
+      for (const m of mods) {
+        if (m.domain && m.id) next.add(`${m.domain}:${m.id}`);
+      }
+      persistSeenMods(next);
+      return next;
+    });
+  }, []);
+
+  const isNew = useCallback((modUpdatedAt, domain, modId) => {
     if (!lastVisit || !modUpdatedAt) return false;
+    if (domain && modId && seenMods.has(`${domain}:${modId}`)) return false;
     return Number(modUpdatedAt) > lastVisit;
-  }, [lastVisit]);
+  }, [lastVisit, seenMods]);
 
   const countNew = useCallback((mods) => {
     if (!lastVisit || !Array.isArray(mods)) return 0;
-    return mods.filter(m => Number(m.updatedAt || 0) > lastVisit).length;
-  }, [lastVisit]);
+    return mods.filter((m) => {
+      if (m.domain && m.id && seenMods.has(`${m.domain}:${m.id}`)) return false;
+      return Number(m.updatedAt || 0) > lastVisit;
+    }).length;
+  }, [lastVisit, seenMods]);
 
   return {
     lastVisit,
     updateLastVisit,
     isNew,
     countNew,
+    seenMods,
+    markAsSeen,
+    markAllAsSeen,
   };
 }
