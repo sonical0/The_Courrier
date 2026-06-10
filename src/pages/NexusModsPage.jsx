@@ -11,6 +11,7 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
   const [untracking, setUntracking] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("ALL");
   const [selectedMods, setSelectedMods] = useState(new Set());
   const [batchUntracking, setBatchUntracking] = useState(false);
 
@@ -19,16 +20,25 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
     return () => clearTimeout(timer);
   }, [updateLastVisit]);
 
-  const mods = useMemo(() => {
-    let result = [];
+  const modsBase = useMemo(() => {
+    const result = [];
     if (!gameKey || gameKey === "ALL") {
       for (const g of games) {
-        const key = g.domain || g.gameId || g.name;
-        result.push(...modsForGame(key));
+        result.push(...modsForGame(g.domain || g.gameId || g.name));
       }
     } else {
-      result = modsForGame(gameKey);
+      result.push(...modsForGame(gameKey));
     }
+    return result;
+  }, [gameKey, modsForGame, games]);
+
+  const availableCategories = useMemo(() => {
+    const cats = new Set(modsBase.map((m) => m.category).filter(Boolean));
+    return [...cats].sort();
+  }, [modsBase]);
+
+  const mods = useMemo(() => {
+    let result = [...modsBase];
 
     if (sortBy === "name") {
       result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -36,6 +46,10 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
       result.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
     } else {
       result.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+    }
+
+    if (filterCategory !== "ALL") {
+      result = result.filter((m) => m.category === filterCategory);
     }
 
     if (searchQuery.trim()) {
@@ -48,7 +62,7 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
     }
 
     return result;
-  }, [gameKey, modsForGame, games, sortBy, searchQuery]);
+  }, [modsBase, sortBy, filterCategory, searchQuery]);
 
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
@@ -212,6 +226,23 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
             ))}
           </select>
         </div>
+        {availableCategories.length > 0 && (
+          <div className="flex-1 max-w-md">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Catégorie
+            </label>
+            <select
+              className="pico-select"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+            >
+              <option value="ALL">Toutes les catégories</option>
+              {availableCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Trier par
