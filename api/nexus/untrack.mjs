@@ -1,4 +1,5 @@
 import fetch from "node-fetch";
+import { enforceRateLimit, LIMITS } from "../utils/rateLimit.mjs";
 
 const nexusHeaders = (username, apiKey) => {
   const appName = (process.env.NEXUS_APP_NAME || "The Courrier").trim();
@@ -16,10 +17,14 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "DELETE, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Nexus-Username, X-Nexus-ApiKey");
+  // Reponse liee a des credentials Nexus : aucun cache en amont.
+  res.setHeader("Cache-Control", "private, no-store");
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
+
+  if (enforceRateLimit(req, res, { scope: "nexus", ...LIMITS.nexus })) return;
 
   if (req.method !== "DELETE") {
     return res.status(405).json({ error: "Method not allowed" });

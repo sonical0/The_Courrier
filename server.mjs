@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
 import { toEpoch, getCategoryName, withPool, sortVersionsSemantic } from "./api/utils/NexusUtils.mjs";
+import { enforceRateLimit, LIMITS } from "./api/utils/rateLimit.mjs";
 
 dotenv.config();
 
@@ -15,6 +16,26 @@ const DEBUG = process.env.NODE_ENV === 'development';
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+// Les routes /api/nexus/* dependent des credentials envoyes en headers :
+// leur reponse est propre a un compte et ne doit jamais etre mise en cache
+// par un intermediaire. Meme politique que les fonctions dans api/nexus/.
+app.use("/api/nexus", (_req, res, next) => {
+  res.setHeader("Cache-Control", "private, no-store");
+  next();
+});
+
+// Plafond de debit par IP. Ici le processus est unique et long-running, donc
+// la protection est complete (contrairement au serverless — voir le
+// commentaire de tete de api/utils/rateLimit.mjs).
+app.use("/api/nexus", (req, res, next) => {
+  if (enforceRateLimit(req, res, { scope: "nexus", ...LIMITS.nexus })) return;
+  next();
+});
+app.use("/api/steam", (req, res, next) => {
+  if (enforceRateLimit(req, res, { scope: "steam", ...LIMITS.steam })) return;
+  next();
+});
 
 const CACHE = new Map();
 
@@ -343,9 +364,18 @@ app.get("/api/steam/game/:appId", async (req, res) => {
     });
   }
 
+  // Meme politique que api/steam/game/[appId].mjs : donnees publiques,
+  // cacheables par un CDN en amont.
+  const setPublicCache = () =>
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=7200, stale-while-revalidate=86400"
+    );
+
   const ck = `steam:${appId}`;
   const cached = cacheGet(ck);
   if (cached) {
+    setPublicCache();
     return res.json(cached);
   }
 
@@ -503,6 +533,7 @@ app.get("/api/steam/game/:appId", async (req, res) => {
     };
 
     cacheSet(ck, result, 2 * 60 * 60_000); // 2 hours cache (réduit de 6h)
+    setPublicCache();
     res.json(result);
   } catch (error) {
     console.error(`Error fetching Steam data for ${appId}:`, error);

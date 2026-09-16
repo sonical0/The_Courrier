@@ -142,6 +142,71 @@ npm run server
 
 ---
 
+## Rate limiting et maîtrise des invocations
+
+### Ce qui est dans le code
+
+Le module `api/utils/rateLimit.mjs` plafonne le débit par IP, appliqué par
+`server.mjs` et par chaque fonction de `api/`. Réponse au dépassement : `429`
+avec `Retry-After`, plus les en-têtes `X-RateLimit-Limit` / `X-RateLimit-Remaining`.
+
+| Variable | Défaut | Portée |
+|---|---|---|
+| `RATE_LIMIT_NEXUS` | 30 / minute / IP | `/api/nexus/*` |
+| `RATE_LIMIT_STEAM` | 60 / minute / IP | `/api/steam/*` |
+
+Un client sain reste très en dessous : le cache navigateur des mods suivis dure
+10 minutes et celui des versions Steam 2 heures.
+
+> **Limite à connaître.** Le compteur vit dans la mémoire du processus. Sur
+> `server.mjs` (long-running) la protection est complète. **Sur Vercel, chaque
+> instance a son propre compteur et un cold start repart de zéro** : la limite
+> effective est « 30 × nombre d'instances tièdes ». Cela borne une boucle client
+> emballée, ce qui est l'objectif, mais ce n'est pas un quota exact — et surtout,
+> la fonction est déjà invoquée (donc facturée) avant que le limiteur ne réponde.
+
+### Ce qu'il faut activer côté Vercel
+
+Le rate limiting du **Vercel Firewall** agit *avant* l'invocation : c'est le seul
+qui évite réellement le coût, et le seul exact entre instances.
+
+1. Vercel Dashboard → le projet → **Firewall**
+2. **Configure** → **Rate Limiting** → *Add Rule*
+3. Condition : `Request Path` *starts with* `/api/`
+4. Action : **Rate Limit**, par exemple 60 requêtes / 60 s, clé **IP Address**
+5. Effet au dépassement : `Deny` (ou `Challenge` si tu préfères laisser une porte
+   de sortie aux utilisateurs légitimes)
+
+> Vérifie la disponibilité sur ton plan : selon l'offre, les règles de rate
+> limiting du Firewall peuvent être limitées ou payantes.
+
+### Cache HTTP : le levier le plus efficace
+
+`/api/steam/game/[appId]` ne dépend que de l'`appId` et renvoie
+`public, s-maxage=7200, stale-while-revalidate=86400` : les appels répétés sont
+servis par le CDN Edge **sans aucune invocation**. C'est ce qui fait le plus
+baisser le compteur, bien avant le limiteur.
+
+Les routes `/api/nexus/*` dépendent des credentials envoyés en en-têtes et
+déclarent donc `private, no-store` : elles ne doivent jamais passer par un cache
+partagé, au risque de servir la liste de mods d'un utilisateur à un autre.
+
+### Si le compteur d'invocations s'envole quand même
+
+Chercher d'abord une boucle côté client, pas un abus externe. Deux causes déjà
+rencontrées dans ce projet :
+
+- un objet recréé à chaque render passé en dépendance d'un `useCallback`, dont
+  dépend un `useEffect` — chaque render relance la requête (corrigé dans
+  `useNexusCredentials`, commit `fba6e92`) ;
+- un cache écrit mais jamais relu avant de décider s'il faut appeler (corrigé
+  dans `useSteamGames`, commit `1b20417`).
+
+Le symptôme est visible dans les logs Vercel : la même route appelée des
+centaines de fois en quelques minutes depuis une seule session.
+
+---
+
 ## Dépannage
 
 ### Erreur "Missing NEXUS_API_KEY"
