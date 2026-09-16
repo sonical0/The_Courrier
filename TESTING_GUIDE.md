@@ -37,18 +37,18 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 ### Test 3 : Modification des credentials
 
 1. Être connecté avec des credentials valides
-2. Cliquer sur le bouton " Config" dans la navbar
+2. Cliquer sur le bouton "Config" (icone engrenage) dans la navbar
 3. **Résultat attendu** : La popup s'affiche avec un bouton "Annuler"
 4. Modifier le username ou l'API key
 5. Cliquer sur "Enregistrer"
 6. **Résultat attendu** : Le badge utilisateur se met à jour
-7. Cliquer à nouveau sur " Config" puis sur "Annuler"
+7. Cliquer à nouveau sur "Config" puis sur "Annuler"
 8. **Résultat attendu** : La popup se ferme sans modification
 
 ### Test 4 : Suppression des credentials
 
 1. Être connecté avec des credentials valides
-2. Cliquer sur le bouton "" dans la navbar
+2. Cliquer sur le bouton de suppression (icone corbeille) dans la navbar
 3. **Résultat attendu** : Une confirmation s'affiche
 4. Confirmer la suppression
 5. **Résultat attendu** : Le badge utilisateur disparaît et la popup de configuration réapparaît
@@ -92,7 +92,7 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 
 1. Être sur la page "Nexus Mods" avec des credentials valides
 2. Sélectionner un jeu dans la liste déroulante
-3. Cliquer sur " Ne plus suivre" sur un mod
+3. Cliquer sur le bouton "Ne plus suivre" sur un mod
 4. **Résultat attendu** : Une confirmation s'affiche
 5. Confirmer la suppression
 6. **Résultat attendu** : Le mod disparaît de la liste
@@ -103,71 +103,211 @@ Pour tester rapidement l'application sans créer de compte Nexus Mods :
 2. Cliquer sur le bouton "Rafraîchir"
 3. **Résultat attendu** : Les données se rechargent avec les credentials actuels
 
-## Tests Automatisés (à implémenter)
+### Test 11 : Bouton de test de connexion dans la modal credentials
 
-### Tests unitaires
+1. Ouvrir la popup de configuration (bouton "Config" dans la navbar)
+2. Laisser les deux champs vides
+3. **Résultat attendu** : Le bouton "Tester la connexion" est désactivé
+4. Remplir uniquement le champ username
+5. **Résultat attendu** : Le bouton reste désactivé
+6. Remplir également le champ API key avec une clé valide
+7. **Résultat attendu** : Le bouton est activé
+8. Cliquer sur "Tester la connexion"
+9. **Résultat attendu** : Le bouton affiche "Test en cours..." pendant la requête, puis un message de succès avec le nom d'utilisateur Nexus
+10. Modifier l'un des deux champs
+11. **Résultat attendu** : Le message de résultat disparaît immédiatement
+12. Saisir une clé API invalide et cliquer sur "Tester la connexion"
+13. **Résultat attendu** : Un message d'erreur s'affiche en rouge ; la popup reste ouverte
 
-```javascript
-// test/useNexusCredentials.test.js
-describe('useNexusCredentials', () => {
-  beforeEach(() => {
-    localStorage.clear();
-  });
+### Test 15 : Badge NEW dismissable
 
-  test('should start with no credentials', () => {
-    const { result } = renderHook(() => useNexusCredentials());
-    expect(result.current.hasCredentials).toBe(false);
-  });
+1. Configurer une derniere visite ancienne (vider localStorage ou attendre un rafraichissement avec de nouvelles MAJ)
+2. Ouvrir la page "Liste des Mods" — des mods doivent afficher le badge NEW
+3. Cliquer sur le bouton "Lu" a cote d'un badge NEW
+4. **Resultat attendu** : le badge NEW disparait immediatement sur cette carte uniquement
+5. Rafraichir la page
+6. **Resultat attendu** : le mod reste marque comme lu (badge absent)
+7. Cliquer sur "Tout marquer comme lu (N)" dans l'entete
+8. **Resultat attendu** : tous les badges NEW visibles disparaissent et le bouton disparait
 
-  test('should save credentials to localStorage', () => {
-    const { result } = renderHook(() => useNexusCredentials());
-    act(() => {
-      result.current.saveCredentials('testuser', 'testkey123');
-    });
-    expect(result.current.hasCredentials).toBe(true);
-    expect(result.current.credentials.username).toBe('testuser');
-  });
+### Test 21 : Notifications navigateur
 
-  test('should clear credentials', () => {
-    const { result } = renderHook(() => useNexusCredentials());
-    act(() => {
-      result.current.saveCredentials('testuser', 'testkey123');
-      result.current.clearCredentials();
-    });
-    expect(result.current.hasCredentials).toBe(false);
-  });
-});
-```
+1. Cliquer sur "Notifs OFF" dans la navbar
+2. **Resultat attendu** : le navigateur affiche une demande de permission
+3. Accepter la permission
+4. **Resultat attendu** : le bouton passe a "Notifs ON" (bleu)
+5. Rafraichir la page avec des nouveaux mods en attente
+6. **Resultat attendu** : une notification systeme s'affiche avec le nombre de nouveaux mods
+7. Cliquer sur "Notifs ON" pour desactiver
+8. **Resultat attendu** : le bouton repasse a "Notifs OFF", aucune notification au prochain chargement
+9. Tester avec un navigateur qui a bloque les notifications pour ce site
+10. **Resultat attendu** : le bouton est desactive et indiquer "bloquees par le navigateur"
 
-### Tests d'intégration
+### Test 22 : Multiples comptes Nexus
 
-```javascript
-// test/App.integration.test.js
-describe('App Integration', () => {
-  test('should show credentials modal on first load', () => {
-    render(<App />);
-    expect(screen.getByText(/Configuration Nexus Mods/i)).toBeInTheDocument();
-  });
+1. Ouvrir la modal de configuration (bouton "Config" dans la navbar)
+2. Saisir un premier compte (username + API key) et cliquer sur "Enregistrer"
+3. Rouvrir la modal — la section "Comptes enregistres" doit apparaitre avec ce premier compte en surbrillance bleue
+4. Saisir un second compte (username different) et cliquer sur "Enregistrer"
+5. **Resultat attendu** : la liste affiche desormais deux comptes ; le second est en surbrillance bleue (compte actif)
+6. Cliquer sur le premier compte dans la liste
+7. **Resultat attendu** : le premier compte devient actif (surbrillance bleue), les donnees rechargent avec ses credentials
+8. Cliquer sur l'icone de suppression du second compte
+9. **Resultat attendu** : le second compte disparait de la liste ; le premier reste actif
+10. Supprimer le dernier compte restant (bouton "Supprimer les identifiants")
+11. **Resultat attendu** : la section "Comptes enregistres" disparait, la modal retrouve son etat initial
 
-  test('should hide modal after saving credentials', async () => {
-    render(<App />);
-    
-    const usernameInput = screen.getByLabelText(/Nom d'utilisateur/i);
-    const apikeyInput = screen.getByLabelText(/Clé API/i);
-    const saveButton = screen.getByText(/Enregistrer/i);
+**Migration automatique** : si le localStorage contient une entree `nexus_credentials` (ancien format), elle doit etre migree automatiquement au format `nexus_accounts` au premier chargement, sans perte de donnees.
 
-    fireEvent.change(usernameInput, { target: { value: 'testuser' } });
-    fireEvent.change(apikeyInput, { target: { value: 'testkey123' } });
-    fireEvent.click(saveButton);
+### Test 23 : Chiffrement des credentials en localStorage
 
-    await waitFor(() => {
-      expect(screen.queryByText(/Configuration Nexus Mods/i)).not.toBeInTheDocument();
-    });
+1. Ouvrir l'application dans un navigateur neuf (ou vider le localStorage)
+2. Configurer un compte Nexus (username + API key) et cliquer sur "Enregistrer"
+3. Ouvrir les DevTools > Application > Local Storage
+4. Localiser la cle `nexus_accounts`
+5. **Resultat attendu** : la valeur est une chaine opaque de la forme `<base64iv>.<base64cipher>` (pas de JSON lisible)
+6. Recharger la page (F5)
+7. **Resultat attendu** : les credentials sont correctement recharges ; le badge utilisateur s'affiche normalement
+8. Tester le basculement de compte : ajouter un second compte, basculer, recharger
+9. **Resultat attendu** : le compte actif est conserve apres rechargement
 
-    expect(screen.getByText(/testuser/i)).toBeInTheDocument();
-  });
-});
-```
+**Migration** : si un ancien `nexus_accounts` en JSON brut est present, il est lu normalement et rechiffre au prochain enregistrement.
+
+### Test 24 : Cache 10 minutes des mods suivis
+
+1. Ouvrir l'application avec des credentials valides
+2. Naviguer vers la page "Liste des Mods"
+3. Ouvrir les DevTools > Network : noter l'appel a `/api/nexus/tracked`
+4. Recharger la page (F5)
+5. **Resultat attendu** : aucun appel reseau vers `/api/nexus/tracked` (chargement depuis le cache)
+6. Ouvrir les DevTools > Application > Local Storage
+7. Localiser la cle `courrier_mods_cache_<username>`
+8. **Resultat attendu** : la valeur est compressee (LZ-String, pas du JSON lisible)
+9. Cliquer sur "Actualiser" dans l'interface
+10. **Resultat attendu** : un appel reseau est effectue (bypass cache force)
+11. Retirer un mod via le bouton de suppression
+12. **Resultat attendu** : le cache est invalide et la liste se rafraichit avec un appel reseau
+
+**Isolation par compte** : basculer vers un autre compte recharge les mods de ce compte (cle de cache differente), pas les mods du premier compte.
+
+### Test 19 : Export de configuration
+
+1. Configurer des tags sur quelques mods et passer en mode sombre
+2. Cliquer sur le bouton "Exporter" dans la navbar
+3. **Resultat attendu** : un fichier the-courrier-config-YYYY-MM-DD.json est telecharge
+4. Ouvrir le fichier et verifier qu'il contient les tags et le theme
+5. **Resultat attendu** : les credentials Nexus sont absents du fichier
+
+### Test 20 : Import de configuration
+
+1. Modifier le theme et quelques tags, puis exporter la configuration
+2. Vider le localStorage (DevTools > Application > Storage)
+3. Cliquer sur "Importer" et selectionner le fichier exporte
+4. **Resultat attendu** : un bandeau confirme la restauration puis la page se recharge
+5. **Resultat attendu** : les tags et le theme sont restaures
+6. Tenter d'importer un fichier texte ou un JSON malformed
+7. **Resultat attendu** : un bandeau d'erreur s'affiche (disparait apres 4 secondes)
+
+### Test 18 : Tags/statuts sur les mods
+
+1. Aller sur la page "Liste des Mods" avec au moins deux mods charges
+2. Sur une carte, cliquer sur le bouton "Installe"
+3. **Resultat attendu** : le bouton "Installe" apparait en vert actif et la bordure de la carte devient verte
+4. Rafraichir la page
+5. **Resultat attendu** : le statut est conserve (persistance localStorage)
+6. Cliquer a nouveau sur le bouton "Installe" actif
+7. **Resultat attendu** : le statut est retire, la bordure disparait (toggle off)
+8. Cliquer sur "A installer", puis "En pause", puis "Archive" sur des cartes differentes
+9. **Resultat attendu** : chaque carte affiche la couleur correspondante (bleu/jaune/rouge)
+10. Dans le selecteur "Statut", choisir "Installe"
+11. **Resultat attendu** : seuls les mods tagues "Installe" sont affiches
+12. Choisir "Sans statut"
+13. **Resultat attendu** : seuls les mods sans aucun statut sont affiches
+
+### Test 16 : Filtre par categorie
+
+1. Aller sur la page "Liste des Mods" avec des mods appartenant a des categories differentes
+2. **Resultat attendu** : Le selecteur "Categorie" est visible et contient les categories presentes
+3. Selectionner une categorie, par exemple "Gameplay"
+4. **Resultat attendu** : Seuls les mods de la categorie "Gameplay" sont affiches
+5. Selectionner "Toutes les categories"
+6. **Resultat attendu** : Tous les mods reapparaissent
+7. Selectionner un jeu qui ne possede aucune categorie sur ses mods
+8. **Resultat attendu** : Le selecteur "Categorie" disparait
+9. Combiner le filtre categorie avec une recherche textuelle
+10. **Resultat attendu** : Les deux filtres s'appliquent simultanement
+
+### Test 17 : Filtre par categorie sur la page Actualites
+
+1. Aller sur la page "Actualites des Mods"
+2. **Resultat attendu** : Le selecteur "Categorie" est visible si des mods ont une categorie dans la periode selectionnee
+3. Selectionner une categorie
+4. **Resultat attendu** : Seuls les mods de cette categorie sont affiches dans chaque groupe-jeu
+5. Changer de jeu dans le selecteur "Filtrer par jeu"
+6. **Resultat attendu** : Le filtre categorie se reinitialise a "Toutes les categories" et la liste des categories disponibles se met a jour
+
+### Test 12 : Recherche de mods
+
+1. Aller sur la page "Liste des Mods" avec au moins deux mods de noms différents
+2. Saisir une partie du nom d'un mod dans le champ de recherche
+3. **Résultat attendu** : Seuls les mods dont le nom contient la saisie s'affichent ; le compteur de résultats est correct
+4. Effacer et saisir le nom d'un auteur connu
+5. **Résultat attendu** : Tous les mods de cet auteur s'affichent
+6. Combiner la recherche avec le filtre jeu
+7. **Résultat attendu** : Les deux filtres s'appliquent simultanément
+
+### Test 13 : Suppression en lot de mods suivis
+
+1. Aller sur la page "Liste des Mods"
+2. Cocher deux ou trois mods via leurs cases à cocher
+3. **Résultat attendu** : La barre d'action sticky apparaît en bas de page avec le compteur correct
+4. Cliquer sur "Tout sélectionner"
+5. **Résultat attendu** : Tous les mods visibles sont cochés
+6. Cliquer sur "Tout désélectionner"
+7. **Résultat attendu** : Toutes les cases sont décochées et la barre disparaît
+8. Cocher à nouveau deux mods, cliquer sur le bouton de suppression de la barre
+9. **Résultat attendu** : Une confirmation unique s'affiche ; après confirmation, les deux mods disparaissent
+
+### Test 14 : Export JSON
+
+1. Aller sur la page "Liste des Mods"
+2. Cliquer sur le bouton "Exporter JSON"
+3. **Résultat attendu** : Un fichier the-courrier-mods-YYYY-MM-DD.json est téléchargé
+4. Ouvrir le fichier et vérifier la structure
+5. **Résultat attendu** : Chaque entrée contient les champs name, author, version, category, url, game, updatedAt en ISO 8601
+
+## Tests Automatisés
+
+### Tests implementes
+
+**100 tests** — React Testing Library :
+
+| Fichier | Tests |
+|---|---|
+| `src/components/CredentialsModal.test.jsx` | 10 |
+| `src/components/useLastVisit.test.js` | 9 |
+| `src/pages/NexusModsPage.test.jsx` | 7 |
+| `src/components/useModTags.test.js` | 9 |
+| `src/components/useNexusCredentials.test.js` | 15 |
+| `src/components/useNexusMods.test.js` | 17 |
+| `src/components/useConfigBackup.test.js` | 9 |
+| `src/components/useNotifications.test.js` | 13 |
+| `src/utils/cryptoStorage.test.js` | 5 |
+| `src/utils/compressedStorage.test.js` | 6 |
+
+Scenarios couverts :
+- CredentialsModal : rendu, validation, test connexion (succes/erreur/reseau), reinitialisation
+- useLastVisit : seenMods persistance, markAsSeen, markAllAsSeen, countNew avec exclusion
+- NexusModsPage : filtre par categorie, affichage conditionnel selecteur, cumul avec recherche
+- useModTags : getTag/setTag/clearTag, toggle on/off/switch, persistance localStorage
+- useNexusCredentials : chargement vide, format nexus_accounts, migration legacy, JSON invalide, saveCredentials (nouveau/existant/second), clearCredentials (seul/multiple), switchAccount, removeAccount
+- useNexusMods : normalisation, headers, erreurs HTTP/reseau, modsForGame filtrage et tri, refresh, untrackMod (succes/echec), cache (hit/expiration/absent/bypass refresh/invalidation untrack/isolation par user)
+- useConfigBackup : export (contenu, exclusion credentials), import (succes, JSON invalide, fichier non-JSON)
+- useNotifications : permission denied/granted, enabled/disabled toggle, persistance, notify, notifyNewMods
+- cryptoStorage : round-trip, IV aleatoire, chaine vide, entree malformee, texte chiffre corrompu
+- compressedStorage : round-trip array/objet, cle absente, migration JSON brut, compression reelle, tableau vide
+
+Execution : `node_modules/.bin/react-scripts test --watchAll=false`
 
 ## Checklist de Validation
 
@@ -189,7 +329,7 @@ describe('App Integration', () => {
 
 ### Erreur 1 : API Key invalide
 - **Symptôme** : Erreur 401 ou message "Invalid API Key"
-- **Solution** : Reconfigurer avec une clé API valide via " Config"
+- **Solution** : Reconfigurer avec une clé API valide via le bouton "Config" dans la navbar
 
 ### Erreur 2 : localStorage désactivé
 - **Symptôme** : La popup réapparaît à chaque rechargement

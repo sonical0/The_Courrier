@@ -1,8 +1,7 @@
 import { useMemo, useState } from "react";
-import useNexusMods from "../components/useNexusMods";
-
-export default function IncompatibilityPage({ credentials }) {
-  const { loading, error, games, modsForGame } = useNexusMods(credentials);
+import { useOutletContext } from "react-router-dom";
+export default function IncompatibilityPage() {
+  const { loading, error, games, modsForGame } = useOutletContext();
   const [selectedGame, setSelectedGame] = useState("ALL");
   const [showDetails, setShowDetails] = useState({});
 

@@ -1,5 +1,6 @@
 
 import fetch from "node-fetch";
+import { enforceRateLimit, LIMITS } from "../utils/rateLimit.mjs";
 import { toEpoch, getCategoryName, withPool, sortVersionsSemantic } from "../utils/NexusUtils.mjs";
 
 const CACHE = new Map();
@@ -40,7 +41,9 @@ async function fetchJson(url, { headers }) {
   const txt = await r.text();
   if (!r.ok) {
     const msg = txt || r.statusText;
-    throw new Error(`HTTP ${r.status} — ${msg}`);
+    const err = new Error(`HTTP ${r.status} — ${msg}`);
+    err.status = r.status;
+    throw err;
   }
   try {
     return JSON.parse(txt);
@@ -85,10 +88,15 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Nexus-Username, X-Nexus-ApiKey");
+  // Reponse propre a un compte Nexus : jamais de cache partage en amont,
+  // sinon la liste de mods d'un utilisateur serait servie a un autre.
+  res.setHeader("Cache-Control", "private, no-store");
 
   if (req.method === "OPTIONS") {
     return res.status(204).end();
   }
+
+  if (enforceRateLimit(req, res, { scope: "nexus", ...LIMITS.nexus })) return;
 
   const username = req.headers["x-nexus-username"] || process.env.NEXUS_USERNAME;
   const apiKey = req.headers["x-nexus-apikey"] || process.env.NEXUS_API_KEY;
@@ -231,6 +239,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json(enrichedWithGames);
   } catch (error) {
-    return res.status(500).json({ error: error.message || String(error) });
+    const status = error.status || 500;
+    return res.status(status).json({ error: error.message || String(error) });
   }
 }

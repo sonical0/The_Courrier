@@ -1,5 +1,317 @@
 # Changelog - The Courrier
 
+## Version 4.0.0 - Optimisations techniques : chiffrement + cache + compression (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Chiffrement AES-GCM des credentials en localStorage
+- Module `src/utils/cryptoStorage.js` : encryptValue / decryptValue via Web Crypto API (zero dependance)
+- Cle derivee par PBKDF2 (100 000 iterations, SHA-256), IV aleatoire par chiffrement (AES-GCM 256)
+- Format stocke : `<base64iv>.<base64cipher>` dans la cle `nexus_accounts`
+- Migration transparente depuis JSON brut (ancien format) : lu directement, rechiffre au prochain enregistrement
+- Migration automatique depuis l'ancien format `nexus_credentials` : inchangee
+
+#### Cache 10 minutes par utilisateur pour les mods suivis
+- `useNexusMods` : verifie le cache localStorage avant chaque appel a `/api/nexus/tracked`
+- TTL de 10 minutes, cle specifique par username (`courrier_mods_cache_<username>`)
+- Cache bypasse sur `refresh()` et `untrackMod()` (invalidation + re-fetch force)
+- Zero appel reseau au reload si le cache est valide
+
+#### Compression LZ-String des donnees localStorage
+- Module `src/utils/compressedStorage.js` : setCompressed / getCompressed via lz-string
+- Applique a `courrier_seen_mods` (useLastVisit) et `courrier_mods_cache_<username>` (useNexusMods)
+- Migration automatique : getCompressed lit les valeurs JSON brutes existantes via fallback
+
+### Tests
+- `src/utils/cryptoStorage.test.js` : 5 tests (round-trip, IV aleatoire, chaine vide, entree malformee, ciphertext corrompu)
+- `src/utils/compressedStorage.test.js` : 6 tests (round-trip array/objet, cle absente, migration JSON brut, compression reelle, tableau vide)
+- `src/components/useNexusMods.test.js` : +6 tests cache (hit/expiration/absent/bypass refresh/invalidation untrack/isolation user)
+- `src/components/useNexusCredentials.test.js` : mock cryptoStorage ajoute (tests inchanges, 15 tests)
+- `src/components/useLastVisit.test.js` : mock compressedStorage ajoute (tests inchanges, 9 tests)
+- Total : 100 tests (ancien : 83)
+
+### Dependances
+- `lz-string` ^1.5.0 ajoutee aux dependances
+
+### Fichiers Crees
+- `src/utils/cryptoStorage.js`
+- `src/utils/cryptoStorage.test.js`
+- `src/utils/compressedStorage.js`
+- `src/utils/compressedStorage.test.js`
+
+### Fichiers Modifies
+- `src/components/useNexusCredentials.js` - Chiffrement AES-GCM du stockage credentials
+- `src/components/useNexusCredentials.test.js` - Mock cryptoStorage
+- `src/components/useNexusMods.js` - Cache 10min avec compressedStorage
+- `src/components/useNexusMods.test.js` - 6 nouveaux tests cache + mock compressedStorage
+- `src/components/useLastVisit.js` - Compression seen_mods via compressedStorage
+- `src/components/useLastVisit.test.js` - Mock compressedStorage
+- `src/setupTests.js` - Polyfills TextEncoder/TextDecoder et crypto.subtle pour Jest/jsdom
+- `package.json` - Version 4.0.0, dependance lz-string
+
+---
+
+## Version 3.9.0 - Support de multiples comptes Nexus Mods (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Gestion de plusieurs comptes Nexus Mods
+- Stockage de plusieurs comptes dans localStorage (format nexus_accounts)
+- Migration automatique depuis l'ancien format nexus_credentials au premier demarrage
+- Liste des comptes enregistres dans la modal de configuration avec bouton de basculement
+- Suppression d'un compte individuel (bouton visible si au moins 2 comptes existent)
+- Basculement instantane vers un autre compte depuis la liste
+
+#### Nouveau hook useNexusCredentials (refactorise)
+- Nouveaux exports : accounts, activeAccountId, switchAccount(id), removeAccount(id)
+- saveCredentials : ajoute un nouveau compte ou met a jour la cle si meme username
+- clearCredentials : supprime le compte actif et bascule sur le premier compte restant
+- credentials, hasCredentials, loading inchanges (retro-compatibilite totale)
+
+### Tests
+- useNexusCredentials.test.js : 15 tests (ancien : 8)
+- Couverture ajoutee : migration legacy, ajout second compte, mise a jour cle existante, switchAccount, removeAccount
+
+### Fichiers Modifies
+- src/components/useNexusCredentials.js - Refactoring complet multi-comptes
+- src/components/useNexusCredentials.test.js - Tests mis a jour et etendus
+- src/components/CredentialsModal.jsx - Liste des comptes avec basculement/suppression
+- src/App.jsx - Passage des nouvelles props a CredentialsModal
+
+---
+
+## Version 3.8.1 - Notifications navigateur (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Notifications navigateur pour les nouveaux mods
+- Notification automatique au chargement si des nouveaux mods sont detectes
+- Bouton "Notifs ON/OFF" dans la navbar desktop et le menu mobile
+- Premier clic declenche la demande de permission navigateur
+- Le bouton est desactive si le navigateur a bloque les notifications
+- Preference persistee dans localStorage (cle courrier_notifications_enabled)
+
+#### Nouveau hook useNotifications
+- requestPermission() : demande la permission navigateur (court-circuite si deja granted)
+- disableNotifications() : desactive sans revoquer la permission
+- notify(title, body) : envoie une notification si activee et permission granted
+- notifyNewMods(count) : message au singulier ou pluriel selon le nombre
+
+### Tests
+- Ajout de src/components/useNotifications.test.js (13 tests)
+- Couverture : initialisation, requestPermission granted/denied/deja-granted, disableNotifications, notify, notifyNewMods singulier/pluriel/zero
+
+### Fichiers Modifies
+- src/components/useNotifications.js - Nouveau hook
+- src/components/useNotifications.test.js - Nouveau fichier de tests
+- src/App.jsx - Integration du hook, bouton navbar, notification automatique
+
+---
+
+## Version 3.8.0 - Export et import de configuration (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Export de configuration
+- Bouton "Exporter" dans la navbar (desktop et mobile)
+- Telecharge un fichier the-courrier-config-YYYY-MM-DD.json
+- Contenu : tags de mods, mods vus (seenMods), derniere visite, theme
+- Les credentials Nexus ne sont jamais exportes (securite)
+
+#### Import de configuration
+- Bouton "Importer" dans la navbar (desktop et mobile)
+- Selecteur de fichier JSON, validation de la structure avant restauration
+- Seules les cles reconnues sont restaurees (les cles inconnues sont ignorees)
+- Bandeau de confirmation avec compte des elements restaures, puis rechargement automatique
+- Bandeau d'erreur si le fichier est invalide ou corrompu (disparait apres 4 secondes)
+
+### Tests
+- Ajout de src/components/useConfigBackup.test.js (9 tests)
+- Couverture : structure de l'export, absence des credentials, import restauration, erreurs de format/structure
+
+### Fichiers Modifies
+- src/components/useConfigBackup.js - Nouveau module (exportConfig, importConfig)
+- src/components/useConfigBackup.test.js - Nouveau fichier de tests
+- src/App.jsx - Boutons export/import, gestionnaire d'import, bandeau de statut
+
+---
+
+## Version 3.7.1 - Tests unitaires useNexusCredentials et useNexusMods (10 Juin 2026)
+
+### Tests
+
+#### useNexusCredentials (8 tests)
+- Chargement depuis localStorage au montage
+- Ignorance d'un objet incomplet (username ou apiKey absent)
+- Ignorance d'un JSON invalide sans plantage
+- saveCredentials : persistance dans l'etat et localStorage, valeur de retour
+- clearCredentials : suppression de l'etat et localStorage, valeur de retour
+
+#### useNexusMods (11 tests)
+- Etat de chargement puis resolution avec mods normalises
+- Envoi des headers X-Nexus-Username / X-Nexus-ApiKey si credentials fournis
+- Absence des headers si credentials null
+- Erreur HTTP : set error, games vide
+- Erreur reseau : set error avec le message d'exception
+- Normalisation : mod_id -> id, domain_name -> domain, champs name/version/author
+- modsForGame : filtre par domaine, retourne vide si domaine inconnu
+- modsForGame : tri decroissant par updatedAt
+- refresh() : second appel fetch, mise a jour de l'etat
+- untrackMod() : appel DELETE + refresh, retour success:true
+- untrackMod() : retour success:false + message en cas d'erreur
+
+### Fichiers Modifies
+- src/components/useNexusCredentials.test.js - Nouveau fichier de tests
+- src/components/useNexusMods.test.js - Nouveau fichier de tests
+
+---
+
+## Version 3.7.0 - Systeme de tags/statuts sur les mods (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Tags de statut sur chaque mod suivi
+- Quatre statuts disponibles : Installe, A installer, En pause, Archive
+- Boutons de statut sur chaque carte de mod dans la liste des mods
+- Cliquer sur le statut actif le retire (toggle)
+- Bordure coloree sur la carte selon le statut actif (vert/bleu/jaune/rouge)
+- Les statuts sont persistes dans localStorage (cle courrier_mod_tags)
+
+#### Filtre par statut
+- Selecteur "Statut" dans la barre de filtres de NexusModsPage
+- Options : Tous les statuts, Installe, A installer, En pause, Archive, Sans statut
+- Cumulable avec le filtre jeu, le filtre categorie et la recherche textuelle
+
+#### Nouveau hook useModTags
+- Exports : getTag(domain, id), setTag(domain, id, tag), clearTag(domain, id), toggleTag(domain, id, tag)
+- Persistance automatique dans localStorage a chaque modification
+- Constantes exportees : TAG_LABELS (labels d'affichage), TAG_COLORS (classes Tailwind par statut)
+
+### Tests
+- Ajout de src/components/useModTags.test.js (9 tests)
+- Couverture : getTag lecture/persistance, setTag ecrasement, clearTag suppression, toggleTag on/off/switch
+
+### Fichiers Modifies
+- src/components/useModTags.js - Nouveau hook
+- src/components/useModTags.test.js - Nouveau fichier de tests
+- src/pages/NexusModsPage.jsx - Boutons de statut, bordure coloree, filtre statut
+
+---
+
+## Version 3.6.1 - Filtre par categorie (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Filtre par categorie dans la liste des mods et les actualites
+- Ajout d'un selecteur "Categorie" dans NexusModsPage et ActuUpdatePage
+- Le menu est conditionnel : il n'apparait que si au moins un mod possede une categorie
+- Les categories disponibles sont derivees des mods du jeu selectionne, independamment du filtre categorie actif (evite la disparition des options lors du filtrage)
+- Dans ActuUpdatePage, changer de jeu reinitialise automatiquement le filtre categorie
+- Le filtre categorie se combine avec le filtre jeu et la recherche textuelle
+
+### Tests
+- Ajout de src/pages/NexusModsPage.test.jsx (7 tests)
+- Couverture : affichage initial, presence du menu, filtre par categorie specifique, retour a "Toutes les categories", absence du menu si aucune categorie, cumul filtre + recherche
+
+### Fichiers Modifies
+- src/pages/NexusModsPage.jsx - Selecteur de categorie dans la barre de filtres
+- src/pages/ActuUpdatePage.jsx - Selecteur de categorie + reinitialisation au changement de jeu
+- src/pages/NexusModsPage.test.jsx - Nouveau fichier de tests
+
+---
+
+## Version 3.6.0 - Badge NEW dismissable par mod (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Marquage individuel et en lot des mods comme lus
+- Ajout d'un bouton "Lu" a cote de chaque badge NEW dans NexusModsPage et ActuUpdatePage
+- Ajout d'un bouton "Tout marquer comme lu (N)" dans les entetes des deux pages, visible uniquement quand au moins un nouveau mod est present
+- Les mods marques comme lus perdent leur badge NEW immediatement sans attendre la prochaine visite
+- Les mods vus sont persistes dans localStorage (cle courrier_seen_mods) et survivent aux rechargements de page
+
+#### Extension du hook useLastVisit
+- Nouveaux exports : seenMods (Set), markAsSeen(domain, modId), markAllAsSeen(mods)
+- isNew(modUpdatedAt, domain, modId) : accepte desormais domain et modId pour exclure les mods vus
+- countNew(mods) : exclut les mods presents dans seenMods
+
+### Tests
+- Ajout de src/components/useLastVisit.test.js (9 tests)
+- Couverture : isNew avec seenMods, markAsSeen persistance, markAllAsSeen bulk, countNew avec exclusion
+
+### Fichiers Modifies
+- src/components/useLastVisit.js - Extension avec seenMods, markAsSeen, markAllAsSeen
+- src/components/useLastVisit.test.js - Nouveau fichier de tests
+- src/pages/NexusModsPage.jsx - Bouton "Lu" par carte + bouton "Tout marquer comme lu"
+- src/pages/ActuUpdatePage.jsx - Bouton "Lu" par carte + bouton "Tout marquer comme lu"
+
+---
+
+## Version 3.5.1 - Validation des credentials en temps reel (10 Juin 2026)
+
+### Nouvelles Fonctionnalites
+
+#### Bouton de test de connexion dans la modal credentials
+- Ajout d'un bouton "Tester la connexion" dans CredentialsModal.jsx
+- Appel a l'endpoint /api/nexus/validate avant l'enregistrement des credentials
+- Affichage du resultat inline (succes avec nom d'utilisateur ou message d'erreur)
+- Le bouton est desactive tant que les deux champs sont vides ou pendant le test
+- Le resultat est reinitialise automatiquement a chaque modification des champs
+
+### Tests
+- Ajout de src/components/CredentialsModal.test.jsx (10 tests)
+- Couverture : etat desactive, reponse 200, reponse non-200, erreur reseau, reinitialisation, soumission
+
+### Fichiers Modifies
+- src/components/CredentialsModal.jsx - Ajout bouton de test et gestion de l'etat associe
+- src/components/CredentialsModal.test.jsx - Nouveau fichier de tests
+
+---
+
+## Version 3.5.0 - Securite et nouvelles fonctionnalites (10 Juin 2026)
+
+### Corrections Critiques
+
+#### Isolation de session par utilisateur (securite)
+- Correction du bug de fuite de session entre utilisateurs concurrents sur Vercel
+- Les cles de cache dans api/nexus/tracked.mjs incluent desormais le nom d'utilisateur
+- Avant : cle fixe "tracked" partagee entre tous les utilisateurs sur la meme instance
+- Apres : cle "tracked:{username}" et "mod:{username}:{domain}:{id}"
+- Impact : deux utilisateurs connectes simultanement voient exclusivement leurs propres mods
+
+#### Deduplication du code utilitaire
+- Creation de api/utils/NexusUtils.mjs : module partage entre server.mjs et api/nexus/tracked.mjs
+- Symboles extraits : toEpoch, getCategoryName, withPool, sortVersionsSemantic
+- Elimination de 7 blocs de code dupliques entre les contextes dev et production
+
+### Nouvelles Fonctionnalites
+
+#### Recherche par nom et auteur
+- Ajout d'une barre de recherche textuelle dans NexusModsPage.jsx et ActuUpdatePage.jsx
+- Filtrage insensible a la casse sur mod.name et mod.author
+- Affichage du nombre de resultats sous la barre de recherche
+- Cumul avec les filtres jeu, tri et periode existants
+
+#### Suppression en lot des mods suivis
+- Ajout de cases a cocher sur chaque carte de mod dans NexusModsPage.jsx
+- Barre d'action sticky en bas de page lors d'une selection active
+- Fonctions : compteur, tout selectionner / tout deselectionner, confirmation unique, suppression sequentielle
+- Utilise le hook untrackMod() existant
+
+#### Export JSON
+- Bouton "Exporter JSON" dans NexusModsPage.jsx
+- Telechargement du fichier the-courrier-mods-YYYY-MM-DD.json
+- Champs exportes : name, author, version, category, url, game, updatedAt (ISO 8601)
+
+### Fichiers Modifies
+- api/nexus/tracked.mjs - Correction cles de cache + import NexusUtils
+- api/utils/NexusUtils.mjs - Nouveau fichier (code partage)
+- server.mjs - Import NexusUtils, suppression code duplique
+- src/pages/NexusModsPage.jsx - Recherche, selection en lot, export JSON
+- src/pages/ActuUpdatePage.jsx - Recherche
+
+---
+
 ## Version 3.4.1 - Optimisations Performance (02 Février 2026)
 
 ### Améliorations
@@ -341,7 +653,7 @@ Les modifications sont prêtes pour :
 - **Netlify** : Fonction serverless `netlify/functions/nexus-tracked.mjs` mise à jour
 - **Local** : Serveur Express `server.mjs` mis à jour
 
-###Structure du Projet (Mise à jour)
+### Structure du Projet (Mise à jour)
 
 ```
 src/

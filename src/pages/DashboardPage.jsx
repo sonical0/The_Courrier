@@ -1,11 +1,11 @@
 import { useEffect } from "react";
-import useNexusMods from "../components/useNexusMods";
+import { useOutletContext } from "react-router-dom";
 import useDashboardStats from "../components/useDashboardStats";
 import useLastVisit from "../components/useLastVisit";
 import useGameVersions from "../components/useGameVersions";
 
-export default function DashboardPage({ credentials }) {
-  const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
+export default function DashboardPage() {
+  const { loading, error, games, modsForGame, refresh } = useOutletContext();
   const { updateLastVisit } = useLastVisit();
   const stats = useDashboardStats(games, modsForGame);
   const { updatedGames, checkForUpdates, dismissUpdate, dismissAllUpdates } = useGameVersions();

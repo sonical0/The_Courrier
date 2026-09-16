@@ -10,14 +10,24 @@
 
 ### Pour les Utilisateurs
 
-- **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods
-- **Actualités des mods** : Page dédiée aux mises à jour récentes (24h, 7j, 30j)
-- **Affichage enrichi** : Vrais noms de jeux et icônes officielles Nexus
-- **Catégories des mods** : Affichage des catégories pour chaque mod (180+ catégories pour 5 jeux)
-- **Badges NEW** : Identifiez les nouveaux mods depuis votre dernière visite
-- **Tri avancé** : Trier par date, nom ou auteur
-- **Gestion des suivis** : Ajoutez/retirez des mods de votre liste
-- **Thème adaptatif** : Mode clair/sombre automatique
+- **Configuration personnelle** : Utilisez vos propres identifiants Nexus Mods avec validation en temps reel
+- **Actualites des mods** : Page dediee aux mises a jour recentes (7j, 15j, 30j, annee)
+- **Affichage enrichi** : Vrais noms de jeux et icones officielles Nexus
+- **Categories des mods** : Affichage des categories pour chaque mod (180+ categories pour 5 jeux)
+- **Badges NEW** : Identifiez les nouveaux mods depuis votre derniere visite, dismissables individuellement ou en bloc
+- **Filtre par categorie** : Restreindre l'affichage a une categorie de mod (Gameplay, Armures, etc.)
+- **Tags/statuts** : Marquer chaque mod comme Installe, A installer, En pause ou Archive ; filtre par statut dans la liste
+- **Export/Import config** : Sauvegarder et restaurer les tags, mods vus et theme via un fichier JSON
+- **Notifications navigateur** : Alerte automatique quand de nouveaux mods sont detectes, bouton ON/OFF dans la navbar
+- **Multiples comptes Nexus** : Gerer plusieurs comptes Nexus Mods, basculer en un clic depuis la modal de configuration
+- **Recherche** : Filtrage par nom de mod ou auteur en temps reel
+- **Tri avance** : Trier par date, nom ou auteur
+- **Gestion des suivis** : Retrait individuel ou en lot, avec confirmation unique
+- **Export JSON** : Telechargement de la liste complete des mods suivis
+- **Tableau de bord** : Statistiques globales, distribution par jeu, auteurs les plus actifs
+- **Verification d'incompatibilites** : Detection de conflits potentiels entre mods
+- **Integration Steam** : Suivi des versions de jeux avec alertes de mises a jour
+- **Theme adaptatif** : Mode clair/sombre persistant
 
 ### Pour les Développeurs
 
@@ -159,20 +169,26 @@ The_Courrier/
 
 Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implémentées.
 
-### Améliorations Fonctionnelles
+### Ameliorations Fonctionnelles
 
-- [ ] Tests unitaires et d'intégration
-- [ ] Validation de la clé API en temps réel
-- [ ] Support de multiples comptes Nexus
-- [ ] Extension à d'autres plateformes (Steam, GOG)
-- [ ] Système de notifications pour les updates
-- [ ] Import/Export de configuration
-- [ ] Mode hors-ligne avec cache persistant
+- [x] Tests unitaires pour CredentialsModal (10 tests) et useLastVisit (9 tests)
+- [x] Validation de la cle API en temps reel dans la modal
+- [x] Recherche par nom et auteur (NexusModsPage, ActuUpdatePage)
+- [x] Suppression en lot des mods suivis
+- [x] Export JSON de la liste des mods
+- [x] Badge NEW dismissable par mod (bouton "Lu" individuel + "Tout marquer comme lu")
+- [x] Filtre par categorie de mod (NexusModsPage et ActuUpdatePage)
+- [x] Tags/statuts sur les mods (Installe, A installer, En pause, Archive) avec persistance et filtre
+- [x] Tests unitaires pour useNexusCredentials (8 tests) et useNexusMods (11 tests)
+- [x] Import/Export de configuration (tags, seenMods, theme — credentials exclus)
+- [x] Notifications navigateur pour les nouveaux mods (bouton ON/OFF, permission, persistance)
+- [x] Support de multiples comptes Nexus (ajout, basculement, suppression, migration automatique)
+- [ ] Extension a d'autres plateformes (Steam, GOG)
 
 ### Optimisations Techniques
 
-- [ ] Chiffrement des credentials en localStorage
-- [ ] Compression des données de cache
+- [x] Chiffrement des credentials en localStorage (AES-GCM, PBKDF2, Web Crypto API)
+- [x] Compression des données de cache (LZ-String)
 - [ ] Service Worker pour le mode hors-ligne
 - [ ] Analytics anonymes d'utilisation
 
@@ -226,28 +242,34 @@ Voir [CHANGELOG.md](./CHANGELOG.md) pour les fonctionnalités déjà implément�
 
 ---
 
-## État Actuel
+## Etat Actuel
 
-**Version 3.0.0** - 6 Novembre 2025
+**Version 4.0.0** - 10 Juin 2026
 
-### Fonctionnalités Actives
+### Fonctionnalites Actives
 
-- Configuration personnelle des identifiants Nexus
-- Affichage des vrais noms de jeux avec icônes
-- Page des actualités de mods (ActuUpdatePage)
-- Gestion complète des mods suivis
-- Stockage local sécurisé
-- Cache intelligent multi-niveaux
-- Support Vercel et Netlify
+- Configuration personnelle des identifiants Nexus avec validation en temps reel
+- Tableau de bord avec statistiques globales et distribution des mods
+- Page des actualites de mods avec filtres periode, jeu, tri, recherche
+- Liste complete des mods avec recherche, tri, suppression en lot et export JSON
+- Verificateur d'incompatibilites entre mods
+- Integration Steam : suivi des versions de jeux, alertes de mise a jour
+- Isolation de session par utilisateur (securite)
+- Chiffrement AES-GCM des credentials en localStorage (Web Crypto API, zero dependance)
+- Cache 10min par utilisateur pour les mods suivis (zero fetch au reload)
+- Compression LZ-String des donnees localStorage (seen_mods + cache mods)
+- Stockage local des credentials et preferences
+- Support Vercel (serverless)
+- Tests automatises : CredentialsModal (10), useLastVisit (9), NexusModsPage (7), useModTags (9), useNexusCredentials (15), useNexusMods (17), useConfigBackup (9), useNotifications (13), cryptoStorage (5), compressedStorage (6) — 100 tests au total
 
 ### Statut
 
-- **Production Ready** - Prêt pour déploiement
-- **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials
-- **Documentation complète** - Guides utilisateurs et développeurs
+- **Production Ready** - Deploye sur Vercel
+- **Multi-utilisateurs** - Chaque utilisateur utilise ses propres credentials, sessions isolees
+- **Documentation complete** - Guides utilisateurs et developpeurs
 
-> **Historique complet :** Consultez [CHANGELOG.md](./CHANGELOG.md) pour tous les détails techniques des versions précédentes.
+> **Historique complet :** Consultez [CHANGELOG.md](./CHANGELOG.md) pour tous les details techniques des versions precedentes.
 
 ---
 
-**Dernière mise à jour :** 6 Novembre 2025
+**Derniere mise a jour :** 10 Juin 2026 — v4.0.0

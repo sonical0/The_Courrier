@@ -6,6 +6,8 @@
  * les véritables Build IDs et dates de mise à jour.
  */
 
+import { enforceRateLimit, LIMITS } from "../../utils/rateLimit.mjs";
+
 const CACHE = new Map();
 const TTL = 2 * 60 * 60_000; // 2 hours
 const now = () => Date.now();
@@ -40,6 +42,8 @@ export default async function handler(req, res) {
     return;
   }
 
+  if (enforceRateLimit(req, res, { scope: "steam", ...LIMITS.steam })) return;
+
   const { appId } = req.query;
 
   if (!appId || isNaN(appId)) {
@@ -49,9 +53,20 @@ export default async function handler(req, res) {
     });
   }
 
+  // Donnees publiques indexees par appId seul : cacheables par le CDN Vercel.
+  // Le cache memoire ci-dessous ne survit pas a un cold start, alors que
+  // s-maxage fait servir les appels suivants par l'Edge sans reveiller la
+  // fonction — donc sans invocation facturee.
+  const setPublicCache = () =>
+    res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=7200, stale-while-revalidate=86400"
+    );
+
   const ck = `steam:${appId}`;
   const cached = cacheGet(ck);
   if (cached) {
+    setPublicCache();
     return res.json(cached);
   }
 
@@ -204,6 +219,7 @@ export default async function handler(req, res) {
     };
 
     cacheSet(ck, result, TTL);
+    setPublicCache();
     res.json(result);
   } catch (error) {
     console.error(`Error fetching Steam data for ${appId}:`, error);

@@ -1,16 +1,20 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
-import useNexusMods from "../components/useNexusMods";
+import { useOutletContext } from "react-router-dom";
 import useLastVisit from "../components/useLastVisit";
+import useModTags, { TAG_LABELS, TAG_COLORS } from "../components/useModTags";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
 
-export default function NexusModsPage({ credentials, getSteamInfo }) {
-  const { loading, error, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
-  const { isNew, updateLastVisit } = useLastVisit();
+export default function NexusModsPage() {
+  const { getSteamInfo, loading, error, games, modsForGame, refresh, untrackMod } = useOutletContext();
+  const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
+  const { getTag, toggleTag } = useModTags();
   const [gameKey, setGameKey] = useState("ALL");
   const [untracking, setUntracking] = useState(null);
   const [sortBy, setSortBy] = useState("date");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("ALL");
+  const [filterTag, setFilterTag] = useState("ALL");
   const [selectedMods, setSelectedMods] = useState(new Set());
   const [batchUntracking, setBatchUntracking] = useState(false);
 
@@ -19,16 +23,25 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
     return () => clearTimeout(timer);
   }, [updateLastVisit]);
 
-  const mods = useMemo(() => {
-    let result = [];
+  const modsBase = useMemo(() => {
+    const result = [];
     if (!gameKey || gameKey === "ALL") {
       for (const g of games) {
-        const key = g.domain || g.gameId || g.name;
-        result.push(...modsForGame(key));
+        result.push(...modsForGame(g.domain || g.gameId || g.name));
       }
     } else {
-      result = modsForGame(gameKey);
+      result.push(...modsForGame(gameKey));
     }
+    return result;
+  }, [gameKey, modsForGame, games]);
+
+  const availableCategories = useMemo(() => {
+    const cats = new Set(modsBase.map((m) => m.category).filter(Boolean));
+    return [...cats].sort();
+  }, [modsBase]);
+
+  const mods = useMemo(() => {
+    let result = [...modsBase];
 
     if (sortBy === "name") {
       result.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -36,6 +49,16 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
       result.sort((a, b) => (a.author || "").localeCompare(b.author || ""));
     } else {
       result.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+    }
+
+    if (filterCategory !== "ALL") {
+      result = result.filter((m) => m.category === filterCategory);
+    }
+
+    if (filterTag === "none") {
+      result = result.filter((m) => !getTag(m.domain, m.id));
+    } else if (filterTag !== "ALL") {
+      result = result.filter((m) => getTag(m.domain, m.id) === filterTag);
     }
 
     if (searchQuery.trim()) {
@@ -48,7 +71,7 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
     }
 
     return result;
-  }, [gameKey, modsForGame, games, sortBy, searchQuery]);
+  }, [modsBase, sortBy, filterCategory, filterTag, searchQuery, getTag]);
 
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
@@ -159,17 +182,28 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
 
   return (
     <div className="container mx-auto px-4 py-8 pb-24">
-      <div className="flex items-center justify-between mb-6 gap-4">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
           Liste des Mods
         </h2>
-        <button
-          className="pico-btn-outline text-sm"
-          onClick={handleExport}
-          title="Exporter la liste complète en JSON"
-        >
-          ⬇️ Exporter JSON
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {countNew(mods) > 0 && (
+            <button
+              className="pico-btn-outline text-sm"
+              onClick={() => markAllAsSeen(mods)}
+              title="Marquer tous les mods visibles comme lus"
+            >
+              Tout marquer comme lu ({countNew(mods)})
+            </button>
+          )}
+          <button
+            className="pico-btn-outline text-sm"
+            onClick={handleExport}
+            title="Exporter la liste complète en JSON"
+          >
+            Exporter JSON
+          </button>
+        </div>
       </div>
 
       {/* Barre de recherche */}
@@ -201,6 +235,40 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
             ))}
           </select>
         </div>
+        {availableCategories.length > 0 && (
+          <div className="flex-1 max-w-md">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Catégorie
+            </label>
+            <select
+              className="pico-select"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+            >
+              <option value="ALL">Toutes les catégories</option>
+              {availableCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        <div className="flex-1 max-w-md">
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+            Statut
+          </label>
+          <select
+            className="pico-select"
+            value={filterTag}
+            onChange={(e) => setFilterTag(e.target.value)}
+            data-testid="tag-filter"
+          >
+            <option value="ALL">Tous les statuts</option>
+            {Object.entries(TAG_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
+            <option value="none">Sans statut</option>
+          </select>
+        </div>
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Trier par
@@ -210,13 +278,13 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="date">📅 Date de mise à jour</option>
-            <option value="name">🔤 Nom</option>
-            <option value="author">👤 Auteur</option>
+            <option value="date">Date de mise a jour</option>
+            <option value="name">Nom</option>
+            <option value="author">Auteur</option>
           </select>
         </div>
         <button className="pico-btn-outline w-fit" onClick={refresh}>
-          Rafraîchir
+          Rafraichir
         </button>
       </div>
 
@@ -241,10 +309,13 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
           {mods.map((m) => {
             const selKey = `${m.domain}:${m.id}`;
             const isSelected = selectedMods.has(selKey);
+            const currentTag = getTag(m.domain, m.id);
+            const tagColor = currentTag ? TAG_COLORS[currentTag] : null;
             return (
               <div
-                className={`pico-card flex flex-col transition-all ${isSelected ? "ring-2 ring-pico-primary" : ""}`}
+                className={`pico-card flex flex-col transition-all ${isSelected ? "ring-2 ring-pico-primary" : tagColor ? tagColor.border : ""}`}
                 key={`${m.domain}-${m.id}`}
+                data-testid={`mod-card-${m.id}`}
               >
                 <label className="flex items-center gap-2 px-3 pt-3 cursor-pointer select-none">
                   <input
@@ -264,8 +335,17 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
                     <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
                       {m.name || `${m.domain}/${m.id}`}
                     </h5>
-                    {isNew(m.updatedAt) && (
-                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                    {isNew(m.updatedAt, m.domain, m.id) && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
+                        <button
+                          className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors"
+                          onClick={() => markAsSeen(m.domain, m.id)}
+                          title="Marquer comme lu"
+                        >
+                          Lu
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -308,6 +388,27 @@ export default function NexusModsPage({ credentials, getSteamInfo }) {
                   </div>
 
                   <EnhancedChangelog mod={m} maxLines={6} />
+
+                  <div className="mt-3 mb-2 flex flex-wrap gap-1" data-testid={`tag-buttons-${m.id}`}>
+                    {Object.entries(TAG_LABELS).map(([tagValue, tagLabel]) => {
+                      const isActive = currentTag === tagValue;
+                      const colors = TAG_COLORS[tagValue];
+                      return (
+                        <button
+                          key={tagValue}
+                          className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
+                            isActive
+                              ? colors.btn + " border-transparent"
+                              : "bg-transparent text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600 hover:border-slate-400"
+                          }`}
+                          onClick={() => toggleTag(m.domain, m.id, tagValue)}
+                          title={isActive ? `Retirer le statut "${tagLabel}"` : `Marquer comme "${tagLabel}"`}
+                        >
+                          {tagLabel}
+                        </button>
+                      );
+                    })}
+                  </div>
 
                   <div className="mt-auto space-y-2">
                     <div className="flex justify-between items-center">

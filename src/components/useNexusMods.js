@@ -1,4 +1,7 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { setCompressed, getCompressed } from "../utils/compressedStorage";
+
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
 function toEpoch(val) {
   if (!val) return 0;
@@ -12,23 +15,64 @@ function toEpoch(val) {
   return 0;
 }
 
-export default function useNexusMods(credentials = null) {
+export default function useNexusMods(credentials = null, credentialsLoading = false) {
   const [mods, setMods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // Numero de la derniere requete lancee. Une requete supplantee ne doit plus
+  // ecrire dans le state : au montage un premier fetch partait avant que les
+  // credentials soient dechiffres, et son 401 atterrissait apres le succes du
+  // fetch authentifie — mods correct + error 401 figee, donc "Configuration
+  // requise" affiche par-dessus des donnees valides.
+  const reqIdRef = useRef(0);
 
-  const fetchTracked = useCallback(async () => {
+  const cacheKey = `courrier_mods_cache_${credentials?.username ?? "anon"}`;
+
+  const fetchTracked = useCallback(async (forceRefresh = false) => {
+    const reqId = ++reqIdRef.current;
+    const isStale = () => reqId !== reqIdRef.current;
+
+    // Vérifier le cache si pas de refresh forcé
+    if (!forceRefresh) {
+      const cached = getCompressed(cacheKey);
+      if (cached?.fetchedAt && Array.isArray(cached.data)) {
+        if (Date.now() - cached.fetchedAt < CACHE_TTL_MS) {
+          setMods(cached.data);
+          setLoading(false);
+          setError(null);
+          return;
+        }
+      }
+    }
+
+    // Les credentials sont dechiffres de facon asynchrone : tant que ce n'est
+    // pas fini, on reste en chargement plutot que de lancer une requete qui
+    // partirait sans headers.
+    if (credentialsLoading) return;
+
+    // Sans credentials, la requete est un 401 garanti : une invocation
+    // serverless pour rien a chaque chargement de page.
+    if (!credentials?.username || !credentials?.apiKey) {
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     setError(null);
     try {
-      const headers = { Accept: "application/json" };
-      if (credentials?.username && credentials?.apiKey) {
-        headers["X-Nexus-Username"] = credentials.username;
-        headers["X-Nexus-ApiKey"] = credentials.apiKey;
-      }
+      const headers = {
+        Accept: "application/json",
+        "X-Nexus-Username": credentials.username,
+        "X-Nexus-ApiKey": credentials.apiKey,
+      };
 
       const res = await fetch(`/api/nexus/tracked`, { headers });
       if (!res.ok) {
+        if (res.status === 429) {
+          // Peut venir de Nexus Mods comme de notre propre limiteur de debit :
+          // le message ne doit pas attribuer la cause a tort.
+          throw new Error("Trop de requêtes — veuillez patienter quelques minutes puis rafraîchir.");
+        }
         const text = await res.text();
         throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
       }
@@ -72,7 +116,6 @@ export default function useNexusMods(credentials = null) {
           url,
           picture: m.picture_url ?? m.thumbnail_url ?? m.content_preview_link ?? m.picture,
           summary: m.summary ?? m.short_description ?? "",
-          // ajouts enrichissement serveur
           previousVersion: m.previousVersion ?? m.previous_version ?? null,
           changelog: Array.isArray(m.changelog)
             ? m.changelog
@@ -87,18 +130,24 @@ export default function useNexusMods(credentials = null) {
         };
       });
 
+      if (isStale()) return;
       setMods(normalized);
+      setError(null);
+      setCompressed(cacheKey, { data: normalized, fetchedAt: Date.now() });
     } catch (e) {
+      if (isStale()) return;
       setError(e.message || String(e));
       setMods([]);
     } finally {
-      setLoading(false);
+      if (!isStale()) setLoading(false);
     }
-  }, [credentials]);
+  }, [credentials, cacheKey, credentialsLoading]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     fetchTracked();
   }, [fetchTracked]);
+
+  const refresh = useCallback(() => fetchTracked(true), [fetchTracked]);
 
   const games = useMemo(() => {
     const map = new Map();
@@ -131,15 +180,12 @@ export default function useNexusMods(credentials = null) {
 
   const untrackMod = useCallback(async (domain, modId) => {
     try {
-      // Préparer les headers avec les credentials si disponibles
       const headers = { Accept: "application/json" };
       if (credentials?.username && credentials?.apiKey) {
         headers["X-Nexus-Username"] = credentials.username;
         headers["X-Nexus-ApiKey"] = credentials.apiKey;
       }
 
-      // En dev, utilise le proxy de package.json (Create React App)
-      // En prod (Netlify/Vercel), utilise les serverless functions
       const res = await fetch(`/api/nexus/tracked/${domain}/${modId}`, {
         method: "DELETE",
         headers,
@@ -148,13 +194,14 @@ export default function useNexusMods(credentials = null) {
         const text = await res.text();
         throw new Error(`HTTP ${res.status}${text ? " — " + text : ""}`);
       }
-      // Rafraîchit la liste après suppression
-      await fetchTracked();
+      // Invalider le cache avant le refresh
+      localStorage.removeItem(cacheKey);
+      await fetchTracked(true);
       return { success: true };
     } catch (e) {
       return { success: false, error: e.message || String(e) };
     }
-  }, [fetchTracked, credentials]);
+  }, [fetchTracked, credentials, cacheKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return { loading, error, games, modsForGame, refresh: fetchTracked, untrackMod };
+  return { loading, error, games, modsForGame, refresh, untrackMod };
 }

@@ -1,16 +1,17 @@
 import { useMemo, useState, useEffect } from "react";
-import useNexusMods from "../components/useNexusMods";
+import { useOutletContext } from "react-router-dom";
 import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
 
-export default function ActuUpdatePage({ credentials, getSteamInfo }) {
-  const { loading, error, games, modsForGame, refresh } = useNexusMods(credentials);
-  const { isNew, updateLastVisit } = useLastVisit();
+export default function ActuUpdatePage() {
+  const { getSteamInfo, loading, error, games, modsForGame, refresh } = useOutletContext();
+  const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
   const [period, setPeriod] = useState(7);
   const [selectedGame, setSelectedGame] = useState("ALL");
   const [sortBy, setSortBy] = useState("date");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterCategory, setFilterCategory] = useState("ALL");
 
   useEffect(() => {
     // Marquer comme visité après 2 secondes
@@ -33,6 +34,10 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
       let mods = modsForGame(key).filter(
         (m) => Number(m.updatedAt || 0) >= cutoff
       );
+
+      if (filterCategory !== "ALL") {
+        mods = mods.filter((m) => m.category === filterCategory);
+      }
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -64,7 +69,21 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         Number(b.mods[0]?.updatedAt || 0) - Number(a.mods[0]?.updatedAt || 0)
     );
     return out;
-  }, [games, modsForGame, cutoff, selectedGame, sortBy, searchQuery]);
+  }, [games, modsForGame, cutoff, selectedGame, sortBy, searchQuery, filterCategory]);
+
+  const availableCategories = useMemo(() => {
+    const gamesToShow =
+      selectedGame === "ALL"
+        ? games
+        : games.filter((g) => (g.domain || g.gameId || g.name) === selectedGame);
+    const cats = new Set();
+    for (const g of gamesToShow) {
+      modsForGame(g.domain || g.gameId || g.name)
+        .filter((m) => Number(m.updatedAt || 0) >= cutoff)
+        .forEach((m) => { if (m.category) cats.add(m.category); });
+    }
+    return [...cats].sort();
+  }, [games, modsForGame, cutoff, selectedGame]);
 
   const periodLabel = () => {
     if (period === 7) return "7 derniers jours";
@@ -145,12 +164,20 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
           Mise à jour · {periodLabel()}
         </h2>
-        <button 
-          className="pico-btn-outline w-fit"
-          onClick={refresh}
-        >
-          Rafraîchir
-        </button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {countNew(grouped.flatMap((g) => g.mods)) > 0 && (
+            <button
+              className="pico-btn-outline text-sm"
+              onClick={() => markAllAsSeen(grouped.flatMap((g) => g.mods))}
+              title="Marquer tous les mods visibles comme lus"
+            >
+              Tout marquer comme lu ({countNew(grouped.flatMap((g) => g.mods))})
+            </button>
+          )}
+          <button className="pico-btn-outline w-fit" onClick={refresh}>
+            Rafraîchir
+          </button>
+        </div>
       </div>
 
       <div className="mb-4">
@@ -169,7 +196,7 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
         </p>
       )}
 
-      <div className="mb-6 flex flex-col md:flex-row gap-4">
+      <div className="mb-6 flex flex-col md:flex-row gap-4 flex-wrap">
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Filtrer par jeu
@@ -177,9 +204,9 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
           <select
             className="pico-select"
             value={selectedGame}
-            onChange={(e) => setSelectedGame(e.target.value)}
+            onChange={(e) => { setSelectedGame(e.target.value); setFilterCategory("ALL"); }}
           >
-            <option value="ALL">🎮 Tous les jeux</option>
+            <option value="ALL">Tous les jeux</option>
             {games.map((g) => (
               <option key={g.key} value={g.domain || g.gameId || g.name}>
                 {g.name}
@@ -187,6 +214,24 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
             ))}
           </select>
         </div>
+        {availableCategories.length > 0 && (
+          <div className="flex-1 max-w-md">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+              Catégorie
+            </label>
+            <select
+              className="pico-select"
+              value={filterCategory}
+              onChange={(e) => setFilterCategory(e.target.value)}
+              data-testid="category-filter"
+            >
+              <option value="ALL">Toutes les catégories</option>
+              {availableCategories.map((cat) => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+          </div>
+        )}
         <div className="flex-1 max-w-md">
           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
             Trier par
@@ -196,9 +241,9 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
           >
-            <option value="date">📅 Date de mise à jour</option>
-            <option value="name">🔤 Nom</option>
-            <option value="author">👤 Auteur</option>
+            <option value="date">Date de mise à jour</option>
+            <option value="name">Nom</option>
+            <option value="author">Auteur</option>
           </select>
         </div>
       </div>
@@ -281,8 +326,17 @@ export default function ActuUpdatePage({ credentials, getSteamInfo }) {
                     <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
                       {m.name || `${m.domain}/${m.id}`}
                     </h5>
-                    {isNew(m.updatedAt) && (
-                      <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">🆕 NEW</span>
+                    {isNew(m.updatedAt, m.domain, m.id) && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
+                        <button
+                          className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors"
+                          onClick={() => markAsSeen(m.domain, m.id)}
+                          title="Marquer comme lu"
+                        >
+                          Lu
+                        </button>
+                      </div>
                     )}
                   </div>
                   <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">
