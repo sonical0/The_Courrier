@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { encryptValue, decryptValue } from "../utils/cryptoStorage";
 
 const ACCOUNTS_KEY = "nexus_accounts";
@@ -77,7 +77,16 @@ export default function useNexusCredentials() {
   }, []);
 
   const activeAccount = state.accounts.find((a) => a.id === state.activeId) || null;
-  const credentials = activeAccount ? { username: activeAccount.username, apiKey: activeAccount.apiKey } : null;
+  // Identite stable : un nouvel objet a chaque render ferait re-declencher
+  // le useCallback/useEffect de useNexusMods, donc un fetch par render.
+  // activeAccount est une reference dans state.accounts, donc deja stable.
+  const credentials = useMemo(
+    () =>
+      activeAccount
+        ? { username: activeAccount.username, apiKey: activeAccount.apiKey }
+        : null,
+    [activeAccount]
+  );
 
   const saveCredentials = (username, apiKey) => {
     try {

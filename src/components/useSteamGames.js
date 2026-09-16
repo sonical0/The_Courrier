@@ -36,6 +36,11 @@ const NEXUS_TO_STEAM_MAP = {
 // Clé de stockage localStorage
 const STORAGE_KEY = "steamGameVersions";
 
+// Duree de fraicheur d'une entree Steam. Aligne sur le TTL du endpoint
+// (api/steam/game/[appId].mjs). Sans ce garde-fou, chaque montage relancait
+// une requete par jeu suivi — soit autant d'invocations serverless.
+const STEAM_TTL_MS = 2 * 60 * 60 * 1000;
+
 /**
  * Hook pour gérer les versions Steam des jeux suivis sur Nexus Mods
  */
@@ -85,6 +90,7 @@ export default function useSteamGames(games = []) {
         buildId: data.buildId || null,
         lastUpdate: data.lastUpdate || Date.now(),
         version: data.version || "Unknown",
+        fetchedAt: Date.now(),
       };
     } catch (e) {
       console.error(`Erreur Steam API pour appId ${appId}:`, e);
@@ -130,7 +136,7 @@ export default function useSteamGames(games = []) {
   }, []);
 
   // Fetcher les données Steam pour tous les jeux
-  const fetchAllSteamData = useCallback(async () => {
+  const fetchAllSteamData = useCallback(async (forceRefresh = false) => {
     if (!games || games.length === 0) {
       return;
     }
@@ -140,18 +146,36 @@ export default function useSteamGames(games = []) {
 
     try {
       const storedVersions = loadStoredVersions();
-      const newData = {};
-      
+
       // Filtrer les jeux qui ont un mapping Steam
       const gamesWithSteam = games.filter((g) => {
         const domain = g.domain || g.key;
         return domain && NEXUS_TO_STEAM_MAP[domain];
       });
 
+      // Repartir des entrees encore fraiches : elles evitent une requete.
+      // Le tri est fait par jeu et non globalement, sinon un jeu nouvellement
+      // suivi resterait sans infos Steam jusqu'a expiration du TTL.
+      const newData = {};
+      const toFetch = [];
+      for (const g of gamesWithSteam) {
+        const domain = g.domain || g.key;
+        const entry = storedVersions[domain];
+        const fresh =
+          !forceRefresh &&
+          entry?.fetchedAt &&
+          Date.now() - entry.fetchedAt < STEAM_TTL_MS;
+        if (fresh) {
+          newData[domain] = entry;
+        } else {
+          toFetch.push(g);
+        }
+      }
+
       // Fetcher les infos Steam en parallèle (limité à 5 requêtes simultanées)
       const batchSize = 5;
-      for (let i = 0; i < gamesWithSteam.length; i += batchSize) {
-        const batch = gamesWithSteam.slice(i, i + batchSize);
+      for (let i = 0; i < toFetch.length; i += batchSize) {
+        const batch = toFetch.slice(i, i + batchSize);
         const promises = batch.map((g) => {
           const domain = g.domain || g.key;
           const appId = NEXUS_TO_STEAM_MAP[domain];
@@ -190,6 +214,12 @@ export default function useSteamGames(games = []) {
     fetchAllSteamData();
   }, [fetchAllSteamData]);
 
+  // Un refresh explicite doit ignorer le TTL
+  const refreshSteamData = useCallback(
+    () => fetchAllSteamData(true),
+    [fetchAllSteamData]
+  );
+
   // Obtenir les infos Steam pour un domaine donné
   const getSteamInfo = useCallback(
     (domain) => {
@@ -212,6 +242,6 @@ export default function useSteamGames(games = []) {
     getSteamAppId,
     dismissAlert,
     dismissAllAlerts,
-    refresh: fetchAllSteamData,
+    refresh: refreshSteamData,
   };
 }

@@ -12,7 +12,7 @@ import useNotifications from "./components/useNotifications";
 
 export default function AppLayout() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials, accounts, activeAccountId, switchAccount, removeAccount } = useNexusCredentials();
-  const { loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials);
+  const { loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials, loading);
   const { countNew } = useLastVisit();
   const { supported: notifSupported, enabled: notifEnabled, permission: notifPermission, requestPermission, disableNotifications, notifyNewMods } = useNotifications();
   const [showModal, setShowModal] = useState(false);
