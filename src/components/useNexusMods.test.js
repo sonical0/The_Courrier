@@ -90,13 +90,20 @@ describe("useNexusMods — chargement initial", () => {
     );
   });
 
-  it("n'envoie pas de headers credentials si null", async () => {
-    mockFetchSuccess();
-    renderHook(() => useNexusMods(null));
+  it("credentials null → aucune requete (401 garanti, invocation inutile)", async () => {
+    const fetchSpy = jest.spyOn(global, "fetch");
+    const { result } = renderHook(() => useNexusMods(null));
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(result.current.error).toBeNull();
+  });
+
+  it("credentials en cours de dechiffrement → aucune requete, reste en chargement", async () => {
+    const fetchSpy = jest.spyOn(global, "fetch");
+    const { result } = renderHook(() => useNexusMods(null, true));
     await waitFor(() => {});
-    const callHeaders = global.fetch.mock.calls[0][1].headers;
-    expect(callHeaders["X-Nexus-Username"]).toBeUndefined();
-    expect(callHeaders["X-Nexus-ApiKey"]).toBeUndefined();
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(result.current.loading).toBe(true);
   });
 
   it("set error si la reponse n'est pas ok", async () => {

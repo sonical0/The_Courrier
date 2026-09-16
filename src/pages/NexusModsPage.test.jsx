@@ -1,12 +1,12 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import NexusModsPage from "./NexusModsPage";
 
-jest.mock("../components/useNexusMods");
+jest.mock("react-router-dom", () => ({ useOutletContext: jest.fn() }));
 jest.mock("../components/useLastVisit");
 jest.mock("../components/EnhancedChangelog", () => () => null);
 jest.mock("../components/SteamGameInfo", () => () => null);
 
-const useNexusMods = require("../components/useNexusMods").default;
+const { useOutletContext } = require("react-router-dom");
 const useLastVisit = require("../components/useLastVisit").default;
 
 const mockMods = [
@@ -22,7 +22,9 @@ const mockGames = [
 
 function setupMocks(modsOverride) {
   const mods = modsOverride || mockMods;
-  useNexusMods.mockReturnValue({
+  useOutletContext.mockReturnValue({
+    credentials: { username: "u", apiKey: "k" },
+    getSteamInfo: () => null,
     loading: false,
     error: null,
     games: mockGames,
@@ -40,9 +42,7 @@ function setupMocks(modsOverride) {
 }
 
 function renderPage() {
-  return render(
-    <NexusModsPage credentials={{ username: "u", apiKey: "k" }} getSteamInfo={() => null} />
-  );
+  return render(<NexusModsPage />);
 }
 
 beforeEach(() => {
