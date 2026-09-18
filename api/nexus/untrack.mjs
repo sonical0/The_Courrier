@@ -67,12 +67,20 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
+      // Statut amont propage : une cle invalide est une erreur du client (401),
+      // pas une panne du serveur. Aligne sur validate.mjs et tracked.mjs, qui
+      // rendaient deja des statuts differents pour la meme condition.
       const text = await response.text();
-      throw new Error(`HTTP ${response.status}${text ? " — " + text : ""}`);
+      const err = new Error(`HTTP ${response.status}${text ? " — " + text : ""}`);
+      err.status = response.status;
+      throw err;
     }
 
     return res.status(200).json({ success: true, message: "Mod retiré de la liste suivie" });
   } catch (error) {
-    return res.status(500).json({ error: error.message || String(error) });
+    // 502 par defaut : si l'appel n'a meme pas abouti (panne reseau, DNS), le
+    // service amont est injoignable — l'application n'est pas en faute.
+    const status = error.status && error.status >= 400 && error.status < 600 ? error.status : 502;
+    return res.status(status).json({ error: error.message || String(error) });
   }
 }
