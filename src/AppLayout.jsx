@@ -382,7 +382,12 @@ export default function AppLayout() {
       />
 
       <main>
-        <Outlet context={{ credentials, getSteamInfo, loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod }} />
+        {/* steamAlerts descend jusqu'au tableau de bord : c'est la SEULE source
+            de detection de mise a jour de jeu, fondee sur le changement de
+            buildId Steam. Un second mecanisme (useGameVersions) existait et ne
+            se declenchait jamais — il attendait un champ `version` que les
+            objets `games` ne portent pas. Supprime le 2026-09-18. */}
+        <Outlet context={{ credentials, getSteamInfo, loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod, steamAlerts, dismissAlert, dismissAllAlerts }} />
       </main>
     </div>
   );

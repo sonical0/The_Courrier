@@ -1,25 +1,37 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useOutletContext } from "react-router-dom";
 import useDashboardStats from "../components/useDashboardStats";
 import useLastVisit from "../components/useLastVisit";
-import useGameVersions from "../components/useGameVersions";
 
 export default function DashboardPage() {
-  const { loading, error, games, modsForGame, refresh } = useOutletContext();
+  const { loading, error, games, modsForGame, refresh, steamAlerts, dismissAlert, dismissAllAlerts } =
+    useOutletContext();
   const { updateLastVisit } = useLastVisit();
   const stats = useDashboardStats(games, modsForGame);
-  const { updatedGames, checkForUpdates, dismissUpdate, dismissAllUpdates } = useGameVersions();
+
+  // Les alertes viennent de useSteamGames, qui compare les buildId Steam d'une
+  // visite a l'autre. Le tableau de bord se contente de les presenter : on
+  // retrouve l'identifiant de jeu Nexus depuis `games` pour la vignette, que
+  // l'alerte Steam ne porte pas.
+  const updatedGames = useMemo(
+    () =>
+      (steamAlerts || []).map((a) => ({
+        id: a.id,
+        gameKey: a.domain,
+        gameName: a.gameName,
+        gameId: (games || []).find((g) => g.domain === a.domain)?.gameId,
+        // Le champ `version` de Steam vaut le plus souvent "Not available" :
+        // c'est le buildId qui porte l'information de patch.
+        previousVersion: a.oldBuildId || a.oldVersion,
+        currentVersion: a.newBuildId || a.newVersion,
+      })),
+    [steamAlerts, games]
+  );
 
   useEffect(() => {
     const timer = setTimeout(() => updateLastVisit(), 2000);
     return () => clearTimeout(timer);
   }, [updateLastVisit]);
-
-  useEffect(() => {
-    if (games && games.length > 0) {
-      checkForUpdates(games);
-    }
-  }, [games, checkForUpdates]);
 
   if (loading) {
     return (
@@ -131,7 +143,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <button
-                onClick={dismissAllUpdates}
+                onClick={dismissAllAlerts}
                 className="px-3 py-1 rounded bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors text-sm"
               >
                 Tout masquer
@@ -174,7 +186,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
                   <button
-                    onClick={() => dismissUpdate(game.gameKey)}
+                    onClick={() => dismissAlert(game.id)}
                     className="ml-4 px-3 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm"
                   >
                     Masquer
