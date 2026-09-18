@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { enforceRateLimit, LIMITS } from "../utils/rateLimit.mjs";
 
 const nexusHeaders = (username, apiKey) => {

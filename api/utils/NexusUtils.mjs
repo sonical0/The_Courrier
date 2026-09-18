@@ -1,10 +1,8 @@
-import { readFileSync } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const categoriesPath = path.join(__dirname, "..", "..", "src", "data", "nexus-categories.json");
-const CATEGORIES_BY_GAME = JSON.parse(readFileSync(categoriesPath, "utf-8"));
+// Import statique plutot que lecture disque : le runtime Workers n a pas de
+// systeme de fichiers. L attribut with { type: "json" } est requis par Node 22
+// en ESM et compris par esbuild, qui inline le JSON a la compilation — le meme
+// fichier fonctionne donc sous Node (server.mjs, Vercel) et sur Cloudflare.
+import CATEGORIES_BY_GAME from "../../src/data/nexus-categories.json" with { type: "json" };
 
 export const toEpoch = (v) => {
   if (!v) return 0;

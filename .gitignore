@@ -21,3 +21,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# Cloudflare Wrangler (cache local du serveur de dev)
+.wrangler/

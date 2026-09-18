@@ -1,0 +1,39 @@
+name = "the-courrier"
+main = "worker.mjs"
+
+# >= 2026-08-04 : nodejs_compat et nodejs_compat_v2 sont actifs par defaut.
+# >= 2025-04-01 : nodejs_compat_populate_process_env est actif par defaut, ce qui
+# peuple process.env depuis les variables et secrets du Worker. C'est ce qui
+# permet aux handlers de api/ de lire process.env.NEXUS_API_KEY sans modification.
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Assets statiques produits par `npm run build`.
+# - servis AVANT le Worker : une requete sur un fichier existant ne l'invoque pas
+#   et n'est pas facturee ;
+# - `single-page-application` renvoie index.html pour toute route inconnue, ce qui
+#   remplace la rewrite "/(.*)" -> /index.html de vercel.json ;
+# - les fichiers _headers et _redirects de build/ sont pris en compte nativement.
+[assets]
+directory = "build"
+not_found_handling = "single-page-application"
+
+# /api/* atteint toujours le Worker, quel que soit le mode de la requete.
+# Sans cela, une requete de NAVIGATION vers une route API inconnue (une URL tapee
+# dans la barre d'adresse, qui porte Sec-Fetch-Mode: navigate) est servie par le
+# fallback SPA : index.html en 200 au lieu d'un 404 JSON. Les appels fetch() de
+# l'application n'etaient pas concernes, mais un contrat d'API ne doit pas
+# dependre du mode de la requete.
+run_worker_first = ["/api/*"]
+
+# Variables NON secretes. Les secrets (NEXUS_API_KEY, NEXUS_USERNAME) se posent
+# dans le tableau de bord (Settings > Variables and Secrets, type "Secret") ou par
+# `npx wrangler secret put NEXUS_API_KEY`.
+# Ne jamais les ecrire ici : ce fichier est versionne.
+[vars]
+NEXUS_APP_NAME = "The Courrier"
+RATE_LIMIT_NEXUS = "30"
+RATE_LIMIT_STEAM = "60"
+
+[observability]
+enabled = true
