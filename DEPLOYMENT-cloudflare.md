@@ -171,3 +171,35 @@ npx wrangler dev                # lit wrangler.toml, sert build/ + worker.mjs
 ```
 
 Puis dérouler la liste sur `http://127.0.0.1:8788`.
+
+---
+
+## Steam : 403 sur les IP de sortie Cloudflare
+
+Steam limite par IP, et les IP de sortie de Cloudflare sont mutualisées. Mesuré le 2026-09-18 : **une requête sur trois** repartait en `503 Steam API error: 403`, y compris avec 8 secondes entre les appels — ce n'est donc pas un effet du rythme de test.
+
+Trois couches, posées dans cet ordre, de la moins efficace à la plus efficace :
+
+| Couche | Où | Ce qu'elle apporte |
+|---|---|---|
+| Réessais ×3 (120 ms, 400 ms) | `api/steam/game/[appId].mjs` | Peu : les trois tentatives tapent la même IP en 500 ms |
+| Cache mémoire + repli périmé | idem | **Rien en pratique** : `Map` par isolate, perdu au démarrage à froid |
+| **Cache partagé + repli périmé** | `worker.mjs` | L'essentiel : Steam n'est plus appelé pendant 2 h par fiche |
+
+**C'est la troisième qui règle le problème.** Après amorçage, 15 requêtes sur les cinq jeux du README passent toutes, servies par le cache (`X-Steam-Cache: hit`).
+
+### En-têtes de diagnostic
+
+- `X-Steam-Cache: hit | miss | stale` — d'où vient la réponse.
+- `X-Steam-Age: <secondes>` — âge de l'entrée servie.
+- `X-Steam-Stale: 1` — Steam a refusé, c'est la dernière valeur connue qui est servie.
+
+### Détails qui comptent
+
+**La clé de cache ignore la query string.** Sans ça, un `?utm_source=…` ou un paramètre de cache-busting fragmenterait le cache et le rendrait inutile.
+
+**Le cache vit dans `worker.mjs`, pas dans `api/`.** La mise en cache est propre à la plateforme ; `api/` doit rester utilisable par `server.mjs`. Même logique que pour l'adaptateur.
+
+**Limité à `/api/steam/*`.** Les routes Nexus portent des données liées à des identifiants et sont marquées `private, no-store` : elles ne doivent pas être mises en cache.
+
+**Le cache est propre à chaque centre de données Cloudflare**, pas global. Un cache réellement global demanderait Workers KV — un namespace à créer et des écritures facturées. À reprendre si le taux d'échec redevient gênant.
