@@ -117,7 +117,7 @@ function buildRes(resolve) {
  * @param {(req: object, res: object) => unknown} handler
  * @returns {(context: { request: Request }) => Promise<Response>}
  */
-export function toPagesFunction(handler) {
+export function toWorkerHandler(handler) {
   return async function onRequest({ request, params }) {
     let resolve;
     const done = new Promise((r) => {

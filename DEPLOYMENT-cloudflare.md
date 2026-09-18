@@ -22,7 +22,7 @@ Second motif : Cloudflare Tunnel est déjà prévu pour le homelab. Quand la mac
 
 ## Architecture du portage
 
-Les cinq handlers de `api/` sont écrits au format Vercel `handler(req, res)`. Le runtime Workers attend une `Response`. Plutôt que maintenir deux versions qui divergeraient au premier correctif, `api/utils/pagesAdapter.mjs` présente un faux couple `(req, res)` aux handlers existants.
+Les cinq handlers de `api/` sont écrits au format Vercel `handler(req, res)`. Le runtime Workers attend une `Response`. Plutôt que maintenir deux versions qui divergeraient au premier correctif, `api/utils/workerAdapter.mjs` présente un faux couple `(req, res)` aux handlers existants.
 
 `worker.mjs` porte la table de routes, en `URLPattern` — c'est ce qui remplace le routage par dossier de Pages :
 
@@ -154,13 +154,13 @@ Les scopes sont bien séparés : `nexus` plafonne à 30, `steam` à 60, chacun s
 
 `GET /api/steam/game/489830` répondait `400 Invalid Steam App ID`. Cause : le handler lit `const { appId } = req.query`, car **Vercel place les segments dynamiques de route dans `req.query`**, alors que **Cloudflare les passe séparément** (`context.params` sur Pages, groupes nommés d'`URLPattern` ici). L'adaptateur les ignorait.
 
-Corrigé dans `pagesAdapter.mjs` : `context.params` est fusionné dans `req.query`, en l'emportant sur la query string comme le fait Vercel, et une route attrape-tout (`[[path]]`) voit son tableau joint par `/`.
+Corrigé dans `workerAdapter.mjs` : `context.params` est fusionné dans `req.query`, en l'emportant sur la query string comme le fait Vercel, et une route attrape-tout (`[[path]]`) voit son tableau joint par `/`.
 
 La route `DELETE /api/nexus/tracked/:domain/:modId` masquait le problème : son handler retombe sur une extraction depuis le chemin quand la query est vide. Elle fonctionnait donc déjà — c'est le seul endroit où la panne n'aurait pas été visible.
 
 ### Tests de l'adaptateur
 
-`api/utils/pagesAdapter.mjs` est couvert par 34 assertions (statuts, en-têtes, `req.query`, `req.url`, casse des en-têtes de requête, `CF-Connecting-IP`, 429, handler qui lève, handler qui ne répond pas, double réponse, `params`). Le fichier de test n'est pas versionné ; le recréer au besoin, il ne dépend ni de wrangler ni du build — Node 24 fournit `Request`/`Response` en global.
+`api/utils/workerAdapter.mjs` est couvert par 34 assertions (statuts, en-têtes, `req.query`, `req.url`, casse des en-têtes de requête, `CF-Connecting-IP`, 429, handler qui lève, handler qui ne répond pas, double réponse, `params`). Le fichier de test n'est pas versionné ; le recréer au besoin, il ne dépend ni de wrangler ni du build — Node 24 fournit `Request`/`Response` en global.
 
 ## Reproduire la validation
 

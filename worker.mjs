@@ -5,16 +5,18 @@
  * deduisait la route du chemin du fichier. Un Worker n'a qu'un point d'entree,
  * le routage est donc explicite ici.
  *
- * Tout le reste est inchange : les handlers de api/ restent au format Vercel
- * `handler(req, res)` et passent par api/utils/pagesAdapter.mjs. Un correctif
- * dans api/ profite simultanement a Vercel, a server.mjs et a Cloudflare.
+ * Les handlers de api/ gardent la signature `handler(req, res)` de Node et
+ * passent par api/utils/workerAdapter.mjs. C'est un heritage de Vercel, conserve
+ * parce que server.mjs (le serveur de developpement local) l'utilise : un
+ * correctif dans api/ profite donc a la fois a Cloudflare et au local, sans
+ * deux versions a maintenir. Vercel a ete supprime le 2026-09-18.
  *
  * Les assets statiques (build/) sont servis par la plateforme AVANT d'atteindre
  * ce Worker — voir `[assets]` dans wrangler.toml. Il n'est donc invoque que
  * pour ce que les assets ne couvrent pas, et le fallback SPA est traite par
  * `not_found_handling`, pas ici.
  */
-import { toPagesFunction } from "./api/utils/pagesAdapter.mjs";
+import { toWorkerHandler } from "./api/utils/workerAdapter.mjs";
 
 import nexusTracked from "./api/nexus/tracked.mjs";
 import nexusUntrack from "./api/nexus/untrack.mjs";
@@ -32,9 +34,9 @@ const ROUTES = [
   { pattern: "/api/nexus/untrack", handler: nexusUntrack },
   { pattern: "/api/nexus/validate", handler: nexusValidate },
 
-  // Remplace la rewrite de vercel.json qui reecrivait cette route vers untrack.
-  // Le handler lit domain/modId dans req.query, que l'adaptateur alimente
-  // depuis les groupes nommes ci-dessous.
+  // Reprend la rewrite que vercel.json portait avant sa suppression : cette
+  // route est servie par le handler untrack. Celui-ci lit domain/modId dans
+  // req.query, que l'adaptateur alimente depuis les groupes nommes du motif.
   { pattern: "/api/nexus/tracked/:domain/:modId", handler: nexusUntrack },
 
   { pattern: "/api/steam/game/:appId", handler: steamGame },
@@ -113,7 +115,7 @@ export default {
       // Pages : l'adaptateur les fusionne ensuite dans req.query, comme Vercel.
       const params = { ...match.pathname.groups };
 
-      const response = await toPagesFunction(route.handler)({ request, params, env, ctx });
+      const response = await toWorkerHandler(route.handler)({ request, params, env, ctx });
 
       // Etat de la barriere distribuee, lisible sans acces au tableau de bord.
       // "off" signale que le binding n'est pas attache au Worker deploye :

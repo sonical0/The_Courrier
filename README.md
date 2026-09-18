@@ -48,11 +48,11 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 - **Node.js 18+** - Runtime JavaScript
 - **Express 4.19.2** - Serveur HTTP pour développement local
 - **node-fetch 3.3.2** - Client HTTP pour appels API
-- **Serverless Functions** - Architecture sans serveur (Vercel)
+- **Cloudflare Workers** - Architecture sans serveur (runtime V8, pas Node)
 
 ### Outils de Développement
 - **Create React App 5.0.1** - Toolchain React
-- **Vercel** - Plateforme de déploiement
+- **Cloudflare Workers** - Plateforme de déploiement
 - **Git** - Contrôle de version
 
 ---
@@ -357,7 +357,7 @@ server.mjs                               # Serveur Express pour dev local
 └── Proxy vers API Nexus Mods et Steam
 ```
 
-#### Fonctions Serverless (Production - Vercel)
+#### Fonctions Serverless (Production - Cloudflare Workers)
 
 ```
 api/nexus/
@@ -420,7 +420,7 @@ api/steam/game/
 
 ### Système de Cache
 
-#### Cache serveur (mémoire, Vercel)
+#### Cache serveur (mémoire, par isolate Worker)
 
 | Donnée | TTL | Clé |
 |--------|-----|-----|
@@ -537,15 +537,17 @@ Chaque utilisateur configure ses propres identifiants Nexus Mods via l'interface
 
 ## Déploiement
 
-L'application peut être déployée sur **Vercel** sans configuration complexe. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
+L'application est déployée sur **Cloudflare Workers**, avec build automatique à chaque push sur `main`. Aucune variable d'environnement n'est nécessaire - chaque utilisateur configure ses propres identifiants.
 
-**Guide complet de déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
+**En production :** [the-courrier.sanchez-alex1.workers.dev](https://the-courrier.sanchez-alex1.workers.dev/)
+
+**Guide complet de déploiement** : voir [DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)
 
 ---
 
 ## Documentation
 
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide complet de déploiement sur Vercel
+- **[DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)** - Guide complet de déploiement sur Cloudflare Workers
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration détaillée des identifiants
 - **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test et validation
 - **[CHANGELOG.md](./CHANGELOG.md)** - Historique complet des versions
@@ -620,7 +622,7 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ### Developer Documentation
 - **[CHANGELOG.md](./CHANGELOG.md)** - Complete version history (source of truth)
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Vercel deployment instructions
+- **[DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)** - Cloudflare Workers deployment instructions
 - **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Technical deep-dive on credentials system
 - **[ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)** - How to add new game categories
 - **[STEAM_INTEGRATION.md](./STEAM_INTEGRATION.md)** - Complete Steam integration guide
@@ -676,7 +678,7 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 ### Technologies
 - [React Documentation](https://react.dev) - Framework frontend
 - [Tailwind CSS](https://tailwindcss.com) - Framework CSS utility-first
-- [Vercel](https://vercel.com) - Plateforme de déploiement serverless
+- [Cloudflare Workers](https://developers.cloudflare.com/workers/) - Plateforme de déploiement serverless
 
 
 ````

@@ -1,4 +1,10 @@
-# Guide de Déploiement
+# Guide de Déploiement (obsolète — Vercel)
+
+> ⚠️ **Ce document est périmé.** Il décrit le déploiement sur Vercel, plateforme abandonnée le 2026-09-18 : le projet y a été supprimé et `vercel.json` retiré du dépôt.
+>
+> Le guide en vigueur est **[DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)**.
+>
+> Ce fichier est conservé comme trace de l'ancienne configuration. Ne pas s'y fier pour déployer.
 
 Ce guide vous explique comment déployer **The Courrier** sur **Vercel**.
 
