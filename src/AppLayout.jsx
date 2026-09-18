@@ -8,6 +8,7 @@ import useTheme from "./components/useTheme";
 import useSteamGames from "./components/useSteamGames";
 import GameUpdateAlert from "./components/GameUpdateAlert";
 import { exportConfig, importConfig } from "./components/useConfigBackup";
+import { exporter as exporterDiagnostics } from "./components/diagnostics";
 import useNotifications from "./components/useNotifications";
 
 export default function AppLayout() {
@@ -177,6 +178,13 @@ export default function AppLayout() {
                 title="Importer une configuration sauvegardee"
               >
                 Importer
+              </button>
+              <button
+                className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                onClick={exporterDiagnostics}
+                title="Telecharger un journal technique a joindre a un rapport de bug — sans identifiants"
+              >
+                🩺 Diagnostic
               </button>
               <input
                 ref={importInputRef}

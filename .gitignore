@@ -24,3 +24,9 @@ yarn-error.log*
 
 # Cloudflare Wrangler (cache local du serveur de dev)
 .wrangler/
+
+# Journaux rapatries depuis Cloudflare (npx wrangler tail --format json > logs/prod.jsonl)
+# et exports de diagnostic. Jamais versionnes.
+logs/
+*.jsonl
+the-courrier-diagnostic-*.json
