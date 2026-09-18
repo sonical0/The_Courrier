@@ -45,6 +45,54 @@ const COMPILED = ROUTES.map((r) => ({
   matcher: new URLPattern({ pathname: r.pattern }),
 }));
 
+/**
+ * Premiere barriere de debit, adossee a l'infrastructure Cloudflare.
+ *
+ * api/utils/rateLimit.mjs reste en place derriere, mais son compteur vit dans
+ * la memoire de l'isolate : il repart de zero a chaque cold start et chaque
+ * isolate a le sien. Son propre en-tete le documente. Ici le compteur est
+ * partage, donc c'est lui qui borne reellement une boucle client emballee —
+ * la panne de juin 2026.
+ *
+ * Les deux limites sont volontairement identiques (30/min et 60/min) : si la
+ * barriere distribuee laisse passer, la barriere memoire ne rejettera pas non
+ * plus, et les en-tetes X-RateLimit-* des handlers restent coherents avec ce
+ * que le client observe.
+ *
+ * @returns {Promise<Response|null>} une reponse 429 si la limite est atteinte
+ */
+async function enforceEdgeLimit(request, env, pathname) {
+  const isNexus = pathname.startsWith("/api/nexus/");
+  const limiter = isNexus ? env.RL_NEXUS : env.RL_STEAM;
+
+  // Absent en `wrangler dev` sans binding, ou si la config n'est pas deployee :
+  // on laisse passer plutot que de casser les routes. La barriere memoire reste.
+  if (!limiter) return null;
+
+  const scope = isNexus ? "nexus" : "steam";
+  const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+
+  const { success } = await limiter.limit({ key: `${scope}:${ip}` });
+  if (success) return null;
+
+  return new Response(
+    JSON.stringify({
+      success: false,
+      error: "Too many requests",
+      scope,
+      retryAfter: 60,
+    }),
+    {
+      status: 429,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Retry-After": "60",
+        "Cache-Control": "private, no-store",
+      },
+    }
+  );
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -52,6 +100,11 @@ export default {
     for (const route of COMPILED) {
       const match = route.matcher.exec({ pathname: url.pathname });
       if (!match) continue;
+
+      // Barriere de debit avant d'atteindre le handler — et donc avant tout
+      // appel sortant vers Nexus ou Steam.
+      const limited = await enforceEdgeLimit(request, env, url.pathname);
+      if (limited) return limited;
 
       // Les groupes nommes d'URLPattern jouent le role de context.params sur
       // Pages : l'adaptateur les fusionne ensuite dans req.query, comme Vercel.

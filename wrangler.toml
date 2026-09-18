@@ -37,3 +37,34 @@ RATE_LIMIT_STEAM = "60"
 
 [observability]
 enabled = true
+
+# Rate limiting distribue, adosse a la meme infrastructure que les regles WAF.
+#
+# POURQUOI CE BINDING ET PAS UNE REGLE WAF : les regles de rate limiting du WAF
+# s'appliquent a une ZONE, c'est-a-dire un domaine gere par Cloudflare. Sur un
+# sous-domaine workers.dev il n'y a pas de zone, donc pas de regle possible.
+# Le binding est la seule option ici — et il reste tres superieur au compteur en
+# memoire de api/utils/rateLimit.mjs, qui repart de zero a chaque cold start.
+#
+# CE QU'IL NE FAIT PAS : il s'execute DANS le Worker, donc il ne supprime pas
+# l'invocation, contrairement a une regle WAF qui bloque en amont. Pour ca il
+# faudra un domaine sur le compte. A reconsiderer quand le homelab passera
+# derriere Cloudflare Tunnel, qui suppose de toute facon un domaine.
+#
+# `period` n'accepte que 10 ou 60. Les limites reprennent celles de
+# api/utils/rateLimit.mjs pour que les deux barrieres soient coherentes.
+[[ratelimits]]
+name = "RL_NEXUS"
+namespace_id = "1001"
+
+  [ratelimits.simple]
+  limit = 30
+  period = 60
+
+[[ratelimits]]
+name = "RL_STEAM"
+namespace_id = "1002"
+
+  [ratelimits.simple]
+  limit = 60
+  period = 60

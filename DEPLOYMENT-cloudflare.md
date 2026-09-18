@@ -80,17 +80,32 @@ Les variables non secrètes (`NEXUS_APP_NAME`, `RATE_LIMIT_NEXUS`, `RATE_LIMIT_S
 
 Ces valeurs ne sont que des **replis** : le front envoie normalement les identifiants de l'utilisateur via `X-Nexus-Username` / `X-Nexus-ApiKey`.
 
-### 3. Poser une règle de rate limiting — le vrai correctif
+### 3. Rate limiting — déjà en place dans le code
 
-`api/utils/rateLimit.mjs` documente lui-même sa limite : le compteur vit en mémoire de processus, donc chaque isolate a le sien et un démarrage à froid repart de zéro. Il borne une boucle client emballée, mais ce n'est pas un quota.
+`api/utils/rateLimit.mjs` documente lui-même sa limite : le compteur vit en mémoire de processus, donc chaque isolate a le sien et un démarrage à froid repart de zéro. Il borne une boucle client emballée, mais ce n'est pas un quota. Son en-tête conclut qu'*« il faut soit le rate limiting qui bloque AVANT l'invocation, soit un store partagé »*.
 
-Son en-tête conclut qu'*« il faut soit le rate limiting qui bloque AVANT l'invocation, soit un store partagé »*. C'est exactement ce que fait Cloudflare : Security → WAF → Rate limiting rules, sur `/api/*`, par IP. La règle s'applique à la périphérie, **avant** l'exécution du Worker — donc sans consommer de quota.
+> **Correction du 2026-09-18.** Une version antérieure de ce document recommandait une règle **WAF → Rate limiting rules**. C'est impossible ici : les règles WAF s'appliquent à une **zone**, c'est-à-dire un domaine géré par Cloudflare. Un sous-domaine `workers.dev` n'en est pas une.
 
-Le limiteur en mémoire reste en place comme seconde barrière ; il ne coûte rien.
+La solution retenue est l'**API Rate Limiting de Workers** (`[[ratelimits]]` dans `wrangler.toml`, appelée depuis `worker.mjs`), adossée à la même infrastructure que les règles WAF mais exposée comme binding :
 
-### 4. Alerte de consommation — non négociable
+- compteur **partagé**, pas un `Map` par isolate — c'est lui qui borne réellement une boucle emballée ;
+- deux namespaces distincts, `RL_NEXUS` (30/min) et `RL_STEAM` (60/min), alignés sur les limites existantes ;
+- appliqué **avant** d'atteindre le handler, donc avant tout appel sortant vers Nexus ou Steam ;
+- le limiteur en mémoire reste derrière, comme seconde barrière — il ne coûte rien et garde Vercel et `server.mjs` inchangés.
 
-Notifications → Usage-based billing / Workers. Ce qui a coûté trois mois d'indisponibilité, ce n'est pas le dépassement lui-même : c'est de l'avoir appris par deux mails en juin et d'avoir cru le site en ligne jusqu'en septembre.
+**Ce qu'il ne fait pas** : il s'exécute *dans* le Worker, donc il ne supprime pas l'invocation, contrairement à une règle WAF qui bloque en amont. Pour cela il faudrait un domaine sur le compte — à reconsidérer quand le homelab passera derrière Cloudflare Tunnel, qui en suppose un de toute façon.
+
+`period` n'accepte que **10 ou 60** secondes, et la limite s'applique **par emplacement Cloudflare**, pas globalement.
+
+### 4. Alerte de consommation
+
+> **Correction du 2026-09-18.** Il n'existe **aucune alerte d'usage Workers** dans les notifications de ce compte : la liste complète ne propose, côté consommation, que `Billing Budget Alert` et `Usage Based Billing`, toutes deux adossées à la dépense.
+
+Posée : **Billing Budget Alert à 1 $**, vers `sanchez.alex1@icloud.com`. Elle ne surveille pas les 100 000 requêtes/jour — elle prévient dès que le compte commence à facturer quoi que ce soit.
+
+**Et c'est suffisant, parce que le mode de défaillance de Vercel ne peut pas se reproduire ici.** Dépasser le palier gratuit chez Cloudflare renvoie des 429 ; le compte n'est ni suspendu ni mis en pause. Ce qui a coûté trois mois, ce n'était pas le dépassement : c'était la suspension du compte, sans canal de support et sans moyen d'agir depuis l'interface.
+
+Pour surveiller la consommation réelle : `[observability] enabled = true` est actif dans `wrangler.toml`, les métriques sont dans le tableau de bord du Worker (onglet Metrics).
 
 ## À vérifier au premier déploiement
 
