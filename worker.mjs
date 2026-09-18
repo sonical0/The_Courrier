@@ -65,15 +65,18 @@ async function enforceEdgeLimit(request, env, pathname) {
   const isNexus = pathname.startsWith("/api/nexus/");
   const limiter = isNexus ? env.RL_NEXUS : env.RL_STEAM;
 
-  // Absent en `wrangler dev` sans binding, ou si la config n'est pas deployee :
-  // on laisse passer plutot que de casser les routes. La barriere memoire reste.
-  if (!limiter) return null;
+  // Binding absent : on laisse passer plutot que de casser les routes, la
+  // barriere memoire reste derriere. Mais ce cas doit etre VISIBLE — sinon la
+  // protection est silencieusement inactive, ce qui est pire que pas de
+  // protection du tout (constate en production le 2026-09-18 : le code etait
+  // deploye, le binding non, et rien ne le signalait).
+  if (!limiter) return { absent: true };
 
   const scope = isNexus ? "nexus" : "steam";
   const ip = request.headers.get("CF-Connecting-IP") || "unknown";
 
   const { success } = await limiter.limit({ key: `${scope}:${ip}` });
-  if (success) return null;
+  if (success) return { absent: false };
 
   return new Response(
     JSON.stringify({
@@ -103,14 +106,21 @@ export default {
 
       // Barriere de debit avant d'atteindre le handler — et donc avant tout
       // appel sortant vers Nexus ou Steam.
-      const limited = await enforceEdgeLimit(request, env, url.pathname);
-      if (limited) return limited;
+      const verdict = await enforceEdgeLimit(request, env, url.pathname);
+      if (verdict instanceof Response) return verdict;
 
       // Les groupes nommes d'URLPattern jouent le role de context.params sur
       // Pages : l'adaptateur les fusionne ensuite dans req.query, comme Vercel.
       const params = { ...match.pathname.groups };
 
-      return toPagesFunction(route.handler)({ request, params, env, ctx });
+      const response = await toPagesFunction(route.handler)({ request, params, env, ctx });
+
+      // Etat de la barriere distribuee, lisible sans acces au tableau de bord.
+      // "off" signale que le binding n'est pas attache au Worker deploye :
+      // seule la barriere memoire protege, et elle ne suffit pas.
+      const out = new Response(response.body, response);
+      out.headers.set("X-Edge-RateLimit", verdict.absent ? "off" : "on");
+      return out;
     }
 
     // Aucune route API : ni les assets ni le fallback SPA n'ont pris la requete.
