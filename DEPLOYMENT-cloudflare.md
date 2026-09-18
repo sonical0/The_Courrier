@@ -1,6 +1,10 @@
 # Déploiement sur Cloudflare Workers
 
-Portage depuis Vercel, branche `feat/cloudflare-pages`. Vercel n'est **pas** retiré : `api/` et `vercel.json` restent en place, Cloudflare passe par `worker.mjs`. Les deux plateformes peuvent coexister le temps de valider.
+Portage depuis Vercel, fusionné dans `main` le 2026-09-18.
+
+> **Vercel a été supprimé le 2026-09-18.** Le projet `the_courrier` et tous ses déploiements ont été détruits une fois Cloudflare validé en production ; `thecourrier.vercel.app` renvoie désormais 404. Ce document décrit donc la **seule** plateforme d'hébergement du projet.
+>
+> `api/` reste la source unique des handlers — il sert à Cloudflare via `worker.mjs` **et** au serveur local `server.mjs`. Seul `vercel.json` est devenu une configuration morte : à supprimer, il n'est plus lu par personne.
 
 > **Workers, pas Pages.** Le portage a d'abord visé Pages, puis a basculé sur Workers le 2026-09-18. Motifs : le coût est identique (« requests for static assets on Workers are free, and Pages Functions invocations are charged at the same rate as Workers »), Workers a strictement plus de fonctionnalités (Durable Objects, Cron Triggers, observabilité), et Cloudflare publie un guide « Migrate from Pages to Workers » sans équivalent dans l'autre sens. Le seul élément Pages du portage était le routage par dossier `functions/` ; il est remplacé par une table de routes explicite dans `worker.mjs`.
 
@@ -30,7 +34,7 @@ Les cinq handlers de `api/` sont écrits au format Vercel `handler(req, res)`. L
 /api/steam/game/:appId              ->  api/steam/game/[appId].mjs
 ```
 
-**Conséquence** : un correctif dans `api/` profite simultanément à Vercel, au serveur local (`server.mjs`) et à Cloudflare.
+**Conséquence** : un correctif dans `api/` profite simultanément à Cloudflare et au serveur local (`server.mjs`). Le format `handler(req, res)` est un héritage de Vercel — il est conservé parce que `server.mjs` l'utilise, pas par compatibilité avec une plateforme qui n'existe plus.
 
 La quatrième route remplace la rewrite `vercel.json` qui transformait `/api/nexus/tracked/:domain/:modId` en `/api/nexus/untrack?domain=&modId=`. Les groupes nommés d'`URLPattern` jouent le rôle de `context.params` sur Pages : l'adaptateur les fusionne dans `req.query`, là où le handler les lit.
 
@@ -91,7 +95,7 @@ La solution retenue est l'**API Rate Limiting de Workers** (`[[ratelimits]]` dan
 - compteur **partagé**, pas un `Map` par isolate — c'est lui qui borne réellement une boucle emballée ;
 - deux namespaces distincts, `RL_NEXUS` (30/min) et `RL_STEAM` (60/min), alignés sur les limites existantes ;
 - appliqué **avant** d'atteindre le handler, donc avant tout appel sortant vers Nexus ou Steam ;
-- le limiteur en mémoire reste derrière, comme seconde barrière — il ne coûte rien et garde Vercel et `server.mjs` inchangés.
+- le limiteur en mémoire reste derrière, comme seconde barrière — il ne coûte rien et garde `server.mjs` inchangé.
 
 **Ce qu'il ne fait pas** : il s'exécute *dans* le Worker, donc il ne supprime pas l'invocation, contrairement à une règle WAF qui bloque en amont. Pour cela il faudrait un domaine sur le compte — à reconsidérer quand le homelab passera derrière Cloudflare Tunnel, qui en suppose un de toute façon.
 
