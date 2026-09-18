@@ -10,17 +10,64 @@ import { enforceRateLimit, LIMITS } from "../../utils/rateLimit.mjs";
 
 const CACHE = new Map();
 const TTL = 2 * 60 * 60_000; // 2 hours
+const PRUNE_THRESHOLD = 500;
 const now = () => Date.now();
 
 const cacheGet = (k) => {
   const e = CACHE.get(k);
-  if (!e || now() > e.exp) {
-    CACHE.delete(k);
-    return null;
-  }
+  if (!e || now() > e.exp) return null;
   return e.val;
 };
-const cacheSet = (k, v, ttl) => CACHE.set(k, { val: v, exp: now() + ttl });
+
+/**
+ * Valeur perimee, conservee volontairement.
+ *
+ * L'API Steam renvoie par intermittence des 403 sur les IP de sortie mutualisees
+ * (environ une requete sur trois depuis Cloudflare, mesure le 2026-09-18, alors
+ * qu'un appel direct depuis un poste passe). Plutot que de rendre une erreur
+ * quand Steam refuse, on ressert la derniere valeur connue : un Build ID vieux
+ * de quelques heures vaut infiniment mieux qu'un 500 pour l'utilisateur.
+ *
+ * L'entree n'est donc plus supprimee a l'expiration — d'ou la purge ci-dessous,
+ * pour qu'une longue serie d'appId distincts ne fasse pas grossir la Map.
+ */
+const cacheGetStale = (k) => CACHE.get(k)?.val ?? null;
+
+const cacheSet = (k, v, ttl) => {
+  if (CACHE.size > PRUNE_THRESHOLD) {
+    const cutoff = now() - TTL; // au-dela, meme perimee, la valeur n'a plus d'interet
+    for (const [key, e] of CACHE) if (e.exp < cutoff) CACHE.delete(key);
+  }
+  CACHE.set(k, { val: v, exp: now() + ttl });
+};
+
+/**
+ * `fetch` avec reessais sur les erreurs transitoires de Steam.
+ *
+ * 403 et 429 sont de la limitation de debit cote Steam, 5xx de l'indisponibilite :
+ * dans les trois cas un nouvel essai a de bonnes chances de passer. Les autres
+ * codes (404 notamment) sont definitifs et rendus tels quels, sans attente.
+ *
+ * Les delais restent courts : le budget CPU d'un Worker est de 10 ms, mais
+ * l'attente reseau n'est pas du CPU — c'est la latence percue par l'utilisateur
+ * qui borne, pas la plateforme.
+ */
+const TRANSIENT = new Set([403, 429, 500, 502, 503, 504]);
+
+async function fetchSteam(url, { tries = 3, delays = [120, 400] } = {}) {
+  let last;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url);
+      if (r.ok || !TRANSIENT.has(r.status)) return r;
+      last = new Error(`Steam API error: ${r.status}`);
+    } catch (e) {
+      last = e; // panne reseau : meme traitement qu'un 5xx
+    }
+    if (i < tries - 1) await new Promise((r) => setTimeout(r, delays[i] ?? 400));
+  }
+  throw last;
+}
 
 const DEBUG = process.env.NODE_ENV === 'development';
 
@@ -73,8 +120,11 @@ export default async function handler(req, res) {
   try {
     // 1. Steam Store API pour les infos de base
     const storeUrl = `https://store.steampowered.com/api/appdetails?appids=${appId}`;
-    const storeRes = await fetch(storeUrl);
-    
+    // Seul appel dont depend toute la reponse : c'est celui qui merite des
+    // reessais. SteamCMD et les actualites, plus bas, sont deja facultatifs et
+    // enveloppes dans leur propre try/catch.
+    const storeRes = await fetchSteam(storeUrl);
+
     if (!storeRes.ok) {
       throw new Error(`Steam Store API error: ${storeRes.status}`);
     }
@@ -223,9 +273,27 @@ export default async function handler(req, res) {
     res.json(result);
   } catch (error) {
     console.error(`Error fetching Steam data for ${appId}:`, error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message || "Internal server error" 
+
+    // Steam a refuse malgre les reessais. Si on a deja servi ce jeu, on ressert
+    // la derniere valeur connue plutot qu'une erreur : les donnees changent au
+    // rythme des patchs, quelques heures d'age sont sans consequence.
+    const stale = cacheGetStale(ck);
+    if (stale) {
+      res.setHeader("X-Steam-Stale", "1");
+      // Cache court : on veut retenter Steam bientot, sans marteler.
+      res.setHeader("Cache-Control", "public, s-maxage=300");
+      return res.json(stale);
+    }
+
+    // Aucune valeur de repli. 503 et non 500 : le service amont est
+    // indisponible, l'application n'est pas en faute — et un 503 dit au client
+    // que reessayer a un sens, ce qu'un 500 ne dit pas.
+    res.setHeader("Retry-After", "60");
+    res.setHeader("Cache-Control", "public, s-maxage=30");
+    return res.status(503).json({
+      success: false,
+      error: error.message || "Steam est temporairement indisponible",
+      retryAfter: 60,
     });
   }
 }
