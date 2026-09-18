@@ -1,5 +1,39 @@
-# Equivalent du bloc "headers" de vercel.json.
+# En-tetes de securite. Repris de vercel.json lors du portage, puis completes
+# par la politique de securite de contenu le 2026-09-18.
+#
+# Workers lit ce fichier nativement depuis le dossier d'assets ; CRA recopie
+# public/ vers build/, il atterrit donc a la racine du site.
+
 /*
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+
+# Justification de chaque directive, verifiee sur le code au 2026-09-18 :
+#
+# script-src 'self'          Le build ne contient AUCUN script inline (verifie sur
+#                            build/index.html). Pas besoin de 'unsafe-inline' ni de
+#                            nonce, donc la directive qui compte vraiment est stricte.
+#
+# style-src 'unsafe-inline'  Necessaire : DashboardPage utilise des style={{...}},
+#                            qui produisent des attributs style. Sans cela, la mise
+#                            en page casse. Tailwind, lui, est dans un fichier externe.
+#
+# img-src https:             Les vignettes de mods viennent des CDN Nexus et les
+#                            visuels de jeux des CDN Steam, dont les noms d'hotes
+#                            varient selon la reponse d'API. Les lister ferait
+#                            disparaitre des images au premier changement cote Nexus.
+#                            Une image n'execute pas de code : le risque residuel est
+#                            la fuite de referrer, deja couverte par Referrer-Policy.
+#
+# connect-src 'self'         Verifie : les seuls appels sortants du navigateur sont
+#                            /api/nexus/* et /api/steam/*, tous de meme origine. Une
+#                            exfiltration vers un domaine tiers est donc bloquee —
+#                            c'est la directive la plus utile ici, puisque
+#                            l'application manipule des cles d'API.
+#
+# object-src 'none'          Aucun plugin, aucune raison d'en autoriser.
+# base-uri 'self'            Empeche la reecriture des URL relatives par un <base> injecte.
+# form-action 'self'         Aucun formulaire ne poste vers l'exterieur.
+# frame-ancestors 'none'     Double de X-Frame-Options, pour les navigateurs recents.
