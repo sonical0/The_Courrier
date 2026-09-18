@@ -98,6 +98,86 @@ async function enforceEdgeLimit(request, env, pathname) {
   );
 }
 
+/**
+ * Cache partage des fiches Steam, avec repli sur valeur perimee.
+ *
+ * LE PROBLEME : Steam limite les IP de sortie de Cloudflare, mutualisees. Une
+ * requete sur trois environ repartait en 403, y compris espacee de 8 s.
+ * `api/steam/game/[appId].mjs` a bien un cache et des reessais, mais son cache
+ * est un `Map` en memoire : propre a chaque isolate, perdu au demarrage a
+ * froid. En pratique son repli perime ne se declenchait jamais.
+ *
+ * LA REPONSE : l'API Cache de Cloudflare. Elle survit aux isolates, donc :
+ *  - une fiche deja servie n'appelle plus Steam pendant FRAIS_MS ;
+ *  - si Steam refuse, on ressert la derniere valeur connue jusqu'a GARDE_S.
+ *
+ * PORTEE : le cache est propre a chaque centre de donnees Cloudflare, pas
+ * global. Un cache reellement global demanderait Workers KV, donc un namespace
+ * a creer et une ecriture facturee ; a reprendre si le taux d'echec reste
+ * genant. Ici, un utilisateur frappe peu de centres, donc le gain est deja
+ * l'essentiel.
+ *
+ * Volontairement limite a /api/steam/* : les routes Nexus portent des donnees
+ * liees a des identifiants et sont marquees `private, no-store`.
+ */
+const STEAM_FRAIS_MS = 2 * 60 * 60_000; // en deca, on sert sans appeler Steam
+const STEAM_GARDE_S = 24 * 60 * 60; // au-dela, l'entree n'a plus d'interet
+
+/** Recopie une reponse en ajoutant des en-tetes (une Response est immuable). */
+const avecEnTetes = (res, entetes) => {
+  const out = new Response(res.body, res);
+  for (const [k, v] of Object.entries(entetes)) out.headers.set(k, v);
+  return out;
+};
+
+// Exportee pour etre testable : le chemin "repli sur valeur perimee" ne peut
+// pas etre declenche a la demande depuis l'exterieur, puisqu'il suppose que
+// Steam refuse pile au moment ou une entree perimee existe.
+export async function steamAvecCache(request, params, env, ctx, handler) {
+  // `caches` n'existe pas partout (dev local selon la configuration) : sans lui
+  // on se contente du comportement d'origine plutot que d'echouer.
+  if (typeof caches === "undefined" || !caches.default) return null;
+
+  const cache = caches.default;
+  const origine = new URL(request.url).origin;
+  // Cle normalisee : la query string est ignoree, sinon un `?cb=123` de test
+  // fragmenterait le cache et le rendrait inutile.
+  const cle = new Request(`${origine}/api/steam/game/${params.appId}`, { method: "GET" });
+
+  const hit = await cache.match(cle);
+  const age = hit ? Date.now() - Number(hit.headers.get("X-Cached-At") || 0) : Infinity;
+
+  if (hit && age < STEAM_FRAIS_MS) {
+    return avecEnTetes(hit, { "X-Steam-Cache": "hit", "X-Steam-Age": String(Math.round(age / 1000)) });
+  }
+
+  const frais = await toWorkerHandler(handler)({ request, params, env, ctx });
+
+  if (frais.status === 200) {
+    const aStocker = avecEnTetes(frais.clone(), {
+      "X-Cached-At": String(Date.now()),
+      // Duree de conservation cote Cloudflare. La fraicheur, elle, est decidee
+      // par X-Cached-At ci-dessus : c'est ce qui rend le repli perime possible.
+      "Cache-Control": `public, s-maxage=${STEAM_GARDE_S}`,
+    });
+    ctx.waitUntil(cache.put(cle, aStocker));
+    return avecEnTetes(frais, { "X-Steam-Cache": "miss" });
+  }
+
+  // Steam a refuse. Une fiche vieille de quelques heures vaut mieux qu'une
+  // erreur : les donnees ne bougent qu'au rythme des patchs.
+  if (hit) {
+    return avecEnTetes(hit, {
+      "X-Steam-Cache": "stale",
+      "X-Steam-Stale": "1",
+      "X-Steam-Age": String(Math.round(age / 1000)),
+      "Cache-Control": "public, s-maxage=300", // retenter bientot, sans marteler
+    });
+  }
+
+  return avecEnTetes(frais, { "X-Steam-Cache": "miss" });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -115,7 +195,12 @@ export default {
       // Pages : l'adaptateur les fusionne ensuite dans req.query, comme Vercel.
       const params = { ...match.pathname.groups };
 
-      const response = await toWorkerHandler(route.handler)({ request, params, env, ctx });
+      // Les fiches Steam passent par le cache partage ; tout le reste va
+      // directement au handler.
+      const cachable = request.method === "GET" && url.pathname.startsWith("/api/steam/game/");
+      const response =
+        (cachable && (await steamAvecCache(request, params, env, ctx, route.handler))) ||
+        (await toWorkerHandler(route.handler)({ request, params, env, ctx }));
 
       // Etat de la barriere distribuee, lisible sans acces au tableau de bord.
       // "off" signale que le binding n'est pas attache au Worker deploye :
