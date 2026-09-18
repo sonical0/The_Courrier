@@ -1,3 +1,0 @@
-# Fallback SPA — equivalent de la rewrite "/(.*)" -> /index.html de vercel.json.
-# Les routes /api/* sont servies par functions/, qui a la priorite sur ce fallback.
-/*    /index.html   200
