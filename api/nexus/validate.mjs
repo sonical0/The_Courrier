@@ -12,6 +12,28 @@ const nexusHeaders = (username, apiKey) => {
   };
 };
 
+/**
+ * Champs relayes au navigateur.
+ *
+ * `/v1/users/validate.json` renvoie bien plus que ce dont l'interface a besoin :
+ * elle n'affiche que `name` ("connecte en tant que ..."). Deux champs de la
+ * reponse Nexus ne doivent jamais sortir d'ici :
+ *
+ * - `email` — adresse du compte. Sur le compte de demonstration publie dans le
+ *   README, n'importe quel visiteur la recuperait en une requete.
+ * - `key` — Nexus re-emet la cle API dans sa propre reponse. La relayer, c'est
+ *   la renvoyer au navigateur alors qu'elle n'a aucune raison d'y revenir.
+ *
+ * LISTE BLANCHE et non liste noire : si Nexus ajoute demain un champ sensible,
+ * il ne fuitera pas par defaut. Elargir cette liste est un choix explicite.
+ */
+const PUBLIC_FIELDS = ["user_id", "name", "profile_url", "is_premium", "is_supporter"];
+
+const publicProfile = (data) =>
+  Object.fromEntries(
+    PUBLIC_FIELDS.filter((k) => data[k] !== undefined).map((k) => [k, data[k]])
+  );
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
@@ -39,12 +61,18 @@ export default async function handler(req, res) {
 
     const text = await response.text();
     if (!response.ok) {
-      throw new Error(`HTTP ${response.status} — ${text || response.statusText}`);
+      // Le statut amont est propage tel quel : une cle invalide est une erreur
+      // du client (401), pas une panne du serveur. Renvoyer 500 rendrait les
+      // vraies pannes indiscernables d'une mauvaise saisie.
+      const err = new Error(`HTTP ${response.status} — ${text || response.statusText}`);
+      err.status = response.status;
+      throw err;
     }
 
     const data = JSON.parse(text);
-    return res.status(200).json(data);
+    return res.status(200).json(publicProfile(data));
   } catch (error) {
-    return res.status(500).json({ error: error.message || String(error) });
+    const status = error.status && error.status >= 400 && error.status < 600 ? error.status : 502;
+    return res.status(status).json({ error: error.message || String(error) });
   }
 }
