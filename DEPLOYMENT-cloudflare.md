@@ -95,6 +95,10 @@ La solution retenue est l'**API Rate Limiting de Workers** (`[[ratelimits]]` dan
 
 **Ce qu'il ne fait pas** : il s'exécute *dans* le Worker, donc il ne supprime pas l'invocation, contrairement à une règle WAF qui bloque en amont. Pour cela il faudrait un domaine sur le compte — à reconsidérer quand le homelab passera derrière Cloudflare Tunnel, qui en suppose un de toute façon.
 
+**Comportement verifie en production le 2026-09-18** : 8 x 429 sur 120 requetes soutenues. La documentation le qualifie de *permissif et eventuellement coherent*, **volontairement pas un systeme de comptage exact** : les compteurs sont caches sur la machine qui execute le Worker et mis a jour en arriere-plan. Une rafale courte passe donc entierement — un premier test de 40 requetes ne declenchait rien. **Tester sur au moins une centaine de requetes.** Cela suffit largement pour la menace reelle : la panne de juin etait une boucle soutenue a 664 req/15 min.
+
+Les bindings de rate limiting **ne sont pas visibles dans le tableau de bord** (la doc le precise). C est la raison d etre de l en-tete `X-Edge-RateLimit: on|off` pose sur chaque reponse /api/* : c est le seul moyen simple de verifier que la barriere est attachee.
+
 `period` n'accepte que **10 ou 60** secondes, et la limite s'applique **par emplacement Cloudflare**, pas globalement.
 
 ### 4. Alerte de consommation
