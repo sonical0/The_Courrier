@@ -1,0 +1,18 @@
+name = "the-courrier"
+pages_build_output_dir = "build"
+
+# >= 2026-08-04 : nodejs_compat et nodejs_compat_v2 sont actifs par defaut.
+# >= 2025-04-01 : nodejs_compat_populate_process_env est actif par defaut, ce qui
+# peuple process.env depuis les variables et secrets du projet Pages. C'est ce qui
+# permet aux handlers de api/ de lire process.env.NEXUS_API_KEY sans modification.
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Variables NON secretes. Les secrets (NEXUS_API_KEY, NEXUS_USERNAME) se posent
+# dans le tableau de bord Pages > Settings > Environment variables, en cochant
+# "Encrypt", ou par `npx wrangler pages secret put NEXUS_API_KEY`.
+# Ne jamais les ecrire ici : ce fichier est versionne.
+[vars]
+NEXUS_APP_NAME = "The Courrier"
+RATE_LIMIT_NEXUS = "30"
+RATE_LIMIT_STEAM = "60"

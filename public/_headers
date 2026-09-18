@@ -1,0 +1,5 @@
+# Equivalent du bloc "headers" de vercel.json.
+/*
+  X-Frame-Options: DENY
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer
