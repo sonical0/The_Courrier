@@ -95,9 +95,11 @@ La solution retenue est l'**API Rate Limiting de Workers** (`[[ratelimits]]` dan
 
 **Ce qu'il ne fait pas** : il s'exécute *dans* le Worker, donc il ne supprime pas l'invocation, contrairement à une règle WAF qui bloque en amont. Pour cela il faudrait un domaine sur le compte — à reconsidérer quand le homelab passera derrière Cloudflare Tunnel, qui en suppose un de toute façon.
 
-**Comportement verifie en production le 2026-09-18** : 8 x 429 sur 120 requetes soutenues. La documentation le qualifie de *permissif et eventuellement coherent*, **volontairement pas un systeme de comptage exact** : les compteurs sont caches sur la machine qui execute le Worker et mis a jour en arriere-plan. Une rafale courte passe donc entierement — un premier test de 40 requetes ne declenchait rien. **Tester sur au moins une centaine de requetes.** Cela suffit largement pour la menace reelle : la panne de juin etait une boucle soutenue a 664 req/15 min.
+**Comportement vérifié en production le 2026-09-18** : 8 × 429 sur 120 requêtes soutenues, avec le corps et le `Retry-After` attendus. La documentation qualifie l'API de *permissive et éventuellement cohérente*, **volontairement pas un système de comptage exact** : les compteurs sont mis en cache sur la machine qui exécute le Worker et mis à jour en arrière-plan, et la limite est locale à chaque emplacement Cloudflare.
 
-Les bindings de rate limiting **ne sont pas visibles dans le tableau de bord** (la doc le precise). C est la raison d etre de l en-tete `X-Edge-RateLimit: on|off` pose sur chaque reponse /api/* : c est le seul moyen simple de verifier que la barriere est attachee.
+Conséquence pratique : **une rafale courte passe entièrement**. Un premier test de 40 requêtes n'a rien déclenché, ce qui m'a fait conclure à tort que la fonctionnalité était absente puis indisponible en plan gratuit. **Tester sur au moins une centaine de requêtes.** Cette imprécision est sans conséquence pour la menace réelle : la panne de juin était une boucle soutenue à 664 req/15 min, exactement ce que ce limiteur borne.
+
+Les bindings de rate limiting **ne sont pas visibles dans le tableau de bord** — la documentation le précise. C'est la raison d'être de l'en-tête `X-Edge-RateLimit: on|off` posé sur chaque réponse `/api/*` : c'est le seul moyen simple de vérifier que la barrière est bien attachée au Worker déployé.
 
 `period` n'accepte que **10 ou 60** secondes, et la limite s'applique **par emplacement Cloudflare**, pas globalement.
 
