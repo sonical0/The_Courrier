@@ -1,80 +1,109 @@
 import { parseChangelog, compareVersions } from './ChangelogUtils';
 
 /**
- * Composant pour afficher un changelog enrichi avec icônes et couleurs
+ * Changelog d'un mod : les premières lignes du journal de version, classées.
+ *
+ * La version précédente donnait à chaque ligne un emoji, une couleur de texte
+ * et un fond teinté — six teintes empilées dans un cadre de 128 px de haut.
+ * L'emoji portait seul la catégorie, donc elle disparaissait au lecteur
+ * d'écran et en noir et blanc, et le texte à 14 px sur fond coloré passait
+ * sous le seuil de contraste.
+ *
+ * Ici la catégorie est un mot, posé devant la ligne.
  */
+
+const MOT_PAR_TYPE = {
+  added: 'Ajout',
+  fixed: 'Correction',
+  changed: 'Modification',
+  removed: 'Suppression',
+  improved: 'Amélioration',
+  deprecated: 'Obsolète',
+};
+
+// Seule la version majeure justifie une alerte : c'est celle qui casse les
+// dépendances. Les autres sont neutres — les colorer toutes revenait à n'en
+// signaler aucune.
+const ETIQUETTE_PAR_VERSION = {
+  major: 'cr-etiquette-attention',
+  minor: 'cr-etiquette-neutre',
+  patch: 'cr-etiquette-neutre',
+  unknown: 'cr-etiquette-neutre',
+};
+
 export default function EnhancedChangelog({ mod, maxLines = 6 }) {
   if (!mod.changelog || mod.changelog.length === 0) {
     return null;
   }
 
   const changelogLines = parseChangelog(mod.changelog[0], maxLines);
-  const updateType = mod.previousVersion && mod.version 
-    ? compareVersions(mod.version, mod.previousVersion)
-    : null;
+  const updateType =
+    mod.previousVersion && mod.version
+      ? compareVersions(mod.version, mod.previousVersion)
+      : null;
 
   if (changelogLines.length === 0) {
     return (
       <div className="mb-4">
-        <small className="font-semibold text-slate-700 dark:text-slate-300 block mb-1">
-          Changelog :
-        </small>
-        <div className="text-sm bg-slate-50 dark:bg-slate-900/50 p-3 rounded">
-          <p className="text-slate-500 dark:text-slate-400 italic mb-0">
-            Aucun détail disponible
-          </p>
-        </div>
+        <h4 className="text-base font-semibold m-0 mb-1">Changelog</h4>
+        <p className="m-0" style={{ color: "var(--cr-muted)" }}>
+          L’auteur n’a pas détaillé cette version.
+        </p>
       </div>
     );
   }
 
-  const hasMore = changelogLines.length === maxLines && 
-    (mod.changelog[0].changes?.join("\n").length > changelogLines.map(l => l.text).join("\n").length);
+  const hasMore =
+    changelogLines.length === maxLines &&
+    mod.changelog[0].changes?.join("\n").length >
+      changelogLines.map((l) => l.text).join("\n").length;
 
   return (
     <div className="mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <small className="font-semibold text-slate-700 dark:text-slate-300">
-          Changelog :
-        </small>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1 mb-2">
+        <h4 className="text-base font-semibold m-0">Changelog</h4>
         {updateType && updateType.type !== 'unknown' && (
-          <span className={`text-xs font-bold px-2 py-1 rounded ${updateType.bg} ${updateType.color}`}>
+          <span
+            className={`cr-etiquette ${ETIQUETTE_PAR_VERSION[updateType.type] || 'cr-etiquette-neutre'}`}
+          >
             {updateType.label}
           </span>
         )}
       </div>
-      
-      <div className="text-sm max-h-32 overflow-y-auto overflow-x-hidden bg-slate-50 dark:bg-slate-900/50 p-2 rounded space-y-1">
+
+      <ul
+        className="m-0 p-0 list-none flex flex-col gap-2 overflow-y-auto"
+        style={{ maxHeight: "16rem" }}
+      >
         {changelogLines.map((line, i) => (
-          <div
-            key={i}
-            className={`flex items-start gap-2 p-1.5 rounded ${line.bg}`}
-          >
-            <span className="text-base flex-shrink-0 mt-0.5" title={line.type}>
-              {line.icon}
-            </span>
-            <span className={`${line.color} text-sm leading-relaxed flex-1 break-words overflow-wrap-anywhere whitespace-normal`}>
-              {line.text}
-            </span>
-          </div>
+          <li key={i} className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            {MOT_PAR_TYPE[line.type] && (
+              <span
+                className="font-semibold flex-shrink-0"
+                style={{ color: "var(--cr-muted)" }}
+              >
+                {MOT_PAR_TYPE[line.type]} —
+              </span>
+            )}
+            <span className="flex-1 min-w-0 overflow-wrap-anywhere">{line.text}</span>
+          </li>
         ))}
         {hasMore && (
-          <div className="flex items-start gap-2 p-1.5">
-            <span className="text-slate-400 dark:text-slate-600 text-sm italic">
-              …
-            </span>
-          </div>
+          <li style={{ color: "var(--cr-muted)" }}>
+            … la suite est sur la page du mod.
+          </li>
         )}
-      </div>
-      
+      </ul>
+
       {mod.changelogUrl && (
         <a
           href={mod.changelogUrl}
           target="_blank"
           rel="noreferrer"
-          className="text-sm text-pico-primary hover:underline inline-block mt-2"
+          className="inline-block mt-2"
+          style={{ color: "var(--cr-accent)" }}
         >
-          Voir le changelog complet →
+          Voir le changelog complet
         </a>
       )}
     </div>

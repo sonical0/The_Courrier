@@ -66,19 +66,32 @@ async function getGameInfo(domain, username, apiKey) {
       id: gameInfo.id,
       name: gameInfo.name,
       domain: gameInfo.domain_name || domain,
+      resolu: true,
     };
     cacheSet(ck, info, TTL.game);
     return info;
   } catch (error) {
-
-    const fallback = {
+    // Le repli portait `name: domain`, c'est-à-dire le slug — une valeur
+    // truthy qui ressemble à un nom de jeu. Conséquence : l'échec se
+    // déguisait en succès, écrasait au passage le vrai nom renvoyé par
+    // l'endpoint des mods suivis (voir plus bas), et l'interface affichait
+    // « cyberpunk2077 » sans que rien n'indique une panne.
+    //
+    // Désormais le nom reste NUL quand il n'a pas pu être résolu : c'est à
+    // l'appelant de choisir un affichage de repli, en connaissance de cause.
+    const echec = {
       id: null,
-      name: domain,
+      name: null,
       domain: domain,
+      resolu: false,
+      raison: error?.status ? `HTTP ${error.status}` : error?.message || "inconnue",
     };
 
-    cacheSet(ck, fallback, 5 * 60_000);
-    return fallback;
+    // Échec mis en cache brièvement : assez pour ne pas marteler l'API amont
+    // si elle nous limite, assez peu pour que le nom réapparaisse de lui-même
+    // dès qu'elle redevient disponible.
+    cacheSet(ck, echec, 5 * 60_000);
+    return echec;
   }
 }
 
@@ -87,6 +100,9 @@ export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Nexus-Username, X-Nexus-ApiKey");
+  // Sans cette ligne, un appel depuis une autre origine ne pourrait pas lire
+  // les en-tetes de diagnostic — le navigateur les masque par defaut.
+  res.setHeader("Access-Control-Expose-Headers", "X-Nexus-Games-Unresolved, X-Nexus-Games-Reason");
   // Reponse propre a un compte Nexus : jamais de cache partage en amont,
   // sinon la liste de mods d'un utilisateur serait servie a un autre.
   res.setHeader("Cache-Control", "private, no-store");
@@ -138,6 +154,20 @@ export default async function handler(req, res) {
         gameName: m.game_name ?? m.game?.name,
       };
     }).filter((m) => m.id && m.domain);
+
+    // Les infos de jeu sont demandées AVANT l'enrichissement mod par mod.
+    //
+    // Elles étaient réclamées en dernier, après un appel par mod suivi : sur un
+    // compte qui en suit beaucoup, le quota horaire de l'API Nexus est déjà
+    // consommé quand leur tour arrive, et ce sont elles qui échouent — quatre
+    // requêtes qui coûtent peu mais qui nomment tous les jeux de l'interface.
+    // Elles passent donc en premier, où elles sont quasi gratuites.
+    const domainesUniques = [...new Set(rows.map((m) => m.domain).filter(Boolean))];
+    const infosJeux = await Promise.all(
+      domainesUniques.map((domain) => getGameInfo(domain, username, apiKey))
+    );
+    const jeuxParDomaine = new Map(infosJeux.map((g) => [g.domain, g]));
+    const jeuxNonResolus = infosJeux.filter((g) => !g.resolu);
 
     const enriched = await withPool(rows, 4, async (m) => {
       const ck = kMod(username, m.domain, m.id);
@@ -219,22 +249,36 @@ export default async function handler(req, res) {
 
     enriched.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
-    const uniqueDomains = [...new Set(enriched.map(m => m.domain).filter(Boolean))];
-    const gamesInfo = await Promise.all(
-      uniqueDomains.map(domain => getGameInfo(domain, username, apiKey))
-    );
-    const gamesMap = new Map(gamesInfo.map(g => [g.domain, g]));
-
-    const enrichedWithGames = enriched.map(m => {
-      const gameInfo = gamesMap.get(m.domain);
+    const enrichedWithGames = enriched.map((m) => {
+      const infoJeu = jeuxParDomaine.get(m.domain);
       return {
         ...m,
-        gameId: m.gameId || gameInfo?.id,
-        gameName: gameInfo?.name || m.gameName,
+        gameId: m.gameId || infoJeu?.id,
+        // L'ordre était inversé : l'info de jeu passait avant la donnée du mod,
+        // donc un repli portant le slug écrasait un vrai nom. Le nom du mod
+        // d'abord, l'info de jeu ensuite, le slug en dernier recours.
+        gameName: m.gameName || infoJeu?.name || m.domain,
+        // Permet au client de distinguer « ce jeu s'appelle vraiment comme ça »
+        // de « on n'a pas pu récupérer son nom ».
+        gameNameResolu: Boolean(m.gameName || infoJeu?.resolu),
       };
     });
 
     cacheSet(kTracked(username), enrichedWithGames, TTL.tracked);
+
+    // Rendre l'échec visible depuis le navigateur : c'était l'angle mort. Le
+    // journal de diagnostic ne trace que les appels navigateur → Worker, et
+    // cette requête répond 200 même quand tous les noms de jeux manquent.
+    if (jeuxNonResolus.length > 0) {
+      res.setHeader(
+        "X-Nexus-Games-Unresolved",
+        `${jeuxNonResolus.length}/${domainesUniques.length}`
+      );
+      res.setHeader(
+        "X-Nexus-Games-Reason",
+        jeuxNonResolus.map((g) => `${g.domain}:${g.raison}`).join(", ").slice(0, 200)
+      );
+    }
 
     return res.status(200).json(enrichedWithGames);
   } catch (error) {

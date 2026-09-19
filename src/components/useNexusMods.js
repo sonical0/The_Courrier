@@ -154,13 +154,26 @@ export default function useNexusMods(credentials = null, credentialsLoading = fa
     for (const m of mods) {
       const key = m.domain || m.gameId || m.gameName;
       if (!key) continue;
+      // L'entrée était figée sur le PREMIER mod rencontré : si celui-là
+      // n'avait ni nom de jeu ni identifiant, le jeu restait affiché sous son
+      // slug alors qu'un autre de ses mods portait l'information. On complète
+      // donc l'entrée au fil des mods, sans jamais remplacer une valeur déjà
+      // résolue par une moins bonne.
       if (!map.has(key)) {
         map.set(key, {
           key,
           domain: m.domain,
           gameId: m.gameId,
           name: m.gameName || m.domain || `Game ${m.gameId || ""}`.trim(),
+          nomResolu: Boolean(m.gameNameResolu ?? m.gameName),
         });
+      } else {
+        const jeu = map.get(key);
+        if (!jeu.gameId && m.gameId) jeu.gameId = m.gameId;
+        if (!jeu.nomResolu && (m.gameNameResolu ?? m.gameName)) {
+          jeu.name = m.gameName || jeu.name;
+          jeu.nomResolu = true;
+        }
       }
     }
     return Array.from(map.values()).sort((a, b) =>

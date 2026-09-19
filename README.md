@@ -57,6 +57,31 @@ Contrairement à l'interface standard de Nexus Mods, The Courrier offre une exp�
 
 ---
 
+## Interface : la couche de jetons `cr-*`
+
+Depuis la refonte du 19 septembre 2026, **les écrans ne posent plus de couleur Tailwind en dur**.
+Tout passe par une couche de jetons définie dans `src/index.css` : `--cr-ground`, `--cr-surface`,
+`--cr-ink`, `--cr-muted`, `--cr-accent`, `--cr-ok` / `--cr-warn` / `--cr-crit`, et des classes de
+composants (`cr-bouton`, `cr-etiquette`, `cr-mod`, `cr-chiffre`, `cr-filtre`, `cr-jeu-icone`…).
+
+**Trois règles, à respecter dans toute contribution :**
+
+1. **Pas de `dark:`, pas de `pico-card`, pas de `text-slate-*` ni `bg-*` littéral** dans `src/pages/`
+   ni `src/components/`. Le thème sombre est obtenu en redéfinissant les jetons, pas en doublant
+   chaque règle. Un `grep` suffit à vérifier.
+2. **Aucun état signalé par la seule couleur.** Une étiquette porte un mot écrit ; la teinte ne fait
+   que le doubler. Vaut aussi pour les emoji : ils ne sont pas lus par un lecteur d'écran et ne
+   survivent pas à une impression en noir et blanc.
+3. **14 px de taille de texte minimum, 44 px pour toute cible tactile.**
+
+Le thème a **trois** états — `systeme` (défaut), `light`, `dark` — gérés par `src/components/useTheme.js`.
+En mode système, la page suit `prefers-color-scheme` en direct.
+
+> **Les captures d'écran ci-dessous datent d'avant cette refonte** et ne reflètent plus l'interface.
+> À refaire.
+
+---
+
 ## Captures d'écran
 
 ### Dashboard - Premier lancement (Mode clair)

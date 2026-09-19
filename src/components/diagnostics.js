@@ -161,6 +161,10 @@ export function installer() {
         cacheSteam: reponse.headers.get("X-Steam-Cache") || undefined,
         perime: reponse.headers.get("X-Steam-Stale") || undefined,
         limiteur: reponse.headers.get("X-Edge-RateLimit") || undefined,
+        // Une reponse 200 peut porter des noms de jeux manquants : sans cet
+        // en-tete, la panne est invisible cote navigateur.
+        jeuxNonResolus: reponse.headers.get("X-Nexus-Games-Unresolved") || undefined,
+        jeuxRaison: reponse.headers.get("X-Nexus-Games-Reason") || undefined,
       });
       return reponse;
     } catch (e) {

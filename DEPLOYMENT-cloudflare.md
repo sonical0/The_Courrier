@@ -193,6 +193,32 @@ Trois couches, posées dans cet ordre, de la moins efficace à la plus efficace 
 - `X-Steam-Cache: hit | miss | stale` — d'où vient la réponse.
 - `X-Steam-Age: <secondes>` — âge de l'entrée servie.
 - `X-Steam-Stale: 1` — Steam a refusé, c'est la dernière valeur connue qui est servie.
+- `X-Nexus-Games-Unresolved: <n>/<total>` — nombre de jeux dont le nom n'a pas pu être récupéré.
+- `X-Nexus-Games-Reason: <domaine>:<raison>, …` — pourquoi, tronqué à 200 caractères.
+
+Les deux derniers sont posés par `api/nexus/tracked.mjs` et exposés via
+`Access-Control-Expose-Headers`. Ils sont enregistrés par le journal de diagnostic du navigateur,
+donc présents dans l'export que l'utilisateur peut joindre à un rapport.
+
+> [!] **Pourquoi ces deux-là existent.** Le 2026-09-19, l'interface a affiché `cyberpunk2077` et
+> `fallout4` en minuscules, sans icône, à côté de « Baldur's Gate 3 ». Cause : `getGameInfo()`
+> interroge `api.nexusmods.com/v1/games/<domain>.json` et, en cas d'échec, retombait sur
+> `{ id: null, name: domain }`. Le slug étant une valeur *truthy* qui ressemble à un nom, **l'échec
+> se déguisait en succès** : la requête `/api/nexus/tracked` répondait 200, rien n'était journalisé,
+> et le seul symptôme était un nom qui avait l'air bizarre. Le repli ne porte plus de nom du tout
+> (`name: null`, `resolu: false`) et l'échec remonte jusqu'au navigateur. **Une réponse 200 aux
+> données dégradées est plus difficile à diagnostiquer qu'une erreur franche** — c'est ce que ces
+> en-têtes corrigent.
+
+### Ordre des appels à l'API Nexus
+
+Les infos de jeu sont demandées **avant** l'enrichissement mod par mod, et non après.
+
+Elles étaient réclamées en dernier, après un appel par mod suivi. Sur un compte qui suit beaucoup
+de mods, le quota horaire Nexus est déjà largement consommé quand leur tour arrive — et ce sont
+elles qui échouent, alors qu'elles ne coûtent que quelques requêtes et nomment tous les jeux de
+l'interface. **Hypothèse non confirmée** faute de trace du statut renvoyé par Nexus au moment de
+l'incident : c'est précisément ce que les en-têtes ci-dessus permettront de vérifier au prochain.
 
 ### Détails qui comptent
 

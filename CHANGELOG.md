@@ -1,5 +1,75 @@
 # Changelog - The Courrier
 
+## Version 5.1.0 - Noms de jeux : la panne qui se faisait passer pour une donnee (19 Septembre 2026)
+
+### Corrige
+
+#### Un echec d'API se deguisait en nom de jeu
+- `api/nexus/tracked.mjs` : `getGameInfo()` interroge `api.nexusmods.com/v1/games/<domain>.json`
+  et retombait, en cas d'echec, sur `{ id: null, name: domain }`. Le slug etant une valeur truthy
+  qui ressemble a un nom, l'interface affichait `cyberpunk2077` sans icone au lieu de
+  « Cyberpunk 2077 », et la requete repondait 200 : **rien n'indiquait une panne**
+- Le repli ne porte plus de nom (`name: null`, `resolu: false`, `raison`) : c'est a l'appelant de
+  choisir un affichage de secours, en connaissance de cause
+- L'ordre de fusion etait inverse (`gameInfo?.name || m.gameName`) : le repli **ecrasait** un vrai
+  nom quand l'endpoint des mods suivis en fournissait un. Devenu `m.gameName || infoJeu?.name || m.domain`
+- Les infos de jeu sont demandees **avant** l'enrichissement mod par mod : elles etaient reclamees
+  en dernier, quand le quota horaire Nexus est deja consomme
+- `src/components/useNexusMods.js` : l'entree d'un jeu etait figee sur le **premier** mod rencontre.
+  Si celui-la n'avait ni nom ni identifiant de jeu, le jeu restait sous son slug meme si un autre de
+  ses mods portait l'information. L'entree se complete desormais au fil des mods
+
+#### Diagnostic : la reponse 200 degradee est desormais visible
+- Nouveaux en-tetes `X-Nexus-Games-Unresolved: <n>/<total>` et `X-Nexus-Games-Reason`, exposes via
+  `Access-Control-Expose-Headers` et enregistres par le journal de diagnostic du navigateur
+- Sans eux, le seul symptome etait un nom qui avait l'air bizarre — le journal ne trace que les
+  appels navigateur vers le Worker, jamais le Worker vers Nexus
+
+### Modifie
+
+#### Quatre composants repris sur la couche de jetons
+- `SteamGameInfo`, `EnhancedChangelog`, `GameUpdateAlert`, `CredentialsModal` : la refonte du 19/09
+  n'avait couvert que les pages. Plus aucun `dark:` ni emoji dans `src/components/`
+- `ChangelogUtils.js` melangeait classification et presentation (un emoji et deux chaines Tailwind
+  par categorie). Il ne renvoie plus qu'un `type` ; le composant ecrit « Correction — », « Ajout — ».
+  L'emoji portait seul le sens : invisible au lecteur d'ecran, muet en noir et blanc
+- `SteamGameInfo` affichait un Build ID tronque a dix caracteres suivis de points de suspension —
+  or c'est justement la valeur qu'on veut comparer. Il est affiche en entier
+- `CredentialsModal` n'etait pas une boite de dialogue : ni `role="dialog"`, ni `aria-modal`, Echap
+  ne la fermait pas, le focus restait dans la page derriere. Corrige
+
+### Tests
+- Deux assertions de `CredentialsModal.test.jsx` portaient sur une classe de couleur
+  (`toHaveClass("text-green-700")`) : une assertion de comportement liee a la feuille de style.
+  L'etat passe par `data-etat="succes|erreur"`
+- 120/120
+
+## Version 5.0.0 - Refonte graphique : lisible et responsive (19 Septembre 2026)
+
+### Modifie
+
+#### Couche de jetons `cr-*` sur les six ecrans
+- Tableau de bord, mises a jour, mods suivis, incompatibilites, 404 et erreur de route
+- Plus aucun `dark:`, `pico-card` ni couleur Tailwind litterale dans `src/pages/`
+- Theme a **trois** etats (`systeme` par defaut, `light`, `dark`) : l'ancien hook imposait le clair
+  au premier chargement quel que soit le reglage de l'appareil
+- Menu burger replie a 768 px au lieu de 1280 — l'ancien seuil affichait le menu replie sur des
+  ecrans larges — et portant le nom de la section courante
+- En-tete passe de 285 a ~180 lignes : un seul balisage replie par CSS, au lieu d'une version
+  bureau et d'une version mobile dupliquees
+- 31 emoji retires ; les porteurs de sens remplaces par une etiquette avec un mot ecrit
+- Icones de jeu Nexus a la place des vignettes generiques (`gameId` transmis par `useDashboardStats`)
+
+### Corrige
+- L'echelle des barres d'activite valait `count / totalMods x 100 x 5` : un facteur arbitraire qui
+  faisait deborder la barre des qu'une semaine depassait 20 % du total
+- `AppLayout` peignait encore le fond en `bg-slate-50` : la couche de jetons n'etait pas appliquee
+  au fond de page, alors que tout le reste en dependait
+- Les noms de mods tronques par `truncate` sont rendus sur deux lignes
+- Le message d'import flottait sous l'en-tete collant et le recouvrait ; passe en bas, en `role="status"`
+- La case « Selectionner » portait le nom du mod dans un span cache, ce qui dupliquait le nom dans
+  le DOM ; passe en `aria-label`
+
 ## Version 4.0.0 - Optimisations techniques : chiffrement + cache + compression (10 Juin 2026)
 
 ### Nouvelles Fonctionnalites

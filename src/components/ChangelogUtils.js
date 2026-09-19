@@ -24,44 +24,39 @@ function htmlToPlainText(html) {
   return decodeEntities(noTags);
 }
 
+// Ce module portait aussi la présentation : un emoji et deux chaînes de
+// classes Tailwind par catégorie. Résultat, changer l'apparence obligeait à
+// modifier de la logique de classification, et l'emoji était le seul porteur
+// du sens — invisible pour un lecteur d'écran, muet en noir et blanc.
+//
+// Il ne renvoie plus qu'un `type`. C'est au composant de décider comment le
+// montrer, et il le fait avec un mot écrit.
 const CHANGELOG_PATTERNS = [
-  { type: 'added', regex: /^[\s\-*•]*\s*(added|new|nouveau|ajout)/i, icon: '✨', color: 'text-green-600 dark:text-green-400', bg: 'bg-green-50 dark:bg-green-900/20' },
-  { type: 'fixed', regex: /^[\s\-*•]*\s*(fixed|fix|correction|corrigé|bug)/i, icon: '🔧', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20' },
-  { type: 'changed', regex: /^[\s\-*•]*\s*(changed|change|modif|updated|update)/i, icon: '🔄', color: 'text-yellow-600 dark:text-yellow-400', bg: 'bg-yellow-50 dark:bg-yellow-900/20' },
-  { type: 'removed', regex: /^[\s\-*•]*\s*(removed|remove|deleted|supprimé|suppression)/i, icon: '🗑️', color: 'text-red-600 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
-  { type: 'improved', regex: /^[\s\-*•]*\s*(improved|improve|optimization|optimized|enhanced)/i, icon: '⚡', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-50 dark:bg-purple-900/20' },
-  { type: 'deprecated', regex: /^[\s\-*•]*\s*(deprecated|obsolete)/i, icon: '⚠️', color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-50 dark:bg-orange-900/20' },
+  { type: 'added', regex: /^[\s\-*•]*\s*(added|new|nouveau|ajout)/i },
+  { type: 'fixed', regex: /^[\s\-*•]*\s*(fixed|fix|correction|corrigé|bug)/i },
+  { type: 'changed', regex: /^[\s\-*•]*\s*(changed|change|modif|updated|update)/i },
+  { type: 'removed', regex: /^[\s\-*•]*\s*(removed|remove|deleted|supprimé|suppression)/i },
+  { type: 'improved', regex: /^[\s\-*•]*\s*(improved|improve|optimization|optimized|enhanced)/i },
+  { type: 'deprecated', regex: /^[\s\-*•]*\s*(deprecated|obsolete)/i },
 ];
 
 /**
- * Analyse une ligne de changelog et retourne son type avec style
+ * Analyse une ligne de changelog et retourne sa catégorie.
  */
 export function categorizeChangelogLine(line) {
   if (!line || typeof line !== 'string') {
-    return { type: 'default', icon: '•', color: 'text-slate-600 dark:text-slate-400', bg: 'bg-slate-50 dark:bg-slate-800/50', text: line || '' };
+    return { type: 'default', text: line || '' };
   }
 
   const trimmedLine = line.trim();
-  
+
   for (const pattern of CHANGELOG_PATTERNS) {
     if (pattern.regex.test(trimmedLine)) {
-      return {
-        type: pattern.type,
-        icon: pattern.icon,
-        color: pattern.color,
-        bg: pattern.bg,
-        text: trimmedLine,
-      };
+      return { type: pattern.type, text: trimmedLine };
     }
   }
 
-  return {
-    type: 'default',
-    icon: '•',
-    color: 'text-slate-600 dark:text-slate-400',
-    bg: 'bg-slate-50 dark:bg-slate-800/50',
-    text: trimmedLine,
-  };
+  return { type: 'default', text: trimmedLine };
 }
 
 /**
@@ -84,39 +79,22 @@ export function compareVersions(currentVersion, previousVersion) {
   const current = parseVersion(currentVersion);
   const previous = parseVersion(previousVersion);
 
+  // Le libellé dit ce que l'utilisateur doit en retenir. Une version majeure
+  // est celle qui casse le plus souvent les dépendances : elle mérite le seul
+  // niveau d'alerte du lot.
   if (current.major > previous.major) {
-    return { 
-      type: 'major', 
-      label: '🚀 Mise à jour MAJEURE',
-      color: 'text-red-700 dark:text-red-400',
-      bg: 'bg-red-100 dark:bg-red-900/30'
-    };
+    return { type: 'major', label: 'Version majeure' };
   }
 
   if (current.minor > previous.minor) {
-    return { 
-      type: 'minor', 
-      label: '⭐ Mise à jour mineure',
-      color: 'text-orange-700 dark:text-orange-400',
-      bg: 'bg-orange-100 dark:bg-orange-900/30'
-    };
+    return { type: 'minor', label: 'Version mineure' };
   }
 
   if (current.patch > previous.patch) {
-    return { 
-      type: 'patch', 
-      label: '🔧 Correctif',
-      color: 'text-blue-700 dark:text-blue-400',
-      bg: 'bg-blue-100 dark:bg-blue-900/30'
-    };
+    return { type: 'patch', label: 'Correctif' };
   }
 
-  return { 
-    type: 'unknown', 
-    label: 'Mise à jour',
-    color: 'text-slate-700 dark:text-slate-400',
-    bg: 'bg-slate-100 dark:bg-slate-800/50'
-  };
+  return { type: 'unknown', label: 'Mise à jour' };
 }
 
 /**

@@ -1,5 +1,12 @@
 /**
- * Composant pour afficher les alertes de mise à jour de jeux
+ * Alertes flottantes : un jeu suivi vient de changer de build.
+ *
+ * C'est l'information la plus urgente de l'application — un patch de moteur
+ * casse les mods qui dépendent d'un chargeur de scripts. L'ancienne version la
+ * rendait en jaune sur jaune, avec un texte à 12 px et un triangle emoji pour
+ * seule mention de gravité ; le bouton de fermeture faisait 20 px, sous le
+ * seuil tactile. Elle n'était par ailleurs annoncée par aucun rôle ARIA alors
+ * qu'elle apparaît sans action de l'utilisateur.
  */
 export default function GameUpdateAlert({ alerts, onDismiss, onDismissAll }) {
   if (!alerts || alerts.length === 0) {
@@ -7,65 +14,76 @@ export default function GameUpdateAlert({ alerts, onDismiss, onDismissAll }) {
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-md space-y-2">
+    <div
+      role="status"
+      aria-live="polite"
+      className="fixed z-50 flex flex-col gap-2"
+      style={{
+        bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+        right: "1rem",
+        left: "1rem",
+        maxWidth: "28rem",
+        marginLeft: "auto",
+      }}
+    >
       {alerts.map((alert) => (
-        <div
+        <article
           key={alert.id}
-          className="bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 dark:border-yellow-600 p-4 rounded-r-lg shadow-lg animate-slide-in"
+          className="p-4 animate-slide-in"
+          style={{
+            background: "var(--cr-surface)",
+            borderLeft: "4px solid var(--cr-warn)",
+            border: "1px solid var(--cr-line)",
+            borderLeftWidth: "4px",
+            borderLeftColor: "var(--cr-warn)",
+            borderRadius: "var(--cr-radius)",
+            boxShadow: "0 6px 24px rgba(0, 0, 0, 0.18)",
+          }}
         >
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0">
-              <span className="text-2xl">⚠️</span>
-            </div>
-            <div className="flex-1">
-              <h4 className="text-sm font-bold text-yellow-800 dark:text-yellow-300 mb-1">
-                Mise à jour du jeu détectée
-              </h4>
-              <p className="text-sm text-yellow-700 dark:text-yellow-400 mb-2">
-                <strong>{alert.gameName}</strong> a été mis à jour !
+            <div className="flex-1 min-w-0">
+              <p className="m-0 mb-1">
+                <span className="cr-etiquette cr-etiquette-attention">Patch détecté</span>
               </p>
-              <div className="text-xs text-yellow-600 dark:text-yellow-500 space-y-1">
-                <p>
-                  Version: <span className="line-through">{alert.oldVersion}</span> →{" "}
-                  <strong>{alert.newVersion}</strong>
-                </p>
-                <p>
-                  Build ID: <span className="line-through">{alert.oldBuildId}</span> →{" "}
-                  <strong>{alert.newBuildId}</strong>
-                </p>
-              </div>
-              <p className="text-xs text-yellow-600 dark:text-yellow-500 mt-2 italic">
-                ⚡ Vérifiez la compatibilité de vos mods !
+              <h3 className="text-base font-semibold m-0 overflow-wrap-anywhere">
+                {alert.gameName} a été mis à jour
+              </h3>
+
+              <p className="cr-transition mt-2 mb-0">
+                <span className="cr-transition-avant">{alert.oldVersion}</span>
+                <span aria-hidden="true" style={{ color: "var(--cr-muted)" }}>
+                  →
+                </span>
+                <span className="cr-transition-apres">{alert.newVersion}</span>
+              </p>
+              <p className="cr-transition mt-1 mb-0">
+                <span className="cr-transition-avant">build {alert.oldBuildId}</span>
+                <span aria-hidden="true" style={{ color: "var(--cr-muted)" }}>
+                  →
+                </span>
+                <span className="cr-transition-apres">build {alert.newBuildId}</span>
+              </p>
+
+              <p className="mt-2 mb-0">
+                Les mods dépendant d’un chargeur de scripts (SKSE, F4SE…) cessent généralement de
+                fonctionner après une mise à jour du moteur.
               </p>
             </div>
+
             <button
+              type="button"
               onClick={() => onDismiss(alert.id)}
-              className="flex-shrink-0 text-yellow-600 hover:text-yellow-800 dark:text-yellow-400 dark:hover:text-yellow-200 transition-colors"
-              aria-label="Fermer l'alerte"
+              className="cr-bouton flex-shrink-0"
+              aria-label={`Masquer l’alerte pour ${alert.gameName}`}
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              Masquer
             </button>
           </div>
-        </div>
+        </article>
       ))}
-      
+
       {alerts.length > 1 && (
-        <button
-          onClick={onDismissAll}
-          className="w-full px-3 py-2 text-xs bg-yellow-100 dark:bg-yellow-900/40 hover:bg-yellow-200 dark:hover:bg-yellow-900/60 text-yellow-800 dark:text-yellow-300 rounded-lg transition-colors font-medium"
-        >
+        <button type="button" onClick={onDismissAll} className="cr-bouton w-full">
           Tout masquer ({alerts.length})
         </button>
       )}
