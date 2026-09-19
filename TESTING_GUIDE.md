@@ -2,7 +2,7 @@
 
 > **Pré-requis credentials** : voir [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)
 
-> **Exécution locale/CI** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
+> **Exécution locale/CI** : voir [DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)
 
 ## Credentials de Test
 

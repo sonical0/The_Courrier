@@ -1,194 +1,125 @@
-# The Courrier - AI Agent Guide
+# The Courrier — guide pour agents IA
 
-## Project Overview
-React 19 SPA for tracking Nexus Mods updates. Serverless architecture (Vercel) with user-provided credentials stored in localStorage. No backend database—all state is client-side or cached in serverless functions.
+SPA React 19 qui suit les mises à jour de mods Nexus Mods et les versions de jeux Steam.
+Aucune base de données : l'état vit dans le navigateur ou dans le cache mémoire du serveur.
+Les identifiants sont fournis par l'utilisateur et stockés chiffrés dans son `localStorage` —
+ils ne sont jamais persistés côté serveur.
+
+> Ce fichier décrivait une architecture Vercel jusqu'au 2026-09-19 et renvoyait à un
+> `vercel.json` supprimé du dépôt. L'hébergement est **Cloudflare Workers** depuis le 2026-09-18.
 
 ## Architecture
 
-### Frontend Structure
-- **Pages**: [ActuUpdatePage.jsx](../src/pages/ActuUpdatePage.jsx) (recent updates), [NexusModsPage.jsx](../src/pages/NexusModsPage.jsx) (all tracked mods)
-- **Custom Hooks Pattern**: All logic in `src/components/use*.js` hooks, not components
-  - `useNexusMods.js`: API calls with credential headers, data normalization
-  - `useNexusCredentials.js`: localStorage management for username/apiKey
-  - `useLastVisit.js`: Track visit timestamps for "NEW" badges
-  - `useTheme.js`: Dark/light mode persistence
-- **Components**: Only UI components (modals, changelog displays)
+### Front
 
-### Backend Structure
-- **Dev Server**: [server.mjs](../server.mjs) (Express, port 4000, run with `npm run server`)
-- **Production**: Serverless functions in [api/nexus/](../api/nexus/) (Vercel)
-  - `tracked.mjs`: Fetch tracked mods with enrichment (game names, categories, changelogs)
-  - `untrack.mjs`: Remove mod from tracking
-  - `validate.mjs`: Validate credentials
-- **Dual Auth**: Functions read credentials from `X-Nexus-Username`/`X-Nexus-ApiKey` headers (user-provided) OR env vars (legacy fallback)
+- **Pages** : `src/pages/` — `DashboardPage`, `ActuUpdatePage`, `NexusModsPage`,
+  `IncompatibilityPage`, plus `NotFoundPage` et `RouteErrorPage`.
+- **Toute la logique est dans des hooks** `src/components/use*.js`, jamais dans le JSX :
+  `useNexusMods` (appels API et normalisation), `useNexusCredentials` (multi-comptes chiffrés),
+  `useDashboardStats`, `useSteamGames`, `useModTags`, `useLastVisit`, `useNotifications`,
+  `useConfigBackup`, `useTheme`.
+- **Composants** : uniquement de l'affichage.
 
-### Data Flow
-1. User enters credentials → stored in localStorage
-2. `useNexusMods` hook passes credentials as headers to `/api/nexus/*`
-3. Serverless function adds credentials to Nexus API requests
-4. Response enriched with game names, categories, changelogs
-5. Frontend normalizes data (see `toEpoch` helper for timestamp handling)
+### Back
 
-## Critical Patterns
+- **Production** : `worker.mjs` (Cloudflare Workers) porte la table de routes `URLPattern`,
+  le rate limiting et le cache Steam partagé. Il appelle les handlers de `api/` via
+  `api/utils/workerAdapter.mjs`.
+- **Développement** : `server.mjs` (Express, port 4000, `npm run server`).
+- **Handlers** : `api/nexus/{tracked,untrack,validate}.mjs`, `api/steam/game/[appId].mjs`.
+  Ils gardent la signature Node `handler(req, res)` — héritage conservé volontairement, parce
+  que `server.mjs` s'en sert aussi. **Ne pas les « moderniser » en handlers Fetch.**
+- **Authentification** : les handlers lisent `X-Nexus-Username` / `X-Nexus-ApiKey`, avec repli
+  sur les variables d'environnement.
 
-### Timestamp Normalization
-Nexus API returns inconsistent timestamp formats. Always use the `toEpoch` utility (exists in hooks and backend):
-```javascript
-const toEpoch = (v) => {
-  if (!v) return 0;
-  if (typeof v === "number") return v;
-  // handles both Unix timestamps and ISO strings
-  if (typeof v === "string") {
-    const n = Number(v);
-    if (!Number.isNaN(n) && n > 0) return n;
-    const d = Date.parse(v);
-    if (!Number.isNaN(d)) return Math.floor(d / 1000);
-  }
-  return 0;
-};
-```
+## Le piège principal : `server.mjs` réimplémente les routes
 
-### Code Synchronization (Critical!)
-**Dev server ([server.mjs](../server.mjs)) and serverless functions ([api/nexus/](../api/nexus/)) must stay in sync.** Changes to one require updating the other.
+`server.mjs` **ne réutilise pas** `api/nexus/tracked.mjs` : il en redéfinit sa propre version
+(≈150 lignes). Seuls les utilitaires sont partagés, via `api/utils/NexusUtils.mjs`
+(`toEpoch`, `getCategoryName`, `withPool`, `sortVersionsSemantic`) et `api/utils/rateLimit.mjs`.
 
-Duplicated code to keep synchronized:
-- `toEpoch()` utility function (all 3 files)
-- `nexusHeaders()` helper (all 3 files - must accept username/apiKey params)
-- `getCategoryName()` function (server.mjs + api/nexus/tracked.mjs)
-- `withPool()` concurrency helper (server.mjs + api/nexus/tracked.mjs)
-- `getGameInfo()` game metadata fetcher (server.mjs + api/nexus/tracked.mjs)
-- Changelog version sorting logic (semantic versioning, not alphabetical)
+**Toute modification de la logique de `api/nexus/tracked.mjs` doit être reportée dans
+`server.mjs`, et inversement.** Le 2026-09-19, un correctif n'a été appliqué qu'à la version de
+production : le serveur de dev a continué pendant plusieurs heures à produire des données
+différentes de la prod, sans que rien ne le signale.
 
-### Category System
-Game mod categories are centralized in [src/data/nexus-categories.json](../src/data/nexus-categories.json). To add a new game:
-1. Follow [ADDING_GAME_CATEGORIES.md](../ADDING_GAME_CATEGORIES.md) extraction script
-2. Add category mapping to the JSON file (automatically used by both server.mjs and api/nexus/tracked.mjs)
-3. Use game's `domain_name` as key (e.g., `skyrimspecialedition`)
+Blocs à garder synchronisés :
 
-### Caching Strategy
-Both dev server and serverless functions use in-memory `Map` cache with TTLs:
-- Tracked mods: 60s
-- Individual mod details: 10 min
-- Game metadata: 24h
+1. `getGameInfo()` — et notamment son repli d'échec, qui ne doit **jamais** porter le slug
+   comme nom (voir plus bas)
+2. `nexusHeaders(username, apiKey)`
+3. L'ordre des appels : infos de jeu **avant** l'enrichissement mod par mod
+4. La fusion `gameName: m.gameName || infoJeu?.name || m.domain`
+5. Les en-têtes de diagnostic `X-Nexus-Games-*`
+6. Le tri sémantique des versions de changelog
 
-Cache keys follow pattern: `tracked:${username}`, `mod:${domain}:${id}`, `game:${domain}`
+Les catégories, elles, sont centralisées dans `src/data/nexus-categories.json` et ne demandent
+aucune synchronisation.
 
-### Vercel Configuration
-[vercel.json](../vercel.json) includes critical rewrite for untrack endpoint:
-```json
-"/api/nexus/tracked/(.*)/(.*)$" → "/api/nexus/untrack?domain=$1&modId=$2"
-```
-This allows DELETE requests to `/api/nexus/tracked/{domain}/{modId}` to work.
+## Règle apprise : un échec ne doit pas ressembler à une donnée
 
-## Development Workflow
+`getGameInfo()` retombait sur `{ id: null, name: domain }` quand l'API Nexus refusait. Le slug
+étant une valeur *truthy* qui ressemble à un nom de jeu, l'interface affichait `cyberpunk2077`
+et la requête répondait 200 : **la panne était indiscernable d'un succès**.
 
-### Local Development
+Le repli porte désormais `name: null`, `resolu: false` et une `raison`, et l'échec remonte au
+navigateur via `X-Nexus-Games-Unresolved` / `X-Nexus-Games-Reason`, captés par le journal de
+diagnostic (`src/components/diagnostics.js`).
+
+**Généralisation à appliquer partout : une réponse 200 aux données dégradées coûte plus cher à
+diagnostiquer qu'une erreur franche.** Un repli doit être marqué comme tel.
+
+## Style d'interface : la couche de jetons `cr-*`
+
+Depuis la refonte du 2026-09-19, tout passe par les jetons définis dans `src/index.css`
+(`--cr-ground`, `--cr-surface`, `--cr-ink`, `--cr-muted`, `--cr-accent`, `--cr-ok` / `--cr-warn`
+/ `--cr-crit`) et par des classes de composants (`cr-bouton`, `cr-etiquette`, `cr-mod`,
+`cr-chiffre`, `cr-filtre`, `cr-jeu-icone`, `cr-depeche`, `cr-transition`…).
+
+1. **Aucun `dark:`, aucun `pico-card`, aucune couleur Tailwind littérale** dans `src/pages/` ni
+   `src/components/`. Le thème sombre redéfinit les jetons ; il ne double pas chaque règle.
+2. **Aucun état porté par la seule couleur** : une étiquette contient un mot écrit. Pas d'emoji
+   en guise d'icône — un lecteur d'écran ne les lit pas, une impression N&B les perd.
+3. **14 px minimum pour le texte, 44 px pour toute cible tactile.**
+
+Le thème a trois états — `systeme` (défaut), `light`, `dark` — dans `useTheme.js`.
+
+## Tests
+
+`npm test` — 120 tests, 13 suites, React Testing Library. À lancer **en entier** avant de
+déclarer un travail terminé : un build qui compile ne dit rien des régressions.
+
+Une assertion ne doit pas porter sur une classe de style. Pour vérifier un état, utiliser un
+attribut (`data-etat`) ou un rôle, jamais `toHaveClass("text-green-700")`.
+
+## Développement local
+
 ```bash
 npm install
-npm run server  # Starts Express on port 4000
-npm start       # Starts React dev server (proxies to 4000)
-```
-The `proxy` field in [package.json](../package.json) routes `/api/*` to Express server.
-
-### Testing
-- Manual tests: [TESTING_GUIDE.md](../TESTING_GUIDE.md) includes test credentials
-- No automated tests yet (React Testing Library set up but unused)
-- Test both with/without localStorage credentials
-
-### Deployment
-Follow [DEPLOYMENT.md](../DEPLOYMENT.md). Key points:
-- Vercel auto-detects Create React App
-- No env vars required (user credentials only)
-- Serverless functions auto-deployed from `api/` folder
-
-## Common Tasks
-
-### Adding API Functionality
-1. Create new file in `api/nexus/` (e.g., `api/nexus/feature.mjs`)
-2. Export default async handler: `export default async function handler(req, res) {...}`
-3. Copy CORS headers setup from existing serverless functions
-4. Use `nexusHeaders(username, apiKey)` helper (read from `req.headers["x-nexus-*"]` OR `process.env`)
-5. Add corresponding route to `server.mjs` for local development
-6. Update `useNexusMods.js` hook to call new endpoint with credential headers
-
-### Adding UI Features
-1. If state/logic needed: Create `useFeatureName.js` hook in `src/components/`
-2. If pure UI: Create component in `src/components/`
-3. Import hook in `App.jsx` or page component
-4. Never put business logic in JSX components
-
-### Styling
-- Tailwind CSS for layouts/spacing (utility classes)
-- Dark mode: Use `dark:` prefix (theme toggled via `useTheme` hook)
-- Bootstrap 5 only for modal components
-- Custom classes use `pico-*` prefix (see [App.css](../src/App.css))
-
-## Gotchas
-- React Router v7: Import from `react-router-dom`, not `react-router`
-- React 19: No need for `React.` prefix, imports are auto-detected
-- Nexus API rate limits: 100 req/hour for free accounts (why user credentials matter)
-- localStorage keys: `nexusCredentials` (JSON), `lastVisit` (timestamp), `theme` (string)
-- Game identifiers: Use `domain` (string) not `gameId` (number) for API calls
-
-## Documentation Updates (REQUIRED)
-
-**ALWAYS update CHANGELOG.md when making code changes.** Follow this workflow:
-
-### 1. Update CHANGELOG.md (Mandatory)
-Add entry at the top with this format:
-```markdown
-## Version X.Y.Z - Description (DD Month YYYY)
-
-### [Category]
-- Change description
-- Files modified: file1.ext, file2.ext
-
-### Impact Technique
-- Impact description
+npm run server   # Express sur le port 4000
+npm start        # React, proxy /api vers 4000
 ```
 
-Categories: `Nouvelles Fonctionnalités`, `Corrections`, `Améliorations`, `Documentation`
+## Pièges connus
 
-Version numbering:
-- Major (X): Breaking changes or major features
-- Minor (Y): New features, backward compatible
-- Patch (Z): Bug fixes, documentation
+- React Router v7 : importer depuis `react-router-dom`.
+- Rate limit Nexus : 100 requêtes/heure sur un compte gratuit — d'où l'importance de l'ordre
+  des appels décrit plus haut.
+- Steam limite les IP de sortie Cloudflare : ~1 requête sur 3 en 403. Traité par réessais,
+  cache partagé et repli sur valeur périmée dans `worker.mjs`.
+- Clés `localStorage` : `nexus_accounts` (chiffré AES-GCM), `courrier_mods_cache_<user>`
+  (compressé lz-string), `theme`, `courrier_last_visit`, `courrier_diagnostics`.
+- Identifiants de jeu : utiliser `domain` (chaîne) pour les appels API, `gameId` (nombre)
+  uniquement pour l'URL des tuiles d'illustration.
 
-### 2. Update Other Files (Conditional)
-Based on change type, update:
+## Documentation à tenir à jour
 
-| Change Type | Files to Update |
-|-------------|----------------|
-| New feature | CHANGELOG.md + README.md + TESTING_GUIDE.md |
-| Bug fix | CHANGELOG.md + README.md (if user-facing) |
-| Code pattern change | CHANGELOG.md + .github/copilot-instructions.md |
-| Deployment change | CHANGELOG.md + DEPLOYMENT.md |
-| Credentials change | CHANGELOG.md + CREDENTIALS_CONFIG.md |
-| Category system | CHANGELOG.md + ADDING_GAME_CATEGORIES.md |
-| Sync dev/prod | CHANGELOG.md + verify 7 critical blocks |
-| File added/removed | CHANGELOG.md + README.md (Structure section) |
+- **`CHANGELOG.md` à chaque changement de code**, entrée en tête, format
+  `## Version X.Y.Z - Description (JJ Mois AAAA)`.
+- `README.md` si le changement est visible par l'utilisateur.
+- `DEPLOYMENT-cloudflare.md` pour tout ce qui touche à l'hébergement, au rate limiting ou aux
+  en-têtes de diagnostic.
+- `CREDENTIALS_CONFIG.md` pour la gestion des identifiants.
+- `ADDING_GAME_CATEGORIES.md` pour le système de catégories.
 
-### 3. Sync Dev/Prod (Critical)
-When modifying serverless functions, update BOTH:
-- `server.mjs` (dev)
-- `api/nexus/*.mjs` (prod)
-
-Verify these 6 blocks stay identical:
-1. `toEpoch()`
-2. `nexusHeaders(username, apiKey)`
-3. `getCategoryName()`
-4. `withPool()`
-5. `getGameInfo()`
-6. Changelog sorting logic
-
-Note: `CATEGORIES_BY_GAME` is now centralized in [src/data/nexus-categories.json](../src/data/nexus-categories.json) and no longer requires manual sync.
-
-### 4. Update Version References
-- PRE_DEPLOYMENT_CHECK.md header (date + version)
-- All other files link to CHANGELOG.md (no version duplication)
-
-### 5. Documentation Style (Professional)
-- Remove emojis from .md files unless strictly necessary for clarity
-- Exception: User-facing guides (SUMMARY.md, TESTING_GUIDE.md) may use minimal emojis for readability
-- Technical docs must remain emoji-free: CHANGELOG.md, DEPLOYMENT.md, CREDENTIALS_CONFIG.md
-- Code comments and commit messages: no emojis
+Pas d'emoji dans les fichiers `.md`, les commentaires de code ni les messages de commit.

@@ -186,8 +186,8 @@ La détection se base sur la comparaison des Build IDs. Si Steam ne met pas à j
 # Dev server (local)
 curl http://localhost:4000/api/steam/game/489830
 
-# Production (Vercel)
-curl https://your-app.vercel.app/api/steam/game/489830
+# Production (Cloudflare Workers)
+curl https://the-courrier.sanchez-alex1.workers.dev/api/steam/game/489830
 ```
 
 ## Performance

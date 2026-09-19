@@ -572,11 +572,19 @@ L'application est déployée sur **Cloudflare Workers**, avec build automatique 
 
 ## Documentation
 
-- **[DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)** - Guide complet de déploiement sur Cloudflare Workers
-- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Configuration détaillée des identifiants
-- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Scénarios de test et validation
-- **[CHANGELOG.md](./CHANGELOG.md)** - Historique complet des versions
-- **[SUMMARY.md](./SUMMARY.md)** - Vue d'ensemble et guide d'utilisation
+Huit documents, un sujet chacun. *Neuf fichiers ont été supprimés le 2026-09-19 : guides Vercel
+périmés, doublons et rapports de fin de chantier. Leur contenu reste dans l'historique git.*
+
+| Document | Sujet |
+|---|---|
+| [CHANGELOG.md](./CHANGELOG.md) | Historique des versions — la source de vérité |
+| [DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md) | Hébergement, rate limiting, cache Steam, en-têtes de diagnostic |
+| [CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md) | Fonctionnement du système d'identifiants |
+| [STEAM_INTEGRATION.md](./STEAM_INTEGRATION.md) | Intégration Steam : architecture et limites |
+| [INCOMPATIBILITY_CHECKER.md](./INCOMPATIBILITY_CHECKER.md) | Détection d'incompatibilités entre mods |
+| [ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md) | Ajouter les catégories d'un nouveau jeu |
+| [TESTING_GUIDE.md](./TESTING_GUIDE.md) | Scénarios de test manuels (les tests automatiques : `npm test`) |
+| [.github/copilot-instructions.md](./.github/copilot-instructions.md) | Guide pour les agents IA travaillant sur le dépôt |
 
 ---
 
@@ -636,29 +644,6 @@ Voir [LICENSE](./LICENSE) pour plus de détails.
 
 ---
 
-## Documentation
-
-### Quick Reference
-- **[.github/QUICK_UPDATE_GUIDE.md](./.github/QUICK_UPDATE_GUIDE.md)** - Quick guide for making changes
-
-### User Documentation
-- **[SUMMARY.md](./SUMMARY.md)** - User-friendly overview and quick start guide
-- **[TESTING_GUIDE.md](./TESTING_GUIDE.md)** - Test credentials and manual test scenarios
-
-### Developer Documentation
-- **[CHANGELOG.md](./CHANGELOG.md)** - Complete version history (source of truth)
-- **[DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)** - Cloudflare Workers deployment instructions
-- **[CREDENTIALS_CONFIG.md](./CREDENTIALS_CONFIG.md)** - Technical deep-dive on credentials system
-- **[ADDING_GAME_CATEGORIES.md](./ADDING_GAME_CATEGORIES.md)** - How to add new game categories
-- **[STEAM_INTEGRATION.md](./STEAM_INTEGRATION.md)** - Complete Steam integration guide
-- **[STEAM_IMPLEMENTATION_SUMMARY.md](./STEAM_IMPLEMENTATION_SUMMARY.md)** - Implementation summary
-- **[STEAM_TEST_GUIDE.md](./STEAM_TEST_GUIDE.md)** - Testing guide for Steam features
-- **[INCOMPATIBILITY_CHECKER.md](./INCOMPATIBILITY_CHECKER.md)** - Incompatibility detection guide
-- **[PRE_DEPLOYMENT_CHECK.md](./PRE_DEPLOYMENT_CHECK.md)** - Pre-deployment checklist
-- **[.github/copilot-instructions.md](./.github/copilot-instructions.md)** - AI agent development guide
-- **[.github/DOCUMENTATION_GUIDE.md](./.github/DOCUMENTATION_GUIDE.md)** - Documentation maintenance guide
-
----
 
 ## Auteur
 

@@ -9,7 +9,7 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
 ### Stockage Local et Sécurisé
 
 - Les identifiants (username et API key) sont stockés uniquement dans le **localStorage** du navigateur de l'utilisateur
-- Aucune donnée sensible n'est envoyée ni stockée sur le serveur Vercel
+- Aucune donnée sensible n'est envoyée ni stockée côté serveur
 - Les credentials transitent uniquement entre le navigateur de l'utilisateur et les serveurs de Nexus Mods via les fonctions serverless
 
 ### Interface Utilisateur
@@ -31,7 +31,7 @@ Cette application permet désormais aux utilisateurs de configurer leurs propres
    - `X-Nexus-Username`: le nom d'utilisateur
    - `X-Nexus-ApiKey`: la clé API
 
-4. Les fonctions serverless Vercel lisent ces headers et les utilisent pour authentifier les requêtes vers l'API Nexus Mods
+4. Les handlers de l API lisent ces headers et les utilisent pour authentifier les requêtes vers l'API Nexus Mods
 
 ## Architecture Technique
 
@@ -108,11 +108,11 @@ Pour modifier vos identifiants plus tard, cliquez sur le bouton " Config" dans l
 
 > **Tests détaillés** : voir [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
-> **Déploiement** : voir [DEPLOYMENT.md](./DEPLOYMENT.md)
+> **Déploiement** : voir [DEPLOYMENT-cloudflare.md](./DEPLOYMENT-cloudflare.md)
 
 ## Compatibilité
 
-- Fonctionne avec Vercel
+- Fonctionne sur Cloudflare Workers (production) et avec le serveur Express local
 - Compatible avec le développement local (via proxy)
 - Rétrocompatible avec l'ancienne méthode (variables d'environnement)
 
