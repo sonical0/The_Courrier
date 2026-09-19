@@ -116,19 +116,24 @@ async function getGameInfo(domain, username, apiKey) {
       id: gameInfo.id,
       name: gameInfo.name,
       domain: gameInfo.domain_name || domain,
+      resolu: true,
     };
     cacheSet(ck, info, TTL.game);
     return info;
   } catch (error) {
-
-    const fallback = {
+    // Doit rester identique a api/nexus/tracked.mjs : le repli portait
+    // `name: domain`, une valeur truthy qui ressemble a un nom de jeu, donc
+    // l'echec se deguisait en succes. Voir le bloc equivalent la-bas.
+    const echec = {
       id: null,
-      name: domain,
+      name: null,
       domain: domain,
+      resolu: false,
+      raison: error?.status ? `HTTP ${error.status}` : error?.message || "inconnue",
     };
 
-    cacheSet(ck, fallback, 5 * 60_000);
-    return fallback;
+    cacheSet(ck, echec, 5 * 60_000);
+    return echec;
   }
 }
 
@@ -210,6 +215,16 @@ app.get("/api/nexus/tracked", async (req, res) => {
         gameName: m.game_name ?? m.game?.name,
       };
     }).filter((m) => m.id && m.domain);
+
+    // Avant l'enrichissement mod par mod, comme en production : ces quelques
+    // requetes nomment tous les jeux de l'interface et ne doivent pas etre les
+    // dernieres servies par le quota horaire Nexus.
+    const domainesUniques = [...new Set(rows.map(m => m.domain).filter(Boolean))];
+    const infosJeux = await Promise.all(
+      domainesUniques.map(domain => getGameInfo(domain, username, apiKey))
+    );
+    const jeuxParDomaine = new Map(infosJeux.map(g => [g.domain, g]));
+    const jeuxNonResolus = infosJeux.filter(g => !g.resolu);
 
     const enriched = await withPool(rows, 4, async (m) => {
       const ck = kMod(username, m.domain, m.id);
@@ -296,22 +311,26 @@ app.get("/api/nexus/tracked", async (req, res) => {
 
     enriched.sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
 
-    const uniqueDomains = [...new Set(enriched.map(m => m.domain).filter(Boolean))];
-    const gamesInfo = await Promise.all(
-      uniqueDomains.map(domain => getGameInfo(domain, username, apiKey))
-    );
-    const gamesMap = new Map(gamesInfo.map(g => [g.domain, g]));
-
     const enrichedWithGames = enriched.map(m => {
-      const gameInfo = gamesMap.get(m.domain);
+      const infoJeu = jeuxParDomaine.get(m.domain);
       return {
         ...m,
-        gameId: m.gameId || gameInfo?.id,
-        gameName: gameInfo?.name || m.gameName,
+        gameId: m.gameId || infoJeu?.id,
+        // Meme ordre qu'en production : le nom porte par le mod d'abord,
+        // l'info de jeu ensuite, le slug en dernier recours.
+        gameName: m.gameName || infoJeu?.name || m.domain,
+        gameNameResolu: Boolean(m.gameName || infoJeu?.resolu),
       };
     });
 
     cacheSet(kTracked(username), enrichedWithGames, TTL.tracked);
+    if (jeuxNonResolus.length > 0) {
+      res.setHeader("X-Nexus-Games-Unresolved", `${jeuxNonResolus.length}/${domainesUniques.length}`);
+      res.setHeader(
+        "X-Nexus-Games-Reason",
+        jeuxNonResolus.map(g => `${g.domain}:${g.raison}`).join(", ").slice(0, 200)
+      );
+    }
     res.json(enrichedWithGames);
   } catch (e) {
     console.error('❌ Error fetching tracked mods:', e);

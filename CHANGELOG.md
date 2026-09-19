@@ -1,5 +1,37 @@
 # Changelog - The Courrier
 
+## Version 5.1.1 - Le serveur de dev avait garde le bug (19 Septembre 2026)
+
+### Corrige
+
+#### Divergence silencieuse entre `server.mjs` et `api/nexus/tracked.mjs`
+- Le correctif 5.1.0 n'avait ete applique qu'a la version de production. `server.mjs`
+  **reimplemente** `/api/nexus/tracked` (~150 lignes) au lieu de reutiliser le handler : seuls les
+  utilitaires sont partages, via `api/utils/NexusUtils.mjs` et `api/utils/rateLimit.mjs`
+- Le serveur de developpement a donc produit pendant plusieurs heures des donnees differentes de la
+  production, **sans aucun signal**. Repli marque, ordre des appels et en-tetes de diagnostic
+  reportes a l'identique
+- La documentation affirmait le contraire (« server.mjs utilise les memes handlers ») : c'est cette
+  croyance qui a cause l'oubli. Corrigee
+
+### Documentation
+
+#### Tri : neuf fichiers supprimes, 1 738 lignes
+- Supprimes : `DEPLOYMENT.md` et `PRE_DEPLOYMENT_CHECK.md` (Vercel, plateforme abandonnee le 18/09),
+  `STEAM_IMPLEMENTATION_SUMMARY.md` et `STEAM_TEST_GUIDE.md` (doublons de `STEAM_INTEGRATION.md`, le
+  premier decrivant encore un cache « par instance serverless Vercel » alors qu'il vit dans
+  `worker.mjs`), `SUMMARY.md` (doublon du README), `README_react.md` (boilerplate CRA),
+  `EXAMPLES.js` (importe nulle part, n'utilisait que 2 des 9 valeurs du hook, sans le multi-comptes),
+  `.github/DOCUMENTATION_GUIDE.md` et `.github/QUICK_UPDATE_GUIDE.md`
+- Le depot passe de 14 documents pour 8 sujets a 8 documents. Tout reste dans l'historique git
+- `.github/copilot-instructions.md` reecrit : il renvoyait a `vercel.json`, supprime du depot, et
+  annoncait « no automated tests yet » alors qu'il y en a 120. Un guide pour agents IA qui decrit une
+  plateforme morte oriente activement vers le mauvais code
+- README : les **deux** index documentaires redondants (un francais, un anglais, tous deux avec des
+  liens morts) fusionnes en un seul
+- Mentions Vercel restantes corrigees dans `CREDENTIALS_CONFIG.md`, `STEAM_INTEGRATION.md` et
+  `TESTING_GUIDE.md`
+
 ## Version 5.1.0 - Noms de jeux : la panne qui se faisait passer pour une donnee (19 Septembre 2026)
 
 ### Corrige
