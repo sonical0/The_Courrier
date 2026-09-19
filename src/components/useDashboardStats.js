@@ -9,6 +9,7 @@ export default function useDashboardStats(games, modsForGame) {
     // Collect all mods across all games
     const allMods = [];
     const modsByGame = new Map();
+    const gameIdByName = new Map();
     const modsByAuthor = new Map();
     const modsByCategory = new Map();
 
@@ -17,6 +18,9 @@ export default function useDashboardStats(games, modsForGame) {
       const gameMods = modsForGame(key);
       
       modsByGame.set(game.name || game.domain, gameMods);
+      // L'identifiant Nexus sert à retrouver la tuile du jeu côté affichage :
+      // une icône reconnaissable vaut mieux qu'une pastille de couleur.
+      gameIdByName.set(game.name || game.domain, game.gameId);
       allMods.push(...gameMods);
 
       // Count by author
@@ -62,7 +66,11 @@ export default function useDashboardStats(games, modsForGame) {
     for (const [gameName, gameMods] of modsByGame.entries()) {
       if (gameMods.length > mostActiveGameCount) {
         mostActiveGameCount = gameMods.length;
-        mostActiveGame = { name: gameName, count: gameMods.length };
+        mostActiveGame = {
+          name: gameName,
+          gameId: gameIdByName.get(gameName),
+          count: gameMods.length,
+        };
       }
       if (gameMods.length < leastActiveGameCount) {
         leastActiveGameCount = gameMods.length;
@@ -86,6 +94,7 @@ export default function useDashboardStats(games, modsForGame) {
     const gameDistribution = Array.from(modsByGame.entries())
       .map(([gameName, gameMods]) => ({
         name: gameName,
+        gameId: gameIdByName.get(gameName),
         count: gameMods.length,
         percentage: totalMods > 0 ? Math.round((gameMods.length / totalMods) * 100) : 0
       }))

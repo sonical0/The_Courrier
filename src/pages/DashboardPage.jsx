@@ -35,8 +35,8 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-slate-600 dark:text-slate-400">Chargement du tableau de bord…</p>
+      <div className="cr-enveloppe py-8">
+        <p style={{ color: "var(--cr-muted)" }}>Chargement du tableau de bord…</p>
       </div>
     );
   }
@@ -44,56 +44,66 @@ export default function DashboardPage() {
   if (error) {
     if (error.includes("credentials") || error.includes("401")) {
       return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
-            <h4 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
-              ⚠️ Configuration requise
-            </h4>
-            <p className="text-slate-700 dark:text-slate-300 mb-3">
-              Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
-            </p>
-            <hr className="my-3 border-slate-200 dark:border-slate-700" />
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
-            </p>
-          </div>
+        <div className="cr-enveloppe py-8 cr-lecture">
+          <p className="m-0 mb-2">
+            <span className="cr-etiquette cr-etiquette-attention">Configuration requise</span>
+          </p>
+          <h1 className="text-2xl font-semibold mb-2">Vos identifiants Nexus manquent</h1>
+          <p className="mb-0">
+            The Courrier lit votre liste de mods suivis via l’API Nexus Mods : sans nom d’utilisateur
+            ni clé d’API, il n’a rien à afficher. Ouvrez <strong>Config</strong> dans l’en-tête pour
+            les renseigner.
+          </p>
         </div>
       );
     }
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="pico-card p-6 border-red-500 dark:border-red-600">
-          <h4 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">❌ Erreur</h4>
-          <p className="text-slate-700 dark:text-slate-300">{error}</p>
-        </div>
+      <div className="cr-enveloppe py-8 cr-lecture">
+        <p className="m-0 mb-2">
+          <span className="cr-etiquette cr-etiquette-critique">Erreur</span>
+        </p>
+        <h1 className="text-2xl font-semibold mb-2">Le tableau de bord n’a pas pu être chargé</h1>
+        <p className="mb-0" style={{ color: "var(--cr-muted)" }}>
+          {error}
+        </p>
       </div>
     );
   }
 
   if (!games.length) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="pico-card p-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">
-              👋 Bienvenue sur The Courrier !
-            </h3>
-            <p className="text-slate-700 dark:text-slate-300 mb-4">
-              <strong>The Courrier</strong> vous permet de suivre facilement les mises à jour de vos mods Nexus Mods préférés.
-            </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                <strong>🎯 Pour voir vos mods apparaître ici :</strong>
-              </p>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-slate-700 dark:text-slate-300 ml-2">
-                <li>Rendez-vous sur <a href="https://www.nexusmods.com" target="_blank" rel="noreferrer" className="text-pico-primary hover:underline">Nexus Mods</a></li>
-                <li>Connectez-vous avec votre compte</li>
-                <li>Activez le suivi ("Track") sur les mods qui vous intéressent</li>
-                <li>Revenez ici pour voir les mises à jour</li>
-              </ol>
-            </div>
-          </div>
-        </div>
+      <div className="cr-enveloppe py-8 cr-lecture">
+        <h1 className="text-3xl font-semibold mb-2">Bienvenue sur The Courrier</h1>
+        <p className="mb-6">
+          The Courrier surveille les mods que vous suivez sur Nexus Mods et vous dit lesquels ont
+          bougé — sans que vous ayez à rouvrir chaque page.
+        </p>
+
+        <h2 className="text-xl font-semibold mb-3">Pour voir vos mods apparaître ici</h2>
+        <ol className="m-0 p-0 list-none flex flex-col">
+          {[
+            <>
+              Rendez-vous sur{" "}
+              <a href="https://www.nexusmods.com" target="_blank" rel="noreferrer" style={{ color: "var(--cr-accent)" }}>
+                Nexus Mods
+              </a>
+            </>,
+            "Connectez-vous avec votre compte",
+            "Activez le suivi (« Track ») sur les mods qui vous intéressent",
+            "Revenez ici : la liste se remplit toute seule",
+          ].map((etape, idx) => (
+            <li
+              key={idx}
+              className="flex items-baseline gap-3 py-3 border-b"
+              style={{ borderColor: "var(--cr-line)" }}
+            >
+              <span className="cr-mono flex-shrink-0" style={{ color: "var(--cr-muted)" }} aria-hidden="true">
+                {idx + 1}
+              </span>
+              <span>{etape}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     );
   }
@@ -102,460 +112,546 @@ export default function DashboardPage() {
     return null;
   }
 
-  const StatCard = ({ title, value, subtitle, icon, color = "blue" }) => (
-    <div className={`pico-card p-6 border-l-4 border-${color}-500`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">{title}</p>
-          <p className="text-3xl font-bold text-slate-800 dark:text-white mb-1">{value}</p>
-          {subtitle && <p className="text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}
-        </div>
-        {icon && <span className="text-3xl opacity-50">{icon}</span>}
-      </div>
+  // Tuile de chiffre. L'emoji décoratif et le liseré coloré sont retirés :
+  // ils signalaient une différence de nature entre les tuiles qui n'existait
+  // pas. Le chiffre est l'information, il porte la hiérarchie.
+  const StatCard = ({ title, value, subtitle }) => (
+    <div className="cr-chiffre">
+      <dt>{title}</dt>
+      <dd>{value}</dd>
+      {subtitle && <div className="cr-precision">{subtitle}</div>}
     </div>
   );
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
-          📊 Tableau de bord
-        </h2>
-        <button className="pico-btn-outline w-fit" onClick={refresh}>
-          🔄 Rafraîchir
+        <h1 className="text-3xl font-bold" style={{ letterSpacing: "-0.02em" }}>
+          Tableau de bord
+        </h1>
+        <button className="cr-bouton w-fit" onClick={refresh}>
+          Rafraîchir
         </button>
       </div>
 
-      {/* Game Version Updates Alert */}
+      {/* Dépêche : un patch de jeu casse souvent les mods, c'est
+          l'information la plus urgente de l'écran. Une entrée par jeu, avec la
+          transition de build lisible telle quelle — c'est la donnée propre à ce
+          produit, elle mérite mieux qu'une phrase. */}
       {updatedGames && updatedGames.length > 0 && (
-        <section className="mb-8">
-          <div className="pico-card p-6 border-l-4 border-orange-500 bg-orange-50 dark:bg-orange-900/20">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🎮</span>
-                <div>
-                  <h3 className="text-xl font-bold text-orange-800 dark:text-orange-300">
-                    Mise à jour de jeu détectée !
-                  </h3>
-                  <p className="text-sm text-orange-700 dark:text-orange-400">
-                    {updatedGames.length} jeu{updatedGames.length > 1 ? 'x ont' : ' a'} reçu une mise à jour de version
-                  </p>
-                </div>
+        <section className="mb-8 flex flex-col gap-3" aria-label="Mises à jour de jeu détectées">
+          {updatedGames.map((game) => (
+            <div key={game.id} className="cr-depeche">
+              {game.gameId ? (
+                <img
+                  src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${game.gameId}.jpg`}
+                  alt=""
+                  aria-hidden="true"
+                  className="cr-jeu-icone cr-jeu-icone-lg"
+                  onError={(e) => {
+                    e.currentTarget.style.display = "none";
+                  }}
+                />
+              ) : (
+                <span className="cr-jeu-icone cr-jeu-icone-lg" aria-hidden="true" />
+              )}
+
+              <div>
+                <p className="m-0 mb-1">
+                  <span className="cr-depeche-marqueur">Patch détecté</span>
+                </p>
+                <h2 className="text-lg m-0">{game.gameName} a été mis à jour</h2>
+
+                <p className="cr-transition mt-1 mb-0">
+                  <span className="cr-transition-avant">build {game.previousVersion}</span>
+                  <span aria-hidden="true" style={{ color: "var(--cr-muted)" }}>
+                    →
+                  </span>
+                  <span className="cr-transition-apres">build {game.currentVersion}</span>
+                </p>
+
+                {/* Le « pourquoi » plutôt qu'un simple avertissement : c'est ce
+                    qui dit à l'utilisateur quoi faire de l'information. */}
+                <p className="mt-2 mb-0">
+                  Les mods dépendants d’un chargeur de scripts (SKSE, F4SE…) cessent
+                  généralement de fonctionner après une mise à jour du moteur. Vérifiez vos
+                  mods avant de relancer une partie.
+                </p>
               </div>
-              <button
-                onClick={dismissAllAlerts}
-                className="px-3 py-1 rounded bg-orange-200 dark:bg-orange-800 text-orange-800 dark:text-orange-200 hover:bg-orange-300 dark:hover:bg-orange-700 transition-colors text-sm"
-              >
-                Tout masquer
-              </button>
-            </div>
-            
-            <div className="space-y-3">
-              {updatedGames.map((game, idx) => (
-                <div 
-                  key={idx}
-                  className="flex items-center justify-between p-4 bg-white dark:bg-slate-800 rounded-lg border border-orange-200 dark:border-orange-800"
-                >
-                  <div className="flex items-center gap-4 flex-1">
-                    {game.gameId && (
-                      <img 
-                        src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${game.gameId}.jpg`}
-                        alt={game.gameName}
-                        className="w-12 h-12 rounded object-cover border-2 border-orange-300 dark:border-orange-600"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    )}
-                    <div className="flex-1">
-                      <p className="font-bold text-slate-800 dark:text-white mb-1">
-                        {game.gameName}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="px-2 py-0.5 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded line-through">
-                          v{game.previousVersion}
-                        </span>
-                        <span className="text-slate-400">→</span>
-                        <span className="px-2 py-0.5 bg-orange-500 text-white rounded font-medium">
-                          v{game.currentVersion}
-                        </span>
-                      </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        ⚠️ Vérifiez la compatibilité de vos mods
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => dismissAlert(game.id)}
-                    className="ml-4 px-3 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm"
-                  >
-                    Masquer
+
+              <div className="col-span-full flex flex-wrap gap-2">
+                <button type="button" className="cr-bouton" onClick={() => dismissAlert(game.id)}>
+                  Masquer
+                </button>
+                {updatedGames.length > 1 && (
+                  <button type="button" className="cr-bouton" onClick={dismissAllAlerts}>
+                    Tout masquer
                   </button>
-                </div>
-              ))}
+                )}
+              </div>
             </div>
-            
-            <div className="mt-4 p-3 bg-orange-100 dark:bg-orange-900/30 rounded text-sm text-orange-800 dark:text-orange-300">
-              💡 <strong>Conseil :</strong> Les mises à jour de jeux peuvent nécessiter des mises à jour de certains mods (SKSE, F4SE, etc.). 
-              Vérifiez les mods essentiels de votre liste.
-            </div>
-          </div>
+          ))}
         </section>
       )}
 
-      {/* Core Statistics */}
+      {/* Chiffres clés. Une liste de définitions plutôt qu'une grille de
+          <div> : chaque tuile est bien un couple libellé/valeur, et un lecteur
+          d'écran l'annonce comme tel. La grille s'ajuste d'elle-même au nombre
+          de tuiles qui tiennent, sans point de rupture à maintenir. */}
       <section className="mb-8">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Vue d'ensemble</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard
-            title="Mods suivis"
-            value={stats.totalMods}
-            icon="📦"
-            color="blue"
-          />
-          <StatCard
-            title="Jeux"
-            value={stats.totalGames}
-            icon="🎮"
-            color="purple"
-          />
+        <h2 className="text-xl font-semibold mb-4">Vue d'ensemble</h2>
+        <dl className="grid gap-4 m-0" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
+          <StatCard title="Mods suivis" value={stats.totalMods} subtitle={`sur ${stats.totalGames} jeux`} />
           <StatCard
             title="Mises à jour (7 jours)"
             value={stats.updatesLast7Days}
             subtitle={`${stats.updatesLast30Days} sur 30 jours`}
-            icon="🆕"
-            color="green"
           />
           <StatCard
-            title="Mods inactifs (1 an+)"
+            title="Sans activité (1 an+)"
             value={stats.staleMods}
-            subtitle={`${Math.round((stats.staleMods / stats.totalMods) * 100)}% du total`}
-            icon="⏳"
-            color="yellow"
+            subtitle={
+              stats.totalMods
+                ? `${Math.round((stats.staleMods / stats.totalMods) * 100)} % du total`
+                : undefined
+            }
           />
-        </div>
+          <StatCard title="Jeux suivis" value={stats.totalGames} />
+        </dl>
       </section>
 
-      {/* Games with Recent Updates */}
+      {/* Jeux bougés cette semaine. Le titre de mod était tronqué par
+          `truncate` : un nom coupé au milieu ne permet pas de reconnaître le
+          mod, alors que la place existe sur deux lignes. */}
       {stats.gamesWithUpdates && stats.gamesWithUpdates.length > 0 && (
         <section className="mb-8">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-            🎮 Jeux avec mises à jour récentes (7 derniers jours)
-          </h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {stats.gamesWithUpdates.map((game, idx) => (
-              <div key={idx} className="pico-card p-6 border-l-4 border-green-500">
-                <div className="flex items-start gap-4 mb-4">
-                  {game.gameId && (
-                    <img 
+          <h2 className="text-xl font-semibold mb-4">Mises à jour des 7 derniers jours</h2>
+
+          <div
+            className="grid gap-6"
+            style={{ gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))" }}
+          >
+            {stats.gamesWithUpdates.map((game) => (
+              <article key={game.gameId ?? game.gameName}>
+                <header className="flex items-center gap-3 mb-3">
+                  {game.gameId ? (
+                    <img
                       src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${game.gameId}.jpg`}
-                      alt={game.gameName}
-                      className="w-16 h-16 rounded object-cover border-2 border-slate-300 dark:border-slate-600"
+                      alt=""
+                      aria-hidden="true"
+                      className="cr-jeu-icone cr-jeu-icone-lg"
+                      loading="lazy"
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        e.currentTarget.style.visibility = "hidden";
                       }}
                     />
+                  ) : (
+                    <span className="cr-jeu-icone cr-jeu-icone-lg" aria-hidden="true" />
                   )}
-                  <div className="flex-1">
-                    <h4 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
+                  <div className="min-w-0">
+                    <h3 className="text-lg font-semibold m-0 overflow-wrap-anywhere">
                       {game.gameName}
-                    </h4>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
-                      <span className="font-semibold text-green-600 dark:text-green-400">
-                        {game.updateCount} mise{game.updateCount > 1 ? 's' : ''} à jour
+                    </h3>
+                    <p className="cr-meta mt-1 mb-0">
+                      <span>
+                        {game.updateCount} mise{game.updateCount > 1 ? "s" : ""} à jour
                       </span>
-                      {' · '}
-                      {game.totalMods} mod{game.totalMods > 1 ? 's' : ''} suivi{game.totalMods > 1 ? 's' : ''}
+                      <span>
+                        sur {game.totalMods} mod{game.totalMods > 1 ? "s" : ""} suivi
+                        {game.totalMods > 1 ? "s" : ""}
+                      </span>
                     </p>
                   </div>
-                </div>
-                
-                <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {game.recentMods.map((mod, modIdx) => (
-                    <div 
-                      key={modIdx}
-                      className="flex items-center justify-between p-2 bg-slate-50 dark:bg-slate-800 rounded"
+                </header>
+
+                <ul className="m-0 p-0 list-none flex flex-col">
+                  {game.recentMods.map((mod) => (
+                    <li
+                      key={mod.id}
+                      className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-2 border-b"
+                      style={{ borderColor: "var(--cr-line)" }}
                     >
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-slate-800 dark:text-white truncate">
-                          {mod.name || `Mod ${mod.id}`}
-                        </p>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {new Date(Number(mod.updatedAt) * 1000).toLocaleDateString()} · v{mod.version || '?'}
-                        </p>
-                      </div>
                       <a
                         href={mod.url}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-xs text-pico-primary hover:underline ml-2 flex-shrink-0"
+                        className="flex-1 font-semibold min-w-0 overflow-wrap-anywhere"
+                        style={{ color: "var(--cr-ink)" }}
                       >
-                        Voir →
+                        {mod.name || `Mod ${mod.id}`}
                       </a>
-                    </div>
+                      <span className="cr-meta m-0">
+                        <time dateTime={new Date(Number(mod.updatedAt) * 1000).toISOString()}>
+                          {new Date(Number(mod.updatedAt) * 1000).toLocaleDateString("fr-FR", {
+                            day: "numeric",
+                            month: "short",
+                          })}
+                        </time>
+                        {mod.version && <span className="cr-mono">v{mod.version}</span>}
+                      </span>
+                    </li>
                   ))}
-                </div>
-              </div>
+                </ul>
+              </article>
             ))}
           </div>
         </section>
       )}
 
-      {/* Recent Activity */}
-      <section className="mb-8">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">Activité récente</h3>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Most Recent Mod */}
-          {stats.mostRecentMod && (
-            <div className="pico-card p-6">
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-                ✨ Dernière mise à jour
-              </h4>
-              <div className="flex items-start gap-4">
-                {stats.mostRecentMod.picture && (
-                  <img
-                    src={stats.mostRecentMod.picture}
-                    alt={stats.mostRecentMod.name}
-                    className="w-20 h-20 rounded object-cover"
-                  />
-                )}
-                <div className="flex-1">
-                  <p className="font-bold text-slate-800 dark:text-white mb-1">
-                    {stats.mostRecentMod.name}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                    par {stats.mostRecentMod.author || "Auteur inconnu"}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-500">
-                    {new Date(Number(stats.mostRecentMod.updatedAt) * 1000).toLocaleString()}
-                  </p>
-                  <a
-                    href={stats.mostRecentMod.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm text-pico-primary hover:underline mt-2 inline-block"
-                  >
-                    Voir sur Nexus →
-                  </a>
-                </div>
-              </div>
-            </div>
-          )}
+      {/* Activité récente. Deux cartes côte à côte sont devenues une liste :
+          ce sont deux mods, pas deux natures d'objet, et une liste se lit dans
+          l'ordre au lieu de forcer un aller-retour du regard. L'étiquette dit
+          ce que chaque entrée est — l'emoji décoratif ne le disait pas. */}
+      <section className="mb-8 cr-lecture">
+        <h2 className="text-xl font-semibold mb-2">Activité récente</h2>
 
-          {/* Oldest Mod */}
-          {stats.oldestMod && (
-            <div className="pico-card p-6">
-              <h4 className="text-lg font-semibold text-slate-800 dark:text-white mb-3">
-                🕰️ Plus ancien
-              </h4>
-              <div className="flex items-start gap-4">
-                {stats.oldestMod.picture && (
-                  <img
-                    src={stats.oldestMod.picture}
-                    alt={stats.oldestMod.name}
-                    className="w-20 h-20 rounded object-cover"
-                  />
-                )}
-                <div className="flex-1">
-                  <p className="font-bold text-slate-800 dark:text-white mb-1">
-                    {stats.oldestMod.name}
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                    par {stats.oldestMod.author || "Auteur inconnu"}
-                  </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-500">
-                    Dernière maj: {new Date(Number(stats.oldestMod.updatedAt) * 1000).toLocaleDateString()}
-                  </p>
-                  <a
-                    href={stats.oldestMod.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm text-pico-primary hover:underline mt-2 inline-block"
-                  >
-                    Voir sur Nexus →
-                  </a>
-                </div>
-              </div>
+        {stats.mostRecentMod && (
+          <article className="cr-mod">
+            {stats.mostRecentMod.picture ? (
+              <img
+                src={stats.mostRecentMod.picture}
+                alt=""
+                aria-hidden="true"
+                className="cr-mod-vignette"
+                loading="lazy"
+              />
+            ) : (
+              <span className="cr-mod-vignette" aria-hidden="true" />
+            )}
+            <div className="min-w-0">
+              <h3 className="text-lg m-0 overflow-wrap-anywhere">
+                <a
+                  href={stats.mostRecentMod.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  {stats.mostRecentMod.name}
+                </a>
+              </h3>
+              <p className="cr-meta mt-1 mb-0">
+                <span>par {stats.mostRecentMod.author || "auteur inconnu"}</span>
+                <time dateTime={new Date(Number(stats.mostRecentMod.updatedAt) * 1000).toISOString()}>
+                  {new Date(Number(stats.mostRecentMod.updatedAt) * 1000).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+                <span className="cr-etiquette cr-etiquette-ok">Le plus récent</span>
+              </p>
             </div>
-          )}
-        </div>
+          </article>
+        )}
+
+        {stats.oldestMod && (
+          <article className="cr-mod">
+            {stats.oldestMod.picture ? (
+              <img
+                src={stats.oldestMod.picture}
+                alt=""
+                aria-hidden="true"
+                className="cr-mod-vignette"
+                loading="lazy"
+              />
+            ) : (
+              <span className="cr-mod-vignette" aria-hidden="true" />
+            )}
+            <div className="min-w-0">
+              <h3 className="text-lg m-0 overflow-wrap-anywhere">
+                <a
+                  href={stats.oldestMod.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  {stats.oldestMod.name}
+                </a>
+              </h3>
+              <p className="cr-meta mt-1 mb-0">
+                <span>par {stats.oldestMod.author || "auteur inconnu"}</span>
+                <time dateTime={new Date(Number(stats.oldestMod.updatedAt) * 1000).toISOString()}>
+                  {new Date(Number(stats.oldestMod.updatedAt) * 1000).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
+                </time>
+                <span className="cr-etiquette cr-etiquette-attention">Le plus ancien</span>
+              </p>
+            </div>
+          </article>
+        )}
+
+        {/* Le chiffre des mods dormants mérite d'être expliqué plutôt
+            qu'affiché : beaucoup de mods sont simplement terminés. */}
+        {stats.staleMods > 0 && (
+          <p className="cr-vide mt-4 mb-0">
+            <strong style={{ color: "var(--cr-ink)" }}>
+              {stats.staleMods} de vos {stats.totalMods} mods n’ont rien reçu depuis plus d’un an.
+            </strong>
+            <br />
+            Ce n’est pas forcément un problème — beaucoup de mods sont simplement terminés.
+          </p>
+        )}
       </section>
 
-      {/* Update Timeline */}
+      {/* Activité hebdomadaire.
+
+          L'ancienne barre était un dégradé bleu→violet dont la largeur valait
+          `count / totalMods × 500` : un facteur 5 arbitraire qui faisait
+          déborder l'échelle dès qu'une semaine dépassait 20 % du total, et une
+          couleur qui variait sur sa longueur sans coder quoi que ce soit.
+
+          Ici une seule échelle, celle de la semaine la plus chargée, et le
+          chiffre écrit à côté de la barre plutôt que dedans — il reste lisible
+          quand la barre est courte. */}
       <section className="mb-8">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-          📈 Activité des 4 dernières semaines
-        </h3>
-        <div className="pico-card p-6">
-          <div className="space-y-3">
-            {stats.timeline.map((week, idx) => (
-              <div key={idx} className="flex items-center gap-4">
-                <span className="text-sm text-slate-600 dark:text-slate-400 w-32 flex-shrink-0">
+        <h2 className="text-xl font-semibold mb-1">Activité des 4 dernières semaines</h2>
+        <p className="mb-4" style={{ color: "var(--cr-muted)" }}>
+          Nombre de vos mods mis à jour chaque semaine.
+        </p>
+
+        <dl className="m-0 flex flex-col gap-3">
+          {stats.timeline.map((week) => {
+            const maximum = Math.max(1, ...stats.timeline.map((s) => s.count));
+            return (
+              <div key={week.label} className="flex items-center gap-3">
+                <dt className="flex-shrink-0 w-28 sm:w-36" style={{ color: "var(--cr-muted)" }}>
                   {week.label}
-                </span>
-                <div className="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-6 relative overflow-hidden">
+                </dt>
+                <dd className="flex-1 flex items-center gap-3 m-0 min-w-0">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 h-full rounded-full transition-all duration-500 flex items-center justify-end pr-2"
-                    style={{
-                      width: `${Math.max((week.count / stats.totalMods) * 100 * 5, week.count > 0 ? 5 : 0)}%`
-                    }}
+                    className="flex-1 rounded overflow-hidden"
+                    style={{ height: "14px", background: "var(--cr-surface-2)" }}
                   >
-                    <span className="text-white text-xs font-bold">{week.count}</span>
+                    <div
+                      className="h-full rounded"
+                      style={{
+                        width: `${(week.count / maximum) * 100}%`,
+                        background: "var(--cr-accent)",
+                      }}
+                    />
                   </div>
+                  <span
+                    className="cr-mono flex-shrink-0 text-right"
+                    style={{ minWidth: "3ch", fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {week.count}
+                  </span>
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+
+        <p className="mt-4 mb-0" style={{ color: "var(--cr-muted)" }}>
+          En moyenne, vos mods ont reçu leur dernière mise à jour il y a{" "}
+          <strong style={{ color: "var(--cr-ink)" }}>{stats.avgDaysSinceUpdate} jours</strong>.
+        </p>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Répartition par jeu. L'icône du jeu à la place d'une pastille : sur
+            une liste de titres qui se ressemblent à l'écrit (trois Elder
+            Scrolls, deux Fallout), la tuile Nexus est ce que l'œil reconnaît
+            en premier. */}
+        <section>
+          <h2 className="text-xl font-semibold mb-4">Répartition par jeu</h2>
+
+          <dl className="m-0 flex flex-col gap-4">
+            {stats.gameDistribution.map((game) => (
+              <div key={game.name}>
+                <div className="flex items-center gap-3">
+                  {game.gameId ? (
+                    <img
+                      src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${game.gameId}.jpg`}
+                      alt=""
+                      aria-hidden="true"
+                      className="cr-jeu-icone"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.visibility = "hidden";
+                      }}
+                    />
+                  ) : (
+                    <span className="cr-jeu-icone" aria-hidden="true" />
+                  )}
+                  <dt className="flex-1 font-semibold min-w-0 overflow-wrap-anywhere">
+                    {game.name}
+                  </dt>
+                  <dd
+                    className="cr-mono m-0 flex-shrink-0"
+                    style={{ fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {game.count}
+                    <span style={{ color: "var(--cr-muted)" }}> · {game.percentage} %</span>
+                  </dd>
+                </div>
+                <div
+                  className="rounded overflow-hidden mt-2"
+                  style={{ height: "8px", background: "var(--cr-surface-2)" }}
+                >
+                  <div
+                    className="h-full rounded"
+                    style={{ width: `${game.percentage}%`, background: "var(--cr-accent)" }}
+                  />
                 </div>
               </div>
             ))}
-          </div>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-4 text-center">
-            Moyenne : {stats.avgDaysSinceUpdate} jours depuis la dernière mise à jour
-          </p>
-        </div>
-      </section>
+          </dl>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Game Distribution */}
-        <section>
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-            🎮 Distribution par jeu
-          </h3>
-          <div className="pico-card p-6">
-            <div className="space-y-3">
-              {stats.gameDistribution.map((game, idx) => (
-                <div key={idx}>
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {game.name}
-                    </span>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      {game.count} mods ({game.percentage}%)
-                    </span>
-                  </div>
-                  <div className="bg-slate-200 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${game.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            {stats.mostActiveGame && (
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <p className="text-sm text-slate-600 dark:text-slate-400">
-                  🏆 <strong>{stats.mostActiveGame.name}</strong> est votre jeu le plus suivi
-                  avec <strong>{stats.mostActiveGame.count} mods</strong>
-                </p>
-              </div>
-            )}
-          </div>
+          {stats.mostActiveGame && (
+            <p
+              className="mt-4 mb-0 pt-4 border-t"
+              style={{ borderColor: "var(--cr-line)", color: "var(--cr-muted)" }}
+            >
+              Votre jeu le plus suivi est{" "}
+              <strong style={{ color: "var(--cr-ink)" }}>{stats.mostActiveGame.name}</strong>, avec{" "}
+              <strong style={{ color: "var(--cr-ink)" }}>{stats.mostActiveGame.count} mods</strong>.
+            </p>
+          )}
         </section>
 
-        {/* Top Categories */}
+        {/* Catégories. Un classement : le rang porte une information, il reste.
+            La pastille violette, elle, n'en portait aucune. */}
         <section>
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-            📚 Catégories préférées
-          </h3>
-          <div className="pico-card p-6">
-            {stats.topCategories.length > 0 ? (
-              <div className="space-y-3">
-                {stats.topCategories.map((cat, idx) => (
-                  <div key={idx} className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                      {idx + 1}. {cat.category}
-                    </span>
-                    <span className="px-3 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold">
-                      {cat.count} mods
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
-                Aucune catégorie disponible
-              </p>
-            )}
-          </div>
+          <h2 className="text-xl font-semibold mb-4">Catégories les plus suivies</h2>
+
+          {stats.topCategories.length > 0 ? (
+            <ol className="m-0 p-0 list-none flex flex-col">
+              {stats.topCategories.map((cat, idx) => (
+                <li
+                  key={cat.category}
+                  className="flex items-baseline gap-3 py-3 border-b"
+                  style={{ borderColor: "var(--cr-line)" }}
+                >
+                  <span
+                    className="cr-mono flex-shrink-0"
+                    style={{ color: "var(--cr-muted)", minWidth: "2ch" }}
+                    aria-hidden="true"
+                  >
+                    {idx + 1}
+                  </span>
+                  <span className="flex-1 font-semibold min-w-0 overflow-wrap-anywhere">
+                    {cat.category}
+                  </span>
+                  <span
+                    className="cr-mono flex-shrink-0"
+                    style={{ color: "var(--cr-muted)", fontVariantNumeric: "tabular-nums" }}
+                  >
+                    {cat.count} mod{cat.count > 1 ? "s" : ""}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="cr-vide m-0">
+              Aucune catégorie n’est renseignée sur les mods que vous suivez.
+            </p>
+          )}
         </section>
       </div>
 
-      {/* Top Authors */}
+      {/* Auteurs. Trois colonnes de cartes grises sont devenues un classement :
+          ce sont cinq lignes de même nature, pas cinq objets distincts. */}
       <section className="mb-8">
-        <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-          👤 Auteurs les plus suivis
-        </h3>
-        <div className="pico-card p-6">
-          {stats.topAuthors.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {stats.topAuthors.map((author, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+        <h2 className="text-xl font-semibold mb-4">Auteurs les plus suivis</h2>
+
+        {stats.topAuthors.length > 0 ? (
+          <ol className="m-0 p-0 list-none grid gap-x-8" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))" }}>
+            {stats.topAuthors.map((author, idx) => (
+              <li
+                key={author.author}
+                className="flex items-baseline gap-3 py-3 border-b"
+                style={{ borderColor: "var(--cr-line)" }}
+              >
+                <span
+                  className="cr-mono flex-shrink-0"
+                  style={{ color: "var(--cr-muted)", minWidth: "2ch" }}
+                  aria-hidden="true"
                 >
-                  <span className="text-2xl font-bold text-slate-300 dark:text-slate-600">
-                    #{idx + 1}
-                  </span>
-                  <div className="flex-1">
-                    <a
-                      href={`https://next.nexusmods.com/profile/${encodeURIComponent(author.author)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm font-bold text-pico-primary hover:underline block"
-                    >
-                      {author.author}
-                    </a>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      {author.count} mod{author.count > 1 ? 's' : ''}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-slate-500 dark:text-slate-400 text-sm text-center">
-              Aucun auteur référencé
-            </p>
-          )}
-        </div>
+                  {idx + 1}
+                </span>
+                <a
+                  href={`https://next.nexusmods.com/profile/${encodeURIComponent(author.author)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 font-semibold min-w-0 overflow-wrap-anywhere"
+                  style={{ color: "var(--cr-accent)" }}
+                >
+                  {author.author}
+                </a>
+                <span
+                  className="cr-mono flex-shrink-0"
+                  style={{ color: "var(--cr-muted)", fontVariantNumeric: "tabular-nums" }}
+                >
+                  {author.count} mod{author.count > 1 ? "s" : ""}
+                </span>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="cr-vide m-0">
+            Aucun auteur n’est renseigné sur les mods que vous suivez.
+          </p>
+        )}
       </section>
 
-      {/* Stale Mods Warning */}
+      {/* Mods dormants. Le titre disait « nécessitant attention » sous un
+          triangle jaune, alors que le texte juste dessous expliquait que ces
+          mods vont sans doute très bien. Le titre dit maintenant ce qui est
+          mesuré — la date — et laisse l'utilisateur juger. */}
       {stats.staleMods > 0 && (
         <section className="mb-8">
-          <h3 className="text-xl font-semibold text-slate-800 dark:text-white mb-4">
-            ⚠️ Mods nécessitant attention ({stats.staleMods})
-          </h3>
-          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-              Ces mods n'ont pas été mis à jour depuis plus d'un an. Ils peuvent être abandonnés ou simplement stables.
-            </p>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {stats.staleModsList.map((mod, idx) => (
-                <div
-                  key={idx}
-                  className="flex justify-between items-center p-3 bg-slate-50 dark:bg-slate-800 rounded"
+          <h2 className="text-xl font-semibold mb-1">
+            Sans mise à jour depuis plus d’un an ({stats.staleMods})
+          </h2>
+          <p className="cr-lecture mb-4" style={{ color: "var(--cr-muted)" }}>
+            Un mod peut rester inchangé parce qu’il est terminé, ou parce qu’il est abandonné.
+            La date seule ne permet pas de trancher.
+          </p>
+
+          <ul className="m-0 p-0 list-none flex flex-col">
+            {stats.staleModsList.map((mod) => {
+              const maj = new Date(Number(mod.updatedAt) * 1000);
+              const ans = Math.floor(
+                (Date.now() / 1000 - Number(mod.updatedAt)) / (365 * 24 * 3600)
+              );
+              return (
+                <li
+                  key={`${mod.domain}/${mod.id}`}
+                  className="flex flex-wrap items-baseline gap-x-3 gap-y-1 py-3 border-b"
+                  style={{ borderColor: "var(--cr-line)" }}
                 >
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-slate-800 dark:text-white">
-                      {mod.name || `${mod.domain}/${mod.id}`}
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Dernière maj: {new Date(Number(mod.updatedAt) * 1000).toLocaleDateString()}
-                      {' · '}
-                      il y a {Math.floor((Date.now() / 1000 - Number(mod.updatedAt)) / (365 * 24 * 3600))} an(s)
-                    </p>
-                  </div>
+                  <span className="font-semibold flex-1 min-w-0 overflow-wrap-anywhere">
+                    {mod.name || `${mod.domain}/${mod.id}`}
+                  </span>
+                  <span className="cr-meta m-0">
+                    <time dateTime={maj.toISOString()}>
+                      {maj.toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "long",
+                        year: "numeric",
+                      })}
+                    </time>
+                    <span>
+                      il y a {ans} an{ans > 1 ? "s" : ""}
+                    </span>
+                  </span>
                   <a
                     href={mod.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs text-pico-primary hover:underline ml-4"
+                    className="cr-bouton"
+                    style={{ textDecoration: "none" }}
                   >
-                    Voir →
+                    Ouvrir sur Nexus
                   </a>
-                </div>
-              ))}
-            </div>
-          </div>
+                </li>
+              );
+            })}
+          </ul>
         </section>
       )}
     </div>

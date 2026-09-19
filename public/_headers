@@ -8,7 +8,7 @@
   X-Frame-Options: DENY
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; connect-src 'self'; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # Justification de chaque directive, verifiee sur le code au 2026-09-18 :
 #
@@ -19,6 +19,14 @@
 # style-src 'unsafe-inline'  Necessaire : DashboardPage utilise des style={{...}},
 #                            qui produisent des attributs style. Sans cela, la mise
 #                            en page casse. Tailwind, lui, est dans un fichier externe.
+#            + fonts.googleapis.com : la refonte charge ses polices depuis Google
+#                            Fonts. Sans cette autorisation la feuille est refusee
+#                            SANS message, et la page retombe silencieusement sur
+#                            les polices systeme — le defaut qu'on corrigeait.
+#
+# font-src   + fonts.gstatic.com : les fichiers de fonte eux-memes, servis depuis
+#                            un hote distinct de la feuille. Autoriser l'un sans
+#                            l'autre ne sert a rien.
 #
 # img-src https:             Les vignettes de mods viennent des CDN Nexus et les
 #                            visuels de jeux des CDN Steam, dont les noms d'hotes

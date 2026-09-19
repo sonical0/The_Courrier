@@ -110,7 +110,10 @@ describe("NexusModsPage — filtre par categorie", () => {
     renderPage();
     const select = screen.getByDisplayValue("Toutes les catégories");
     fireEvent.change(select, { target: { value: "Gameplay" } });
-    const search = screen.getByPlaceholderText(/Rechercher/i);
+    // Le champ est désormais désigné par un vrai <label> et non plus par son
+    // placeholder : on interroge donc l'étiquette, ce qui reste valable quel
+    // que soit le texte d'invite.
+    const search = screen.getByLabelText(/Rechercher/i);
     fireEvent.change(search, { target: { value: "C" } });
     expect(screen.queryByText("Mod Gameplay A")).not.toBeInTheDocument();
     expect(screen.getByText("Mod Gameplay C")).toBeInTheDocument();

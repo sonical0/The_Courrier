@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from "react";
-import { Outlet, Link } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
 import useNexusMods from "./components/useNexusMods";
@@ -11,6 +11,25 @@ import { exportConfig, importConfig } from "./components/useConfigBackup";
 import { exporter as exporterDiagnostics } from "./components/diagnostics";
 import useNotifications from "./components/useNotifications";
 
+/**
+ * Sections du site, déclarées une seule fois : la barre d'onglets et le
+ * panneau replié lisent la même liste. L'ancienne version les écrivait deux
+ * fois, ce qui avait déjà laissé diverger les libellés.
+ */
+const SECTIONS = [
+  { to: "/", libelle: "Tableau de bord" },
+  { to: "/actus", libelle: "Mises à jour" },
+  { to: "/nexus-mods", libelle: "Mods suivis" },
+  { to: "/incompatibility", libelle: "Incompatibilités" },
+];
+
+const LIBELLE_THEME = {
+  systeme: "Thème système",
+  light: "Thème clair",
+  dark: "Thème sombre",
+};
+const ICONE_THEME = { systeme: "◐", light: "☀", dark: "☾" };
+
 export default function AppLayout() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials, accounts, activeAccountId, switchAccount, removeAccount } = useNexusCredentials();
   const { loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials, loading);
@@ -18,7 +37,14 @@ export default function AppLayout() {
   const { supported: notifSupported, enabled: notifEnabled, permission: notifPermission, requestPermission, disableNotifications, notifyNewMods } = useNotifications();
   const [showModal, setShowModal] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { theme, toggleTheme } = useTheme();
+  const { choix, cycler } = useTheme();
+  const location = useLocation();
+
+  // Une section est active si le chemin correspond ; la racine est un cas à
+  // part, sinon elle serait active partout.
+  const estActive = (to) =>
+    to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+  const sectionCourante = (SECTIONS.find((s) => estActive(s.to)) || SECTIONS[0]).libelle;
 
   // Intégration Steam pour suivre les versions de jeux
   const {
@@ -80,290 +106,229 @@ export default function AppLayout() {
   const shouldShowModal = showModal || (!loading && !hasCredentials);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 transition-colors duration-200">
-      <header className="bg-slate-50 dark:bg-slate-900 border-b-2 border-slate-200 dark:border-slate-700">
-        <div className="container mx-auto px-4">
-          <nav className="flex items-center justify-between py-4">
-            <Link to="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer no-underline">
-              <img
-                src="/logo512.png"
-                alt="The Courrier Logo"
-                className="w-8 h-8 sm:w-10 sm:h-10 md:w-[68px] md:h-[68px]"
-              />
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">
-                The Courrier
-              </h1>
-            </Link>
+    <div className="min-h-screen" style={{ background: "var(--cr-ground)", color: "var(--cr-ink)" }}>
+      {/* ================================================================
+          En-tête. Un seul balisage, replié par CSS.
 
-            <div className="hidden xl:flex items-center gap-6">
-              <div className="flex gap-4">
+          L'ancienne version dupliquait intégralement la navigation et les
+          actions entre une version bureau (`xl:flex`) et un panneau mobile —
+          285 lignes, deux jeux de styles à maintenir, et un point de bascule à
+          1280 px qui affichait le menu replié sur des écrans larges.
+
+          Ici : les sections vivent dans une barre d'onglets visible dès 768 px
+          et dans le panneau en dessous ; les actions secondaires sont toujours
+          dans le panneau, à n'importe quelle taille.
+          ================================================================ */}
+      <header
+        className="sticky z-20 border-b"
+        style={{
+          top: "env(safe-area-inset-top, 0px)",
+          background: "color-mix(in srgb, var(--cr-ground) 92%, transparent)",
+          backdropFilter: "blur(8px)",
+          borderColor: "var(--cr-line)",
+        }}
+      >
+        <div className="cr-enveloppe flex items-center gap-3 py-3 flex-wrap">
+          <Link to="/" className="flex items-center gap-3 no-underline mr-auto" style={{ color: "inherit" }}>
+            <img src="/logo512.png" alt="" className="w-9 h-9" aria-hidden="true" />
+            <span className="flex items-baseline gap-2">
+              <strong className="text-xl" style={{ fontFamily: "var(--cr-display)", letterSpacing: "-0.015em" }}>
+                The Courrier
+              </strong>
+              <span className="text-sm hidden sm:inline" style={{ color: "var(--cr-muted)" }}>
+                suivi de mods
+              </span>
+            </span>
+          </Link>
+
+          {hasCredentials && (
+            <span
+              className="cr-etiquette cr-etiquette-ok hidden sm:inline-flex"
+              title={`Connecté en tant que ${credentials?.username}`}
+            >
+              {credentials?.username}
+            </span>
+          )}
+
+          {/* Trois états : système, clair, sombre. Le libellé passe en lecture
+              d'écran seule sous 640 px, où il poussait les autres boutons à la
+              ligne. */}
+          <button
+            type="button"
+            className="cr-bouton"
+            onClick={cycler}
+            aria-pressed={choix !== "systeme"}
+            title="Changer de thème : système, clair, sombre"
+          >
+            <span aria-hidden="true">{ICONE_THEME[choix]}</span>
+            <span className="hidden sm:inline">{LIBELLE_THEME[choix]}</span>
+            <span className="sm:hidden cr-visuellement-cache">{LIBELLE_THEME[choix]}</span>
+          </button>
+
+          <button
+            type="button"
+            className="cr-bouton cr-bouton-principal"
+            onClick={() => setShowModal(true)}
+            title={hasCredentials ? "Modifier les identifiants" : "Configurer les identifiants"}
+          >
+            Config
+          </button>
+
+          {/* Le bouton porte le nom de la section courante : replier la
+              navigation ne doit pas faire perdre le repère « où suis-je ». */}
+          <button
+            type="button"
+            className="cr-bouton"
+            id="cr-burger"
+            aria-expanded={isMenuOpen}
+            aria-controls="cr-panneau"
+            onClick={() => setIsMenuOpen((v) => !v)}
+          >
+            <span aria-hidden="true" className="grid gap-[3px]">
+              <span className="block w-[18px] h-[2px] rounded" style={{ background: "currentColor" }} />
+              <span className="block w-[18px] h-[2px] rounded" style={{ background: "currentColor" }} />
+              <span className="block w-[18px] h-[2px] rounded" style={{ background: "currentColor" }} />
+            </span>
+            <span className="md:hidden">
+              <span className="cr-visuellement-cache">Navigation — section courante : </span>
+              <strong>{sectionCourante}</strong>
+            </span>
+            <span className="hidden md:inline">Menu</span>
+          </button>
+        </div>
+
+        {/* Onglets de section : visibles dès 768 px, sinon dans le panneau. */}
+        <nav className="hidden md:block border-t" style={{ borderColor: "var(--cr-line)" }} aria-label="Sections">
+          <ul className="cr-enveloppe flex gap-1 list-none m-0 p-0">
+            {SECTIONS.map((s) => (
+              <li key={s.to}>
                 <Link
-                  to="/actus"
-                  className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium relative"
+                  to={s.to}
+                  className="inline-flex items-center gap-2 px-3 font-semibold no-underline"
+                  style={{
+                    minHeight: "44px",
+                    color: estActive(s.to) ? "var(--cr-ink)" : "var(--cr-muted)",
+                    borderBottom: `3px solid ${estActive(s.to) ? "var(--cr-accent)" : "transparent"}`,
+                  }}
+                  aria-current={estActive(s.to) ? "page" : undefined}
                 >
-                  Mise à jour
-                  {newModsCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {s.libelle}
+                  {s.to === "/actus" && newModsCount > 0 && (
+                    <span
+                      className="cr-mono text-sm rounded-full px-2"
+                      style={{ background: "var(--cr-accent-soft)", color: "var(--cr-accent)" }}
+                    >
                       {newModsCount > 99 ? "99+" : newModsCount}
                     </span>
                   )}
                 </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+
+        {isMenuOpen && (
+          <div id="cr-panneau" className="cr-enveloppe pb-4 pt-3 border-t" style={{ borderColor: "var(--cr-line)" }}>
+            {/* Sections : uniquement quand la barre d'onglets est repliée. */}
+            <div className="md:hidden flex flex-col gap-1 mb-3">
+              {SECTIONS.map((s) => (
                 <Link
-                  to="/nexus-mods"
-                  className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
+                  key={s.to}
+                  to={s.to}
+                  onClick={() => setIsMenuOpen(false)}
+                  className="cr-filtre no-underline"
+                  aria-current={estActive(s.to) ? "page" : undefined}
+                  style={
+                    estActive(s.to)
+                      ? {
+                          background: "var(--cr-accent-soft)",
+                          borderColor: "var(--cr-accent)",
+                          color: "var(--cr-accent)",
+                          fontWeight: 600,
+                        }
+                      : undefined
+                  }
                 >
-                  Liste des Mods
+                  {s.libelle}
+                  {s.to === "/actus" && newModsCount > 0 && (
+                    <span className="cr-compte">{newModsCount > 99 ? "99+" : newModsCount}</span>
+                  )}
                 </Link>
-                <Link
-                  to="/incompatibility"
-                  className="text-slate-700 dark:text-slate-300 hover:text-pico-primary dark:hover:text-pico-primary transition-colors font-medium"
-                >
-                  🔍 Incompatibilités
-                </Link>
-              </div>
+              ))}
+            </div>
 
-              {hasCredentials && (
-                <span className="px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-full text-sm font-medium">
-                  ✓ {credentials?.username}
-                </span>
-              )}
-
-              <button
-                onClick={toggleTheme}
-                className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors font-medium"
-                title={theme === "light" ? "Passer en mode nuit" : "Passer en mode jour"}
-              >
-                {theme === "light" ? "🌙 Nuit" : "☀️ Jour"}
-              </button>
-
+            <p className="text-sm font-semibold m-0 mb-2" style={{ color: "var(--cr-muted)" }}>
+              Réglages
+            </p>
+            <div className="flex flex-wrap gap-2">
               {notifSupported && (
                 <button
+                  type="button"
+                  className="cr-bouton"
                   onClick={notifEnabled ? disableNotifications : requestPermission}
-                  className={`px-3 py-2 rounded-lg transition-colors font-medium text-sm ${
-                    notifEnabled
-                      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-800/40"
-                      : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600"
-                  }`}
+                  disabled={notifPermission === "denied"}
+                  aria-pressed={notifEnabled}
                   title={
                     notifPermission === "denied"
-                      ? "Notifications bloquees par le navigateur"
-                      : notifEnabled
-                      ? "Desactiver les notifications"
-                      : "Activer les notifications"
+                      ? "Notifications bloquées par le navigateur"
+                      : "Activer ou désactiver les notifications"
                   }
-                  disabled={notifPermission === "denied"}
                 >
-                  {notifEnabled ? "Notifs ON" : "Notifs OFF"}
+                  Notifications {notifEnabled ? "activées" : "désactivées"}
                 </button>
               )}
-
-              <button
-                className="px-4 py-2 rounded-lg bg-pico-primary hover:bg-pico-primary-hover text-white transition-colors font-medium"
-                onClick={() => setShowModal(true)}
-                title={hasCredentials ? "Modifier les identifiants" : "Configurer les identifiants"}
-              >
-                ⚙️ Config
-              </button>
-
-              <button
-                className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
-                onClick={exportConfig}
-                title="Exporter la configuration (tags, mods vus, theme)"
-              >
-                Exporter
+              <button type="button" className="cr-bouton" onClick={exportConfig} title="Exporter la configuration">
+                Exporter la configuration
               </button>
               <button
-                className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                type="button"
+                className="cr-bouton"
                 onClick={() => importInputRef.current?.click()}
-                title="Importer une configuration sauvegardee"
+                title="Importer une configuration"
               >
                 Importer
               </button>
               <button
-                className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors text-sm font-medium"
+                type="button"
+                className="cr-bouton"
                 onClick={exporterDiagnostics}
-                title="Telecharger un journal technique a joindre a un rapport de bug — sans identifiants"
+                title="Journal technique à joindre à un rapport — sans identifiants"
               >
-                🩺 Diagnostic
+                Diagnostic
               </button>
-              <input
-                ref={importInputRef}
-                type="file"
-                accept=".json,application/json"
-                className="hidden"
-                onChange={handleImport}
-              />
-
               {hasCredentials && (
                 <button
-                  className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors font-medium"
+                  type="button"
+                  className="cr-bouton"
                   onClick={handleClearCredentials}
-                  title="Supprimer les identifiants"
+                  style={{ color: "var(--cr-crit)", borderColor: "var(--cr-crit)" }}
+                  title="Supprimer les identifiants de ce navigateur"
                 >
-                  🗑️
+                  Supprimer mes identifiants
                 </button>
               )}
             </div>
 
-            <div className="xl:hidden">
-              <button
-                aria-label="Ouvrir le menu"
-                className="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors"
-                onClick={() => setIsMenuOpen((v) => !v)}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none"
-                     viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
-                </svg>
-              </button>
-            </div>
-          </nav>
+            {!hasCredentials && (
+              <p className="text-sm mt-3 mb-0" style={{ color: "var(--cr-muted)" }}>
+                Identifiants non configurés.
+              </p>
+            )}
 
-          {isMenuOpen && (
-            <div className="xl:hidden pb-4">
-              <div className={`flex flex-col gap-3 rounded-xl border p-4 transition-colors ${
-                theme === 'dark'
-                  ? 'border-slate-700 bg-slate-800'
-                  : 'border-slate-200 bg-white'
-              }`}>
-                <Link
-                  to="/actus"
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium relative ${
-                    theme === 'dark'
-                      ? 'bg-slate-700 text-white hover:bg-slate-600'
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                  }`}
-                >
-                  Mise à jour
-                  {newModsCount > 0 && (
-                    <span className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                      {newModsCount > 99 ? "99+" : newModsCount}
-                    </span>
-                  )}
-                </Link>
-                <Link
-                  to="/nexus-mods"
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
-                    theme === 'dark'
-                      ? 'bg-slate-700 text-white hover:bg-slate-600'
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                  }`}
-                >
-                  Liste des Mods
-                </Link>
-                <Link
-                  to="/incompatibility"
-                  onClick={() => setIsMenuOpen(false)}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
-                    theme === 'dark'
-                      ? 'bg-slate-700 text-white hover:bg-slate-600'
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                  }`}
-                >
-                  🔍 Incompatibilités
-                </Link>
-                <button
-                  onClick={() => {
-                    toggleTheme();
-                    setIsMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
-                    theme === 'dark'
-                      ? 'bg-slate-700 text-white hover:bg-slate-600'
-                      : 'bg-slate-100 text-slate-900 hover:bg-slate-200'
-                  }`}
-                  title={theme === "light" ? "Passer en mode nuit" : "Passer en mode jour"}
-                >
-                  {theme === "light" ? "🌙 Nuit" : "☀️ Jour"}
-                </button>
-                {notifSupported && (
-                  <button
-                    onClick={() => {
-                      notifEnabled ? disableNotifications() : requestPermission();
-                      setIsMenuOpen(false);
-                    }}
-                    disabled={notifPermission === "denied"}
-                    className={`w-full text-left px-4 py-2 rounded-lg transition-colors font-medium ${
-                      notifEnabled
-                        ? "bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300"
-                        : theme === "dark"
-                        ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                    title={notifPermission === "denied" ? "Notifications bloquees" : ""}
-                  >
-                    {notifEnabled ? "Notifications : activees" : "Notifications : desactivees"}
-                  </button>
-                )}
-
-                <button
-                  onClick={() => {
-                    setShowModal(true);
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full text-left px-4 py-2 rounded-lg bg-pico-primary hover:bg-pico-primary-hover text-white transition-colors font-medium"
-                  title={hasCredentials ? "Modifier les identifiants" : "Configurer les identifiants"}
-                >
-                  ⚙️ Config
-                </button>
-
-                <div className="flex gap-2">
-                  <button
-                    className={`flex-1 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-                      theme === "dark"
-                        ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                    onClick={() => { exportConfig(); setIsMenuOpen(false); }}
-                    title="Exporter la configuration"
-                  >
-                    Exporter config
-                  </button>
-                  <button
-                    className={`flex-1 px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
-                      theme === "dark"
-                        ? "bg-slate-700 text-slate-300 hover:bg-slate-600"
-                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                    }`}
-                    onClick={() => { importInputRef.current?.click(); setIsMenuOpen(false); }}
-                    title="Importer une configuration"
-                  >
-                    Importer config
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between pt-2">
-                  {hasCredentials ? (
-                    <>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        theme === 'dark'
-                          ? 'bg-green-900/30 text-green-300'
-                          : 'bg-green-100 text-green-800'
-                      }`}>
-                        ✓ {credentials?.username}
-                      </span>
-                      <button
-                        className="px-3 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors font-medium"
-                        onClick={handleClearCredentials}
-                        title="Supprimer les identifiants"
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  ) : (
-                    <span className={`text-sm ${
-                      theme === 'dark' ? 'text-slate-400' : 'text-slate-500'
-                    }`}>
-                      Identifiants non configurés
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="application/json"
+              onChange={handleImport}
+              className="cr-visuellement-cache"
+            />
+            {importStatus && (
+              <p className="text-sm mt-3 mb-0" style={{ color: "var(--cr-ink)" }}>
+                {importStatus}
+              </p>
+            )}
+          </div>
+        )}
       </header>
 
       <CredentialsModal
@@ -376,8 +341,21 @@ export default function AppLayout() {
         onRemove={removeAccount}
       />
 
+      {/* Le message flottait sous l'en-tête collant et le recouvrait par
+          moments ; il est passé en bas, hors du chemin, et annoncé aux
+          lecteurs d'écran puisqu'il apparaît sans action de leur part. */}
       {importStatus && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-xl shadow-lg bg-slate-800 text-white text-sm font-medium">
+        <div
+          role="status"
+          className="fixed left-1/2 -translate-x-1/2 z-50 px-5 py-3 font-semibold"
+          style={{
+            bottom: "calc(1rem + env(safe-area-inset-bottom, 0px))",
+            background: "var(--cr-ink)",
+            color: "var(--cr-ground)",
+            borderRadius: "var(--cr-radius)",
+            maxWidth: "calc(100vw - 2rem)",
+          }}
+        >
           {importStatus}
         </div>
       )}

@@ -1,9 +1,44 @@
 import { useMemo, useState, useEffect, useCallback } from "react";
 import { useOutletContext } from "react-router-dom";
 import useLastVisit from "../components/useLastVisit";
-import useModTags, { TAG_LABELS, TAG_COLORS } from "../components/useModTags";
+import useModTags, { TAG_LABELS } from "../components/useModTags";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
+
+// Le statut d'un mod était porté par une couleur d'anneau autour de la carte :
+// invisible pour qui ne distingue pas les teintes, et muet pour un lecteur
+// d'écran. On le rend par une étiquette écrite ; la teinte ne fait que doubler
+// le mot. « En pause » et « Archivé » restent neutres : ce ne sont pas des
+// alertes, seulement des rangements.
+const ETIQUETTE_PAR_STATUT = {
+  installed: "cr-etiquette-ok",
+  "to-install": "cr-etiquette-attention",
+  paused: "cr-etiquette-neutre",
+  archived: "cr-etiquette-neutre",
+};
+
+function EtiquetteStatut({ statut }) {
+  if (!statut) return null;
+  const variante = ETIQUETTE_PAR_STATUT[statut] || "cr-etiquette-neutre";
+  return <span className={`cr-etiquette ${variante}`}>{TAG_LABELS[statut]}</span>;
+}
+
+// La tuile Nexus sert de repère de jeu quand le mod n'a pas d'illustration.
+// Elle est décorative : le nom du jeu reste écrit à côté.
+function IconeJeu({ gameId, className }) {
+  if (!gameId) return <span className={className} aria-hidden="true" />;
+  return (
+    <img
+      src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${gameId}.jpg`}
+      alt=""
+      aria-hidden="true"
+      className={className}
+      onError={(e) => {
+        e.currentTarget.style.display = "none";
+      }}
+    />
+  );
+}
 
 export default function NexusModsPage() {
   const { getSteamInfo, loading, error, games, modsForGame, refresh, untrackMod } = useOutletContext();
@@ -73,6 +108,20 @@ export default function NexusModsPage() {
     return result;
   }, [modsBase, sortBy, filterCategory, filterTag, searchQuery, getTag]);
 
+  // Les compteurs des filtres de statut : ils portent le même ensemble que le
+  // filtre lui-même, avant filtrage, pour que le nombre annoncé soit celui
+  // qu'on obtiendra en cliquant.
+  const comptesStatut = useMemo(() => {
+    const compte = { ALL: modsBase.length, none: 0 };
+    for (const value of Object.keys(TAG_LABELS)) compte[value] = 0;
+    for (const m of modsBase) {
+      const tag = getTag(m.domain, m.id);
+      if (tag && compte[tag] !== undefined) compte[tag] += 1;
+      else if (!tag) compte.none += 1;
+    }
+    return compte;
+  }, [modsBase, getTag]);
+
   const handleUntrack = async (domain, modId, modName) => {
     if (!window.confirm(`Voulez-vous vraiment retirer "${modName}" de votre liste de mods suivis ?`)) {
       return;
@@ -137,36 +186,45 @@ export default function NexusModsPage() {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-slate-600 dark:text-slate-400">Chargement Nexus…</p>
+      <div className="cr-enveloppe py-8">
+        <p style={{ color: "var(--cr-muted)" }}>Chargement Nexus…</p>
       </div>
     );
   }
 
   if (error) {
-    if (error.includes("credentials") || error.includes("401")) {
-      return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
-            <h4 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
-              ⚠️ Configuration requise
-            </h4>
-            <p className="text-slate-700 dark:text-slate-300 mb-3">
-              Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
-            </p>
-            <hr className="my-3 border-slate-200 dark:border-slate-700" />
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
-            </p>
-          </div>
-        </div>
-      );
-    }
+    const identifiantsManquants = error.includes("credentials") || error.includes("401");
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="pico-card p-6 border-red-500 dark:border-red-600">
-          <h4 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">❌ Erreur</h4>
-          <p className="text-slate-700 dark:text-slate-300">{error}</p>
+      <div className="cr-enveloppe py-8">
+        <div
+          className="cr-lecture"
+          style={{
+            background: identifiantsManquants ? "var(--cr-warn-soft)" : "var(--cr-crit-soft)",
+            border: `1px solid ${identifiantsManquants ? "var(--cr-warn)" : "var(--cr-crit)"}`,
+            borderRadius: "var(--cr-radius)",
+            padding: "1.25rem",
+          }}
+        >
+          {identifiantsManquants ? (
+            <>
+              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--cr-warn)" }}>
+                Configuration requise
+              </h2>
+              <p className="mb-2">
+                Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
+              </p>
+              <p className="m-0" style={{ color: "var(--cr-muted)" }}>
+                Ouvrez <strong>Config</strong> dans la barre de navigation pour les renseigner.
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold mb-2" style={{ color: "var(--cr-crit)" }}>
+                Erreur
+              </h2>
+              <p className="m-0">{error}</p>
+            </>
+          )}
         </div>
       </div>
     );
@@ -174,309 +232,366 @@ export default function NexusModsPage() {
 
   if (!games.length) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-slate-600 dark:text-slate-400">Aucun mod suivi trouvé</p>
+      <div className="cr-enveloppe py-8">
+        <div className="cr-vide cr-lecture">Aucun mod suivi trouvé.</div>
       </div>
     );
   }
 
+  const selectedGame =
+    gameKey && gameKey !== "ALL"
+      ? games.find((g) => (g.domain || g.gameId || g.name) === gameKey)
+      : null;
+  const steamInfo = selectedGame && getSteamInfo ? getSteamInfo(selectedGame.domain) : null;
+
+  // Le filtre de statut est un petit ensemble fermé : des boutons le montrent
+  // en entier, avec son compte, là où un menu déroulant le cachait.
+  const filtresStatut = [
+    { value: "ALL", label: "Tous les statuts" },
+    ...Object.entries(TAG_LABELS).map(([value, label]) => ({ value, label })),
+    { value: "none", label: "Sans statut" },
+  ];
+
   return (
-    <div className="container mx-auto px-4 py-8 pb-24">
-      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
-          Liste des Mods
-        </h2>
-        <div className="flex items-center gap-2 flex-wrap">
+    <div className="cr-enveloppe py-8 pb-28">
+      <header className="flex flex-wrap items-center justify-between gap-4 mb-8">
+        <h1 className="text-3xl font-bold m-0" style={{ letterSpacing: "-0.02em" }}>
+          Mods suivis
+        </h1>
+        <div className="flex flex-wrap items-center gap-2">
           {countNew(mods) > 0 && (
-            <button
-              className="pico-btn-outline text-sm"
-              onClick={() => markAllAsSeen(mods)}
-              title="Marquer tous les mods visibles comme lus"
-            >
+            <button type="button" className="cr-bouton" onClick={() => markAllAsSeen(mods)}>
               Tout marquer comme lu ({countNew(mods)})
             </button>
           )}
-          <button
-            className="pico-btn-outline text-sm"
-            onClick={handleExport}
-            title="Exporter la liste complète en JSON"
-          >
+          <button type="button" className="cr-bouton" onClick={handleExport}>
             Exporter JSON
           </button>
+          <button type="button" className="cr-bouton" onClick={refresh}>
+            Rafraîchir
+          </button>
         </div>
-      </div>
+      </header>
 
-      {/* Barre de recherche */}
-      <div className="mb-4">
-        <input
-          type="text"
-          className="pico-select w-full"
-          placeholder="🔍 Rechercher par nom ou auteur..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+      {/* Les filtres passent en rail latéral dès qu'il y a la place : sur cet
+          écran ils sont nombreux, et les comprimer sur une ligne les rendait
+          illisibles avant de les rendre inutilisables. */}
+      <div className="lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 lg:items-start">
+        <aside className="mb-8 lg:mb-0 lg:sticky lg:top-6 flex flex-col gap-6" aria-label="Filtres">
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="recherche-mod">
+              Rechercher
+            </label>
+            <input
+              id="recherche-mod"
+              type="search"
+              className="pico-input"
+              placeholder="Nom ou auteur"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
 
-      <div className="flex flex-col md:flex-row md:items-end md:justify-between mb-6 gap-4">
-        <div className="flex-1 max-w-md">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Jeu
-          </label>
-          <select
-            className="pico-select"
-            value={gameKey}
-            onChange={(e) => setGameKey(e.target.value)}
-          >
-            <option value="ALL">🎮 Tous les jeux</option>
-            {games.map((g) => (
-              <option key={g.key} value={g.domain || g.gameId || g.name}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {availableCategories.length > 0 && (
-          <div className="flex-1 max-w-md">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Catégorie
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="filtre-jeu">
+              Jeu
             </label>
             <select
+              id="filtre-jeu"
               className="pico-select"
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
+              value={gameKey}
+              onChange={(e) => setGameKey(e.target.value)}
             >
-              <option value="ALL">Toutes les catégories</option>
-              {availableCategories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+              <option value="ALL">Tous les jeux</option>
+              {games.map((g) => (
+                <option key={g.key} value={g.domain || g.gameId || g.name}>
+                  {g.name}
+                </option>
               ))}
             </select>
           </div>
-        )}
-        <div className="flex-1 max-w-md">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Statut
-          </label>
-          <select
-            className="pico-select"
-            value={filterTag}
-            onChange={(e) => setFilterTag(e.target.value)}
-            data-testid="tag-filter"
-          >
-            <option value="ALL">Tous les statuts</option>
-            {Object.entries(TAG_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>{label}</option>
-            ))}
-            <option value="none">Sans statut</option>
-          </select>
-        </div>
-        <div className="flex-1 max-w-md">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Trier par
-          </label>
-          <select
-            className="pico-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="date">Date de mise a jour</option>
-            <option value="name">Nom</option>
-            <option value="author">Auteur</option>
-          </select>
-        </div>
-        <button className="pico-btn-outline w-fit" onClick={refresh}>
-          Rafraichir
-        </button>
-      </div>
 
-      {gameKey && gameKey !== "ALL" && getSteamInfo && (() => {
-        const selectedGame = games.find(g => (g.domain || g.gameId || g.name) === gameKey);
-        const steamInfo = selectedGame ? getSteamInfo(selectedGame.domain) : null;
-        return steamInfo ? (
-          <div className="mb-6">
-            <SteamGameInfo domain={selectedGame.domain} steamInfo={steamInfo} />
-          </div>
-        ) : null;
-      })()}
-
-      {searchQuery && (
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          {mods.length} résultat{mods.length !== 1 ? "s" : ""} pour « {searchQuery} »
-        </p>
-      )}
-
-      {mods.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mods.map((m) => {
-            const selKey = `${m.domain}:${m.id}`;
-            const isSelected = selectedMods.has(selKey);
-            const currentTag = getTag(m.domain, m.id);
-            const tagColor = currentTag ? TAG_COLORS[currentTag] : null;
-            return (
-              <div
-                className={`pico-card flex flex-col transition-all ${isSelected ? "ring-2 ring-pico-primary" : tagColor ? tagColor.border : ""}`}
-                key={`${m.domain}-${m.id}`}
-                data-testid={`mod-card-${m.id}`}
+          {availableCategories.length > 0 && (
+            <div>
+              <label className="block font-semibold mb-2" htmlFor="filtre-categorie">
+                Catégorie
+              </label>
+              <select
+                id="filtre-categorie"
+                className="pico-select"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
               >
-                <label className="flex items-center gap-2 px-3 pt-3 cursor-pointer select-none">
-                  <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={() => toggleSelect(m.domain, m.id)}
-                    className="w-4 h-4 accent-pico-primary"
-                  />
-                  <span className="text-xs text-slate-500 dark:text-slate-400">Sélectionner</span>
-                </label>
-
-                {m.picture && (
-                  <img src={m.picture} alt={m.name} className="w-full h-40 object-cover flex-shrink-0" />
-                )}
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="flex items-start gap-2 mb-2">
-                    <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
-                      {m.name || `${m.domain}/${m.id}`}
-                    </h5>
-                    {isNew(m.updatedAt, m.domain, m.id) && (
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
-                        <button
-                          className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors"
-                          onClick={() => markAsSeen(m.domain, m.id)}
-                          title="Marquer comme lu"
-                        >
-                          Lu
-                        </button>
-                      </div>
-                    )}
-                  </div>
-
-                  {m.summary && (
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">{m.summary}</p>
-                  )}
-
-                  {m.category && (
-                    <div className="mb-3">
-                      <span className="px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
-                        📚 {m.category}
-                      </span>
-                    </div>
-                  )}
-
-                  <div className="mb-3 flex items-center gap-2 flex-wrap">
-                    {m.previousVersion && m.previousVersion !== m.version && (
-                      <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">
-                        {m.previousVersion}
-                      </span>
-                    )}
-                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-sm font-medium">
-                      Version {m.version || "?"}
-                    </span>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      · par{" "}
-                      {m.author ? (
-                        <a
-                          href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ""}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-pico-primary hover:underline"
-                        >
-                          {m.author}
-                        </a>
-                      ) : (
-                        "Auteur inconnu"
-                      )}
-                    </span>
-                  </div>
-
-                  <EnhancedChangelog mod={m} maxLines={6} />
-
-                  <div className="mt-3 mb-2 flex flex-wrap gap-1" data-testid={`tag-buttons-${m.id}`}>
-                    {Object.entries(TAG_LABELS).map(([tagValue, tagLabel]) => {
-                      const isActive = currentTag === tagValue;
-                      const colors = TAG_COLORS[tagValue];
-                      return (
-                        <button
-                          key={tagValue}
-                          className={`px-2 py-0.5 rounded text-xs font-medium border transition-colors ${
-                            isActive
-                              ? colors.btn + " border-transparent"
-                              : "bg-transparent text-slate-500 dark:text-slate-400 border-slate-300 dark:border-slate-600 hover:border-slate-400"
-                          }`}
-                          onClick={() => toggleTag(m.domain, m.id, tagValue)}
-                          title={isActive ? `Retirer le statut "${tagLabel}"` : `Marquer comme "${tagLabel}"`}
-                        >
-                          {tagLabel}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-auto space-y-2">
-                    <div className="flex justify-between items-center">
-                      <a
-                        href={m.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`pico-btn-primary text-sm ${m.url ? "" : "opacity-50 pointer-events-none"}`}
-                      >
-                        Ouvrir sur Nexus
-                      </a>
-                      <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded text-xs">
-                        {m.updatedAt
-                          ? new Date(
-                              Number(m.updatedAt) *
-                              (String(m.updatedAt).length > 10 ? 1 : 1000)
-                            ).toLocaleString()
-                          : "?"}
-                      </span>
-                    </div>
-                    <button
-                      className="w-full px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors text-sm font-medium disabled:opacity-50"
-                      onClick={() => handleUntrack(m.domain, m.id, m.name)}
-                      disabled={untracking === m.id}
-                    >
-                      {untracking === m.id ? "Suppression..." : "🗑️ Ne plus suivre"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-          {!mods.length && (
-            <p className="text-slate-500 dark:text-slate-400 col-span-full">
-              Aucun mod pour ce jeu.
-            </p>
+                <option value="ALL">Toutes les catégories</option>
+                {availableCategories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+            </div>
           )}
-        </div>
-      )}
 
-      {/* Barre d'actions batch sticky */}
-      {selectedMods.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-slate-800 border-t border-slate-200 dark:border-slate-700 shadow-lg px-4 py-3">
-          <div className="container mx-auto flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3">
-              <span className="font-medium text-slate-700 dark:text-slate-300">
-                {selectedMods.size} mod{selectedMods.size > 1 ? "s" : ""} sélectionné{selectedMods.size > 1 ? "s" : ""}
-              </span>
-              <button
-                className="text-sm text-pico-primary hover:underline"
-                onClick={toggleSelectAll}
-              >
+          <div data-testid="tag-filter">
+            <h2 className="font-semibold mb-2">Statut</h2>
+            <div className="flex flex-col gap-2">
+              {filtresStatut.map(({ value, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  className="cr-filtre"
+                  aria-pressed={filterTag === value}
+                  onClick={() => setFilterTag(value)}
+                >
+                  <span>{label}</span>
+                  <span className="cr-compte">{comptesStatut[value] ?? 0}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold mb-2" htmlFor="tri-mods">
+              Trier par
+            </label>
+            <select
+              id="tri-mods"
+              className="pico-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="date">Date de mise à jour</option>
+              <option value="name">Nom</option>
+              <option value="author">Auteur</option>
+            </select>
+          </div>
+        </aside>
+
+        <section aria-label="Liste des mods">
+          {steamInfo && (
+            <div className="mb-6">
+              <SteamGameInfo domain={selectedGame.domain} steamInfo={steamInfo} />
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+            <p className="m-0" style={{ color: "var(--cr-muted)" }}>
+              {mods.length} mod{mods.length !== 1 ? "s" : ""}
+              {searchQuery ? ` pour « ${searchQuery} »` : ""}
+            </p>
+            {mods.length > 0 && (
+              <button type="button" className="cr-bouton" onClick={toggleSelectAll}>
                 {selectedMods.size === mods.length ? "Tout désélectionner" : "Tout sélectionner"}
               </button>
-            </div>
-            <div className="flex gap-2">
+            )}
+          </div>
+
+          {mods.length === 0 ? (
+            <div className="cr-vide">Aucun mod ne correspond à ces filtres.</div>
+          ) : (
+            <ul className="list-none m-0 p-0">
+              {mods.map((m) => {
+                const selKey = `${m.domain}:${m.id}`;
+                const isSelected = selectedMods.has(selKey);
+                const currentTag = getTag(m.domain, m.id);
+                const nouveau = isNew(m.updatedAt, m.domain, m.id);
+                const dateMaj = m.updatedAt
+                  ? new Date(
+                      Number(m.updatedAt) * (String(m.updatedAt).length > 10 ? 1 : 1000)
+                    )
+                  : null;
+                return (
+                  <li
+                    className="cr-mod"
+                    key={`${m.domain}-${m.id}`}
+                    data-testid={`mod-card-${m.id}`}
+                    style={
+                      isSelected
+                        ? { background: "var(--cr-accent-soft)", borderRadius: "var(--cr-radius)" }
+                        : undefined
+                    }
+                  >
+                    {m.picture ? (
+                      <img src={m.picture} alt="" aria-hidden="true" className="cr-mod-vignette" />
+                    ) : (
+                      <IconeJeu gameId={m.gameId} className="cr-jeu-icone cr-jeu-icone-lg" />
+                    )}
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-start gap-x-3 gap-y-2 mb-1">
+                        <h3 className="text-xl font-bold m-0 flex-1 min-w-0 overflow-wrap-anywhere">
+                          {m.name || (
+                            <span className="cr-mono">{`${m.domain}/${m.id}`}</span>
+                          )}
+                        </h3>
+                        {nouveau && (
+                          <span className="cr-etiquette cr-etiquette-attention">Nouveau</span>
+                        )}
+                        <EtiquetteStatut statut={currentTag} />
+                      </div>
+
+                      <p className="cr-meta m-0 mb-2">
+                        <span>
+                          par{" "}
+                          {m.author ? (
+                            <a
+                              href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ""}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{ color: "var(--cr-accent)" }}
+                            >
+                              {m.author}
+                            </a>
+                          ) : (
+                            "auteur inconnu"
+                          )}
+                        </span>
+                        {m.gameName && <span>{m.gameName}</span>}
+                        {m.category && <span>{m.category}</span>}
+                        {dateMaj && (
+                          <time dateTime={dateMaj.toISOString()}>{dateMaj.toLocaleString()}</time>
+                        )}
+                      </p>
+
+                      {/* Le passage d'une version à l'autre est la donnée que
+                          l'utilisateur vient chercher : elle se lit telle quelle
+                          plutôt qu'en deux pastilles côte à côte. */}
+                      <p className="cr-transition m-0 mb-2">
+                        {m.previousVersion && m.previousVersion !== m.version && (
+                          <>
+                            <span className="cr-transition-avant">{m.previousVersion}</span>
+                            <span aria-hidden="true" style={{ color: "var(--cr-muted)" }}>
+                              →
+                            </span>
+                          </>
+                        )}
+                        <span className="cr-transition-apres">version {m.version || "?"}</span>
+                      </p>
+
+                      {m.summary && <p className="cr-lecture m-0 mb-2">{m.summary}</p>}
+
+                      <EnhancedChangelog mod={m} maxLines={6} />
+
+                      <div
+                        className="flex flex-wrap gap-2 mt-3"
+                        data-testid={`tag-buttons-${m.id}`}
+                      >
+                        {Object.entries(TAG_LABELS).map(([tagValue, tagLabel]) => {
+                          const actif = currentTag === tagValue;
+                          return (
+                            <button
+                              key={tagValue}
+                              type="button"
+                              className="cr-bouton"
+                              aria-pressed={actif}
+                              style={
+                                actif
+                                  ? {
+                                      background: "var(--cr-accent-soft)",
+                                      borderColor: "var(--cr-accent)",
+                                      color: "var(--cr-accent)",
+                                      fontWeight: 600,
+                                    }
+                                  : undefined
+                              }
+                              onClick={() => toggleTag(m.domain, m.id, tagValue)}
+                            >
+                              {tagLabel}
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {m.url && (
+                          <a
+                            href={m.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="cr-bouton cr-bouton-principal"
+                          >
+                            Ouvrir sur Nexus
+                          </a>
+                        )}
+                        {nouveau && (
+                          <button
+                            type="button"
+                            className="cr-bouton"
+                            onClick={() => markAsSeen(m.domain, m.id)}
+                          >
+                            Marquer comme lu
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="cr-bouton"
+                          style={{ color: "var(--cr-crit)", borderColor: "var(--cr-crit)" }}
+                          onClick={() => handleUntrack(m.domain, m.id, m.name)}
+                          disabled={untracking === m.id}
+                        >
+                          {untracking === m.id ? "Suppression…" : "Ne plus suivre"}
+                        </button>
+                        <label className="cr-bouton cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleSelect(m.domain, m.id)}
+                            className="w-5 h-5"
+                            style={{ accentColor: "var(--cr-accent)" }}
+                            /* Le nom du mod passe par aria-label plutôt que par
+                               un span caché : dix cases « Sélectionner »
+                               identiques sont inutilisables au lecteur d'écran,
+                               mais dupliquer le nom dans le DOM le rendait
+                               ambigu partout ailleurs. */
+                            aria-label={`Sélectionner ${m.name || `${m.domain}/${m.id}`}`}
+                          />
+                          Sélectionner
+                        </label>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      </div>
+
+      {/* Barre d'actions de sélection */}
+      {selectedMods.size > 0 && (
+        <div
+          className="fixed bottom-0 left-0 right-0 z-50"
+          style={{
+            background: "var(--cr-surface)",
+            borderTop: "1px solid var(--cr-line-strong)",
+          }}
+        >
+          <div className="cr-enveloppe py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="m-0 font-semibold">
+              {selectedMods.size} mod{selectedMods.size > 1 ? "s" : ""} sélectionné
+              {selectedMods.size > 1 ? "s" : ""}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" className="cr-bouton" onClick={toggleSelectAll}>
+                {selectedMods.size === mods.length ? "Tout désélectionner" : "Tout sélectionner"}
+              </button>
               <button
-                className="pico-btn-outline text-sm"
+                type="button"
+                className="cr-bouton"
                 onClick={() => setSelectedMods(new Set())}
               >
                 Annuler
               </button>
               <button
-                className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white text-sm font-medium disabled:opacity-50"
+                type="button"
+                className="cr-bouton"
+                style={{ color: "var(--cr-crit)", borderColor: "var(--cr-crit)" }}
                 onClick={handleBatchUntrack}
                 disabled={batchUntracking}
               >
-                {batchUntracking ? "Suppression..." : `🗑️ Retirer la sélection (${selectedMods.size})`}
+                {batchUntracking
+                  ? "Suppression…"
+                  : `Retirer la sélection (${selectedMods.size})`}
               </button>
             </div>
           </div>

@@ -2,20 +2,110 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ====================================================================
+   Jetons de la refonte (2026-09-18).
+
+   La palette vit ici en propriétés CSS, pas dans les utilitaires Tailwind :
+   un seul endroit à toucher pour ajuster une couleur, et c'est ce qui
+   permettra plus tard de poser les thèmes de jeu sans retoucher un seul
+   composant.
+
+   Tailwind reste en place et continue de fonctionner : `darkMode: 'class'`
+   applique `.dark` sur <html>, et useTheme pose cette classe soit d'après un
+   choix explicite, soit d'après le réglage système. Les centaines
+   d'utilitaires `dark:` des écrans existants restent donc valides — les
+   remplacer aurait été long et risqué pour un gain nul.
+
+   Contrastes mesurés : les seize paires couleur/fond des deux thèmes passent
+   AA (4,5:1). La plus serrée est l'alerte sur son fond, à 4,82:1.
+   ==================================================================== */
+
+:root {
+  --cr-ground: #fbfaf8;      /* blanc cassé chaud : choisi, pas hérité */
+  --cr-surface: #ffffff;
+  --cr-surface-2: #f4f2ee;
+  --cr-ink: #16181c;
+  --cr-muted: #5c636e;
+  --cr-line: #e3e1dc;
+  --cr-line-strong: #c9c5bd;
+
+  --cr-accent: #0f6e6e;
+  --cr-accent-ink: #ffffff;
+  --cr-accent-soft: #e2f0ef;
+
+  /* Couleurs de sens, volontairement distinctes de l'accent : une alerte ne
+     doit pas disparaître le jour où la couleur de marque change. */
+  --cr-ok: #1f6f3f;
+  --cr-ok-soft: #e4f2e9;
+  --cr-warn: #9a5b06;
+  --cr-warn-soft: #fdf0dc;
+  --cr-crit: #a3271f;
+  --cr-crit-soft: #fbe6e4;
+
+  --cr-radius: 10px;
+
+  --cr-sans: "Source Sans 3", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cr-display: "Bricolage Grotesque", var(--cr-sans);
+  --cr-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.dark {
+  --cr-ground: #14161a;
+  --cr-surface: #1b1e24;
+  --cr-surface-2: #22262e;
+  --cr-ink: #eceef2;
+  --cr-muted: #a2aab7;
+  --cr-line: #2a2f38;
+  --cr-line-strong: #3b424e;
+
+  --cr-accent: #5ecfc4;      /* remonté en luminosité pour tenir sur fond sombre */
+  --cr-accent-ink: #0b2320;
+  --cr-accent-soft: #17302f;
+
+  --cr-ok: #7cc48d;
+  --cr-ok-soft: #172a1e;
+  --cr-warn: #e0a33e;
+  --cr-warn-soft: #2e2415;
+  --cr-crit: #ef8b80;
+  --cr-crit-soft: #331d1b;
+}
+
 @layer base {
   body {
-    @apply bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100;
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
+    background: var(--cr-ground);
+    color: var(--cr-ink);
+    font-family: var(--cr-sans);
+    /* 16 px plancher : c'est la règle qui a fait écarter les premières
+       maquettes, trop denses pour un site consulté sur téléphone. */
+    font-size: 16px;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  code {
-    font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-      monospace;
+  h1, h2, h3, h4 {
+    font-family: var(--cr-display);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+
+  code, .cr-mono {
+    font-family: var(--cr-mono);
+  }
+
+  /* La navigation au clavier doit se voir partout. */
+  :focus-visible {
+    outline: 3px solid var(--cr-accent);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -24,38 +114,294 @@
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+
+  /* Largeur de lecture bornée : sur un grand écran le texte ne traverse pas
+     la fenêtre. */
+  .cr-lecture { max-width: 72ch; }
+
+  .cr-chiffres { font-variant-numeric: tabular-nums; }
+
+  .cr-visuellement-cache {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 @layer components {
-  /* Style des cartes inspiré de PicoCSS */
+  /* ---------- Cadre ---------- */
+
+  .cr-enveloppe {
+    /* Gouttière posée une seule fois, jamais annulée par un raccourci. */
+    padding-inline: clamp(1rem, 4vw, 2rem);
+    max-width: 1180px;
+    margin-inline: auto;
+  }
+
+  /* ---------- Contrôles ---------- */
+
+  /* 44 px de cible tactile sur tout ce qui se touche. */
+  .cr-bouton {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--cr-radius);
+    border: 1px solid var(--cr-line-strong);
+    background: var(--cr-surface);
+    color: var(--cr-ink);
+    font: inherit;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+  }
+  .cr-bouton:hover { border-color: var(--cr-accent); }
+
+  .cr-bouton-principal {
+    background: var(--cr-accent);
+    border-color: var(--cr-accent);
+    color: var(--cr-accent-ink);
+    font-weight: 600;
+  }
+  .cr-bouton-principal:hover { filter: brightness(1.08); }
+
+  .cr-filtre {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.5rem 0.9rem;
+    border-radius: var(--cr-radius);
+    border: 1px solid var(--cr-line-strong);
+    background: var(--cr-surface);
+    color: var(--cr-ink);
+    font: inherit;
+    cursor: pointer;
+    text-align: start;
+  }
+  .cr-filtre:hover { border-color: var(--cr-accent); }
+  .cr-filtre[aria-pressed="true"] {
+    background: var(--cr-accent-soft);
+    border-color: var(--cr-accent);
+    color: var(--cr-accent);
+    font-weight: 600;
+  }
+  .cr-filtre .cr-compte {
+    margin-inline-start: auto;
+    font-family: var(--cr-mono);
+    font-size: 0.875rem;
+    color: var(--cr-muted);
+  }
+  .cr-filtre[aria-pressed="true"] .cr-compte { color: inherit; }
+
+  /* ---------- Icône de jeu ----------
+     Tuile Nexus (tile_{gameId}.jpg) quand elle existe, repli en initiales
+     sinon. Elle ne porte JAMAIS l'information seule : le nom du jeu reste
+     écrit à côté. */
+  .cr-jeu-icone {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 1.75rem;
+    aspect-ratio: 4 / 3;
+    border-radius: 4px;
+    border: 1px solid var(--cr-line-strong);
+    background: var(--cr-surface-2);
+    color: var(--cr-muted);
+    font-family: var(--cr-mono);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    overflow: hidden;
+    object-fit: cover;
+  }
+  .cr-jeu-icone-sm { width: 1.25rem; font-size: 0.5625rem; }
+  .cr-jeu-icone-lg { width: 2.75rem; border-radius: 6px; font-size: 0.8125rem; }
+
+  /* ---------- Dépêche : le patch de jeu, information la plus urgente ---------- */
+
+  .cr-depeche {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.75rem 1.25rem;
+    align-items: start;
+    padding: 1rem 1.15rem;
+    border: 1px solid color-mix(in srgb, var(--cr-warn) 45%, transparent);
+    border-inline-start: 5px solid var(--cr-warn);
+    border-radius: var(--cr-radius);
+    background: var(--cr-warn-soft);
+  }
+  .cr-depeche-marqueur {
+    display: inline-block;
+    font-family: var(--cr-mono);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--cr-warn);
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+  }
+
+  /* Transition de build : la donnée propre à ce produit, traitée comme telle. */
+  .cr-transition {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    font-family: var(--cr-mono);
+  }
+  .cr-transition-avant {
+    color: var(--cr-muted);
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+  }
+  .cr-transition-apres { font-weight: 600; }
+
+  /* ---------- Chiffres clés ---------- */
+
+  .cr-chiffre {
+    background: var(--cr-surface);
+    border: 1px solid var(--cr-line);
+    border-radius: var(--cr-radius);
+    padding: 1rem 1.1rem;
+  }
+  .cr-chiffre dt {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--cr-muted);
+  }
+  .cr-chiffre dd {
+    margin: 0.2rem 0 0;
+    font-family: var(--cr-display);
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.05;
+    font-variant-numeric: tabular-nums;
+  }
+  .cr-chiffre .cr-precision { font-size: 0.875rem; color: var(--cr-muted); }
+
+  /* ---------- Ligne de mod ---------- */
+
+  .cr-mod {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    gap: 1rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid var(--cr-line);
+  }
+  .cr-mod-vignette {
+    width: 76px;
+    aspect-ratio: 4 / 3;
+    max-width: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--cr-line);
+    background: var(--cr-surface-2);
+  }
+  .cr-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.9rem;
+    align-items: center;
+    color: var(--cr-muted);
+    font-size: 0.875rem;
+  }
+  .cr-meta time { font-variant-numeric: tabular-nums; }
+
+  /* ---------- Étiquettes d'état ----------
+     La pastille double la couleur : l'information n'est jamais portée par la
+     seule teinte. */
+  .cr-etiquette {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+    border: 1px solid transparent;
+  }
+  .cr-etiquette::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: currentColor;
+  }
+  .cr-etiquette-ok {
+    background: var(--cr-ok-soft);
+    color: var(--cr-ok);
+    border-color: color-mix(in srgb, var(--cr-ok) 35%, transparent);
+  }
+  .cr-etiquette-attention {
+    background: var(--cr-warn-soft);
+    color: var(--cr-warn);
+    border-color: color-mix(in srgb, var(--cr-warn) 35%, transparent);
+  }
+  .cr-etiquette-critique {
+    background: var(--cr-crit-soft);
+    color: var(--cr-crit);
+    border-color: color-mix(in srgb, var(--cr-crit) 35%, transparent);
+  }
+  /* Quatrième variante : un état qui n'est ni bon, ni inquiétant, ni grave —
+     « En pause », « Archivé », « Information ». Sans elle ces libellés
+     partaient en vert, ce qui les faisait lire comme « tout va bien ». */
+  .cr-etiquette-neutre {
+    background: var(--cr-surface-2);
+    color: var(--cr-muted);
+    border-color: var(--cr-line-strong);
+  }
+
+  .cr-vide {
+    border: 1px dashed var(--cr-line-strong);
+    border-radius: var(--cr-radius);
+    padding: 1.5rem;
+    background: var(--cr-surface);
+    color: var(--cr-muted);
+  }
+
+  /* ---------- Compatibilité ----------
+     Les écrans non encore repris utilisent ces classes. Elles sont
+     redéfinies sur les jetons pour qu'ils suivent la nouvelle palette au
+     lieu de jurer avec, en attendant leur reprise. */
   .pico-card {
-    @apply bg-white dark:bg-slate-800 rounded-xl shadow-md border border-slate-200 dark:border-slate-700 overflow-hidden transition-all duration-200 hover:shadow-xl;
+    background: var(--cr-surface);
+    border: 1px solid var(--cr-line);
+    border-radius: var(--cr-radius);
+    overflow: hidden;
   }
-
-  /* Boutons style PicoCSS */
-  .pico-btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
-  }
-
+  .pico-btn { @apply px-4 py-2 rounded-lg font-medium; }
   .pico-btn-primary {
-    @apply pico-btn bg-pico-primary hover:bg-pico-primary-hover text-white;
+    @apply pico-btn;
+    background: var(--cr-accent);
+    color: var(--cr-accent-ink);
   }
-
   .pico-btn-secondary {
-    @apply pico-btn bg-pico-secondary hover:bg-pico-secondary-hover text-white;
+    @apply pico-btn;
+    background: var(--cr-surface-2);
+    color: var(--cr-ink);
   }
-
   .pico-btn-outline {
-    @apply pico-btn border-2 border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700;
+    @apply pico-btn;
+    border: 1px solid var(--cr-line-strong);
+    color: var(--cr-ink);
+    min-height: 44px;
   }
-
-  /* Inputs style PicoCSS */
+  .pico-btn-outline:hover { border-color: var(--cr-accent); }
   .pico-input {
-    @apply w-full px-4 py-2 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:border-pico-primary transition-colors;
+    @apply w-full px-4 py-2 rounded-lg;
+    border: 1px solid var(--cr-line-strong);
+    background: var(--cr-surface);
+    color: var(--cr-ink);
+    min-height: 44px;
   }
-
-  .pico-select {
-    @apply pico-input cursor-pointer;
-  }
+  .pico-input:focus { outline: none; border-color: var(--cr-accent); }
+  .pico-select { @apply pico-input; cursor: pointer; }
 }
-

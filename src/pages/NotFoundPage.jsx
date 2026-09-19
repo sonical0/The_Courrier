@@ -10,24 +10,17 @@ import { Link } from "react-router-dom";
  */
 export default function NotFoundPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="pico-card p-6 text-center">
-        <p className="text-5xl mb-3" aria-hidden="true">
-          🧭
-        </p>
-        <h1 className="text-xl font-bold text-slate-800 dark:text-slate-200 mb-2">
-          Cette page n'existe pas
-        </h1>
-        <p className="text-slate-600 dark:text-slate-400 mb-4">
-          Le lien est peut-être périmé, ou l'adresse comporte une faute de frappe.
-        </p>
-        <Link
-          to="/"
-          className="inline-block px-4 py-2 rounded bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-200 dark:text-slate-900 dark:hover:bg-white"
-        >
-          Retour au tableau de bord
-        </Link>
-      </div>
+    <div className="cr-enveloppe py-8 cr-lecture">
+      <p className="cr-mono m-0 mb-2" style={{ color: "var(--cr-muted)" }}>
+        Erreur 404
+      </p>
+      <h1 className="text-3xl font-semibold mb-2">Cette page n’existe pas</h1>
+      <p className="mb-6">
+        Le lien est peut-être périmé, ou l’adresse comporte une faute de frappe.
+      </p>
+      <Link to="/" className="cr-bouton cr-bouton-principal" style={{ textDecoration: "none" }}>
+        Retour au tableau de bord
+      </Link>
     </div>
   );
 }

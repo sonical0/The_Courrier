@@ -4,6 +4,13 @@ import useLastVisit from "../components/useLastVisit";
 import EnhancedChangelog from "../components/EnhancedChangelog";
 import SteamGameInfo from "../components/SteamGameInfo";
 
+const PERIODES = [
+  { valeur: 7, libelle: "7 jours" },
+  { valeur: 15, libelle: "15 jours" },
+  { valeur: 30, libelle: "30 jours" },
+  { valeur: 365, libelle: "Année passée" },
+];
+
 export default function ActuUpdatePage() {
   const { getSteamInfo, loading, error, games, modsForGame, refresh } = useOutletContext();
   const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
@@ -93,38 +100,50 @@ export default function ActuUpdatePage() {
     return `${period} derniers jours`;
   };
 
+  const tousLesMods = grouped.flatMap((g) => g.mods);
+  const nbNouveaux = countNew(tousLesMods);
+
+  const dateLisible = (updatedAt) => {
+    if (!updatedAt) return null;
+    // Les horodatages Nexus arrivent en secondes ou en millisecondes selon
+    // l'endpoint : la longueur les distingue.
+    const ms = Number(updatedAt) * (String(updatedAt).length > 10 ? 1 : 1000);
+    return new Date(ms);
+  };
+
+  // La tuile de jeu est décorative : le nom du jeu reste écrit à côté.
+  const masquerImage = (e) => { e.target.style.display = "none"; };
+
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-slate-600 dark:text-slate-400">Chargement…</p>
+      <div className="cr-enveloppe py-10">
+        <p style={{ color: "var(--cr-muted)" }}>Chargement des mises à jour…</p>
       </div>
     );
   }
-  
+
   if (error) {
-    if (error.includes("credentials") || error.includes("401")) {
-      return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
-            <h4 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
-              ⚠️ Configuration requise
-            </h4>
-            <p className="text-slate-700 dark:text-slate-300 mb-3">
-              Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
-            </p>
-            <hr className="my-3 border-slate-200 dark:border-slate-700" />
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
-            </p>
-          </div>
-        </div>
-      );
-    }
+    const manqueIdentifiants = error.includes("credentials") || error.includes("401");
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="pico-card p-6 border-red-500 dark:border-red-600">
-          <h4 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">❌ Erreur</h4>
-          <p className="text-slate-700 dark:text-slate-300">{error}</p>
+      <div className="cr-enveloppe py-10">
+        <div className="cr-lecture cr-vide" style={{ color: "var(--cr-ink)" }}>
+          <p className="mb-3">
+            <span className={`cr-etiquette ${manqueIdentifiants ? "cr-etiquette-attention" : "cr-etiquette-critique"}`}>
+              {manqueIdentifiants ? "Configuration requise" : "Erreur"}
+            </span>
+          </p>
+          {manqueIdentifiants ? (
+            <>
+              <p className="mb-2">
+                Vos identifiants Nexus Mods sont nécessaires pour afficher les mises à jour.
+              </p>
+              <p style={{ color: "var(--cr-muted)" }}>
+                Ouvrez <strong>Config</strong> dans la barre de navigation pour les renseigner.
+              </p>
+            </>
+          ) : (
+            <p>{error}</p>
+          )}
         </div>
       </div>
     );
@@ -132,26 +151,29 @@ export default function ActuUpdatePage() {
 
   if (!games.length) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="pico-card p-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">
-              👋 Bienvenue sur The Courrier !
-            </h3>
-            <p className="text-slate-700 dark:text-slate-300 mb-4">
-              <strong>The Courrier</strong> vous permet de suivre facilement les mises à jour de vos mods Nexus Mods préférés.
+      <div className="cr-enveloppe py-10">
+        <div className="cr-lecture">
+          <h1 className="text-3xl mb-4" style={{ fontFamily: "var(--cr-display)" }}>
+            Bienvenue sur The Courrier
+          </h1>
+          <p className="mb-4">
+            The Courrier suit pour vous les mises à jour des mods Nexus Mods que vous avez marqués comme suivis.
+          </p>
+          <div className="cr-vide" style={{ color: "var(--cr-ink)" }}>
+            <p className="mb-3" style={{ color: "var(--cr-muted)" }}>
+              Pour voir vos mods apparaître ici :
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                <strong>🎯 Pour voir vos mods apparaître ici :</strong>
-              </p>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-slate-700 dark:text-slate-300 ml-2">
-                <li>Rendez-vous sur <a href="https://www.nexusmods.com" target="_blank" rel="noreferrer" className="text-pico-primary hover:underline">Nexus Mods</a></li>
-                <li>Connectez-vous avec votre compte</li>
-                <li>Activez le suivi ("Track") sur les mods qui vous intéressent</li>
-                <li>Revenez ici pour voir les mises à jour</li>
-              </ol>
-            </div>
+            <ol className="list-decimal list-inside space-y-2">
+              <li>
+                Rendez-vous sur{" "}
+                <a href="https://www.nexusmods.com" target="_blank" rel="noreferrer" style={{ color: "var(--cr-accent)" }}>
+                  Nexus Mods
+                </a>
+              </li>
+              <li>Connectez-vous avec votre compte</li>
+              <li>Activez le suivi (« Track ») sur les mods qui vous intéressent</li>
+              <li>Revenez ici pour voir les mises à jour</li>
+            </ol>
           </div>
         </div>
       </div>
@@ -159,251 +181,269 @@ export default function ActuUpdatePage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-white">
-          Mise à jour · {periodLabel()}
-        </h2>
+    <div className="cr-enveloppe py-8">
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
+        <div>
+          <h1 className="text-3xl" style={{ fontFamily: "var(--cr-display)", letterSpacing: "-0.015em" }}>
+            Mises à jour
+          </h1>
+          <p className="mt-1" style={{ color: "var(--cr-muted)" }}>{periodLabel()}</p>
+        </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {countNew(grouped.flatMap((g) => g.mods)) > 0 && (
+          {nbNouveaux > 0 && (
             <button
-              className="pico-btn-outline text-sm"
-              onClick={() => markAllAsSeen(grouped.flatMap((g) => g.mods))}
-              title="Marquer tous les mods visibles comme lus"
+              type="button"
+              className="cr-bouton"
+              onClick={() => markAllAsSeen(tousLesMods)}
             >
-              Tout marquer comme lu ({countNew(grouped.flatMap((g) => g.mods))})
+              Tout marquer comme lu ({nbNouveaux})
             </button>
           )}
-          <button className="pico-btn-outline w-fit" onClick={refresh}>
+          <button type="button" className="cr-bouton cr-bouton-principal" onClick={refresh}>
             Rafraîchir
           </button>
         </div>
       </div>
 
-      <div className="mb-4">
-        <input
-          type="text"
-          className="pico-select w-full"
-          placeholder="🔍 Rechercher par nom ou auteur..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
-
-      {searchQuery && (
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          {grouped.reduce((acc, g) => acc + g.mods.length, 0)} résultat{grouped.reduce((acc, g) => acc + g.mods.length, 0) !== 1 ? "s" : ""} pour « {searchQuery} »
-        </p>
-      )}
-
-      <div className="mb-6 flex flex-col md:flex-row gap-4 flex-wrap">
-        <div className="flex-1 max-w-md">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Filtrer par jeu
-          </label>
-          <select
-            className="pico-select"
-            value={selectedGame}
-            onChange={(e) => { setSelectedGame(e.target.value); setFilterCategory("ALL"); }}
-          >
-            <option value="ALL">Tous les jeux</option>
-            {games.map((g) => (
-              <option key={g.key} value={g.domain || g.gameId || g.name}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+      <dl className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+        <div className="cr-chiffre">
+          <dt>Mises à jour</dt>
+          <dd>{tousLesMods.length}</dd>
+          <div className="cr-precision">sur la période</div>
         </div>
-        {availableCategories.length > 0 && (
-          <div className="flex-1 max-w-md">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-              Catégorie
+        <div className="cr-chiffre">
+          <dt>Non lues</dt>
+          <dd>{nbNouveaux}</dd>
+          <div className="cr-precision">depuis votre dernière visite</div>
+        </div>
+        <div className="cr-chiffre">
+          <dt>Jeux concernés</dt>
+          <dd>{grouped.length}</dd>
+          <div className="cr-precision">sur {games.length} suivis</div>
+        </div>
+      </dl>
+
+      {/* Les filtres passent au-dessus de la liste sur mobile et se rangent en
+          colonne latérale dès qu'il y a la place. */}
+      <div className="grid gap-8 lg:grid-cols-[18rem_minmax(0,1fr)] items-start">
+        <div className="grid gap-5">
+          <div>
+            <label htmlFor="cr-recherche" className="block mb-2 font-medium">
+              Rechercher
+            </label>
+            <input
+              id="cr-recherche"
+              type="search"
+              className="pico-input"
+              placeholder="Nom ou auteur"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          <fieldset>
+            <legend className="mb-2 font-medium">Période</legend>
+            <div className="grid grid-cols-2 lg:grid-cols-1 gap-2">
+              {PERIODES.map((p) => (
+                <button
+                  key={p.valeur}
+                  type="button"
+                  className="cr-filtre"
+                  aria-pressed={period === p.valeur}
+                  onClick={() => setPeriod(p.valeur)}
+                >
+                  {p.libelle}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <div>
+            <label htmlFor="cr-jeu" className="block mb-2 font-medium">
+              Filtrer par jeu
             </label>
             <select
+              id="cr-jeu"
               className="pico-select"
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              data-testid="category-filter"
+              value={selectedGame}
+              onChange={(e) => { setSelectedGame(e.target.value); setFilterCategory("ALL"); }}
             >
-              <option value="ALL">Toutes les catégories</option>
-              {availableCategories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+              <option value="ALL">Tous les jeux</option>
+              {games.map((g) => (
+                <option key={g.key} value={g.domain || g.gameId || g.name}>
+                  {g.name}
+                </option>
               ))}
             </select>
           </div>
-        )}
-        <div className="flex-1 max-w-md">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Trier par
-          </label>
-          <select
-            className="pico-select"
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-          >
-            <option value="date">Date de mise à jour</option>
-            <option value="name">Nom</option>
-            <option value="author">Auteur</option>
-          </select>
-        </div>
-      </div>
 
-      <div className="mb-6 flex gap-2 flex-wrap">
-        <button
-          type="button"
-          className={period === 7 ? "pico-btn-primary" : "pico-btn-outline"}
-          onClick={() => setPeriod(7)}
-        >
-          7 jours
-        </button>
-        <button
-          type="button"
-          className={period === 15 ? "pico-btn-primary" : "pico-btn-outline"}
-          onClick={() => setPeriod(15)}
-        >
-          15 jours
-        </button>
-        <button
-          type="button"
-          className={period === 30 ? "pico-btn-primary" : "pico-btn-outline"}
-          onClick={() => setPeriod(30)}
-        >
-          30 jours
-        </button>
-        <button
-          type="button"
-          className={period === 365 ? "pico-btn-primary" : "pico-btn-outline"}
-          onClick={() => setPeriod(365)}
-        >
-          Année passée
-        </button>
-      </div>
+          {availableCategories.length > 0 && (
+            <div>
+              <label htmlFor="cr-categorie" className="block mb-2 font-medium">
+                Catégorie
+              </label>
+              <select
+                id="cr-categorie"
+                className="pico-select"
+                value={filterCategory}
+                onChange={(e) => setFilterCategory(e.target.value)}
+                data-testid="category-filter"
+              >
+                <option value="ALL">Toutes les catégories</option>
+                {availableCategories.map((cat) => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
-      {!grouped.length && (
-        <p className="text-slate-500 dark:text-slate-400">Aucune mise à jour récente trouvée.</p>
-      )}
-
-      {grouped.map(({ gameLabel, gameData, mods }) => (
-        <section className="mb-8" key={gameLabel}>
-          <div className="flex items-center gap-3 mb-4">
-            <h4 className="text-2xl font-semibold text-slate-800 dark:text-white">
-              {gameLabel}
-            </h4>
-            {gameData?.gameId && (
-              <img 
-                src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${gameData.gameId}.jpg`}
-                alt={`${gameLabel} icon`}
-                className="w-10 h-10 rounded object-cover border-2 border-slate-300 dark:border-slate-600"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
-            )}
+          <div>
+            <label htmlFor="cr-tri" className="block mb-2 font-medium">
+              Trier par
+            </label>
+            <select
+              id="cr-tri"
+              className="pico-select"
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <option value="date">Date de mise à jour</option>
+              <option value="name">Nom</option>
+              <option value="author">Auteur</option>
+            </select>
           </div>
-          
-          {/* Afficher les infos Steam pour le jeu */}
-          {getSteamInfo && gameData?.domain && (() => {
-            const steamInfo = getSteamInfo(gameData.domain);
-            return steamInfo ? (
-              <div className="mb-4">
-                <SteamGameInfo domain={gameData.domain} steamInfo={steamInfo} />
-              </div>
-            ) : null;
-          })()}
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {mods.map((m) => (
-              <div className="pico-card flex flex-col" key={`${m.domain}-${m.id}`}>
-                {m.picture && (
+        </div>
+
+        <div>
+          {searchQuery && (
+            <p className="mb-4" style={{ color: "var(--cr-muted)" }}>
+              {tousLesMods.length} résultat{tousLesMods.length !== 1 ? "s" : ""} pour « {searchQuery} »
+            </p>
+          )}
+
+          {!grouped.length && (
+            <p className="cr-vide">Aucune mise à jour sur cette période.</p>
+          )}
+
+          {grouped.map(({ gameLabel, gameData, mods }) => (
+            <section className="mb-10" key={gameLabel}>
+              <div className="flex items-center gap-3 mb-1">
+                {gameData?.gameId && (
                   <img
-                    src={m.picture}
-                    alt={m.name}
-                    className="w-full h-40 object-cover flex-shrink-0"
+                    src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${gameData.gameId}.jpg`}
+                    alt=""
+                    aria-hidden="true"
+                    className="cr-jeu-icone cr-jeu-icone-lg"
+                    onError={masquerImage}
                   />
                 )}
-                <div className="p-5 flex flex-col flex-grow">
-                  <div className="flex items-start gap-2 mb-1">
-                    <h5 className="text-xl font-bold text-slate-800 dark:text-white flex-1">
-                      {m.name || `${m.domain}/${m.id}`}
-                    </h5>
-                    {isNew(m.updatedAt, m.domain, m.id) && (
-                      <div className="flex items-center gap-1 flex-shrink-0">
-                        <span className="px-2 py-1 bg-blue-500 text-white text-xs font-bold rounded-full">NEW</span>
-                        <button
-                          className="px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-full transition-colors"
-                          onClick={() => markAsSeen(m.domain, m.id)}
-                          title="Marquer comme lu"
-                        >
-                          Lu
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400 mb-2">
-                    par{" "}
-                    {m.author ? (
-                      <a
-                        href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-pico-primary hover:underline"
-                      >
-                        {m.author}
-                      </a>
-                    ) : (
-                      "Auteur inconnu"
-                    )}
-                    {m.category && (
-                      <span className="ml-2">
-                        · <span className="px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-medium">
-                          {m.category}
-                        </span>
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="mb-3 flex gap-2 flex-wrap">
-                    {m.previousVersion && m.previousVersion !== m.version && (
-                      <span className="px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 rounded text-sm line-through">
-                        {m.previousVersion}
-                      </span>
-                    )}
-                    <span className="px-2 py-1 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded text-sm font-medium">
-                      Version {m.version || "?"}
-                    </span>
-                  </div>
-
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mb-3">
-                    Mise à jour le{" "}
-                    {m.updatedAt
-                      ? new Date(
-                          Number(m.updatedAt) *
-                          (String(m.updatedAt).length > 10 ? 1 : 1000)
-                        ).toLocaleString()
-                      : "?"}
-                  </p>
-
-                  <EnhancedChangelog mod={m} maxLines={6} />
-
-                  <div className="mt-auto flex justify-between items-center">
-                    <a
-                      href={m.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className={`pico-btn-primary text-sm ${m.url ? "" : "opacity-50 pointer-events-none"}`}
-                    >
-                      Ouvrir sur Nexus
-                    </a>
-                    <span className="text-slate-500 dark:text-slate-400 text-sm">
-                      #{m.id}
-                    </span>
-                  </div>
-                </div>
+                <h2 className="text-2xl" style={{ fontFamily: "var(--cr-display)" }}>
+                  {gameLabel}
+                </h2>
+                <span className="cr-mono text-sm" style={{ color: "var(--cr-muted)" }}>
+                  {mods.length}
+                </span>
               </div>
-            ))}
-          </div>
-        </section>
-      ))}
+
+              {getSteamInfo && gameData?.domain && (() => {
+                const steamInfo = getSteamInfo(gameData.domain);
+                return steamInfo ? (
+                  <div className="my-4">
+                    <SteamGameInfo domain={gameData.domain} steamInfo={steamInfo} />
+                  </div>
+                ) : null;
+              })()}
+
+              <ul className="cr-lecture list-none p-0 m-0">
+                {mods.map((m) => {
+                  const nouveau = isNew(m.updatedAt, m.domain, m.id);
+                  const date = dateLisible(m.updatedAt);
+                  return (
+                    <li className="cr-mod" key={`${m.domain}-${m.id}`}>
+                      {m.picture ? (
+                        <img src={m.picture} alt="" aria-hidden="true" className="cr-mod-vignette" onError={masquerImage} />
+                      ) : (
+                        <span className="cr-mod-vignette" aria-hidden="true" />
+                      )}
+                      <div className="min-w-0">
+                        <div className="flex items-start gap-3 flex-wrap">
+                          <h3 className="text-lg font-semibold m-0 flex-1 overflow-wrap-anywhere">
+                            {m.name || `${m.domain}/${m.id}`}
+                          </h3>
+                          {nouveau && (
+                            <>
+                              <span className="cr-etiquette cr-etiquette-attention">Nouveau</span>
+                              <button
+                                type="button"
+                                className="cr-bouton"
+                                onClick={() => markAsSeen(m.domain, m.id)}
+                              >
+                                Marquer comme lu
+                              </button>
+                            </>
+                          )}
+                        </div>
+
+                        <p className="cr-meta mt-1 mb-0">
+                          <span>
+                            par{" "}
+                            {m.author ? (
+                              <a
+                                href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                style={{ color: "var(--cr-accent)" }}
+                              >
+                                {m.author}
+                              </a>
+                            ) : (
+                              "auteur inconnu"
+                            )}
+                          </span>
+                          {m.category && <span>{m.category}</span>}
+                          {date && (
+                            <time dateTime={date.toISOString()}>
+                              {date.toLocaleString()}
+                            </time>
+                          )}
+                          <span className="cr-mono">#{m.id}</span>
+                        </p>
+
+                        <p className="cr-meta mt-1 mb-0">
+                          <span className="cr-visuellement-cache">Version</span>
+                          {m.previousVersion && m.previousVersion !== m.version && (
+                            <>
+                              <span className="cr-mono" style={{ textDecoration: "line-through" }}>
+                                {m.previousVersion}
+                              </span>
+                              <span aria-hidden="true">→</span>
+                            </>
+                          )}
+                          <span className="cr-mono" style={{ color: "var(--cr-ink)", fontWeight: 600 }}>
+                            {m.version || "inconnue"}
+                          </span>
+                        </p>
+
+                        <div className="mt-2">
+                          <EnhancedChangelog mod={m} maxLines={6} />
+                        </div>
+
+                        {m.url && (
+                          <p className="mt-3 mb-0">
+                            <a href={m.url} target="_blank" rel="noreferrer" className="cr-bouton">
+                              Ouvrir sur Nexus
+                            </a>
+                          </p>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

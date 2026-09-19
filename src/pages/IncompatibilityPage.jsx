@@ -1,34 +1,88 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
+
+/* Gravité : un seul endroit décide du mot, de l'étiquette et de la couleur du
+   liseré. Le mot passe avant la teinte — un daltonien, une capture en noir et
+   blanc ou un lecteur d'écran doivent distinguer un conflit probable d'une
+   simple information. */
+const GRAVITES = {
+  high: { mot: "Conflit probable", etiquette: "cr-etiquette-critique", trait: "var(--cr-crit)", rang: 0 },
+  medium: { mot: "Attention recommandée", etiquette: "cr-etiquette-attention", trait: "var(--cr-warn)", rang: 1 },
+  low: { mot: "Information", etiquette: "cr-etiquette-neutre", trait: "var(--cr-line-strong)", rang: 2 },
+};
+const gravite = (severity) => GRAVITES[severity] || GRAVITES.low;
+
+const listeDeConflits = (gc) =>
+  [...gc.categoryConflicts, ...gc.authorConflicts, ...gc.outdatedVersions]
+    .sort((a, b) => gravite(a.severity).rang - gravite(b.severity).rang);
+
+function JeuIcone({ gameId, taille = "" }) {
+  if (!gameId) return null;
+  return (
+    <img
+      src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${gameId}.jpg`}
+      alt=""
+      aria-hidden="true"
+      className={`cr-jeu-icone ${taille}`}
+      onError={(e) => { e.currentTarget.style.display = "none"; }}
+    />
+  );
+}
+
+function LienMod({ mod }) {
+  return (
+    <a
+      href={mod.url}
+      target="_blank"
+      rel="noreferrer"
+      className="font-semibold underline-offset-2 hover:underline"
+      style={{ color: "var(--cr-ink)" }}
+    >
+      {mod.name}
+    </a>
+  );
+}
+
+function Entete() {
+  return (
+    <header className="mb-8">
+      <h1 className="text-3xl font-bold m-0" style={{ fontFamily: "var(--cr-display)" }}>
+        Incompatibilités
+      </h1>
+      <p className="cr-lecture mt-2 mb-0" style={{ color: "var(--cr-muted)" }}>
+        Analyse automatique des conflits potentiels entre les mods que vous suivez.
+      </p>
+    </header>
+  );
+}
+
 export default function IncompatibilityPage() {
   const { loading, error, games, modsForGame } = useOutletContext();
   const [selectedGame, setSelectedGame] = useState("ALL");
   const [showDetails, setShowDetails] = useState({});
 
-  // Analyser les mods pour détecter les incompatibilités potentielles
+  // L'analyse porte sur TOUS les jeux même quand un filtre est actif : c'est ce
+  // qui permet d'afficher un compte en face de chaque jeu dans le filtre.
   const conflicts = useMemo(() => {
     const result = [];
-    const gamesToCheck = selectedGame === "ALL" ? games : games.filter(g => {
-      const key = g.domain || g.gameId || g.name;
-      return key === selectedGame;
-    });
 
-    for (const game of gamesToCheck) {
+    for (const game of games) {
       const key = game.domain || game.gameId || game.name;
       const mods = modsForGame(key);
 
       // Vérifier les conflits de catégories (plusieurs mods dans des catégories qui devraient être uniques)
       const categoryConflicts = detectCategoryConflicts(mods, game);
-      
+
       // Vérifier les conflits d'auteur (mods similaires du même auteur)
       const authorConflicts = detectAuthorConflicts(mods, game);
-      
+
       // Vérifier les versions obsolètes
       const outdatedVersions = detectOutdatedVersions(mods, game);
 
       if (categoryConflicts.length > 0 || authorConflicts.length > 0 || outdatedVersions.length > 0) {
         result.push({
           game: game.name || game.domain,
+          cle: key,
           gameData: game,
           categoryConflicts,
           authorConflicts,
@@ -38,7 +92,7 @@ export default function IncompatibilityPage() {
     }
 
     return result;
-  }, [games, modsForGame, selectedGame]);
+  }, [games, modsForGame]);
 
   // Détecter les conflits de catégories potentiellement incompatibles
   function detectCategoryConflicts(mods, game) {
@@ -55,7 +109,7 @@ export default function IncompatibilityPage() {
     ];
 
     const categorizedMods = {};
-    
+
     mods.forEach(mod => {
       const category = mod.category || 'Uncategorized';
       if (criticalCategories.some(c => category.includes(c))) {
@@ -98,9 +152,9 @@ export default function IncompatibilityPage() {
       if (modsFromAuthor.length > 1) {
         // Vérifier si les noms sont similaires (possibles variantes)
         const names = modsFromAuthor.map(m => m.name.toLowerCase());
-        const hasSimilarNames = names.some((name, i) => 
-          names.slice(i + 1).some(otherName => 
-            name.includes(otherName.substring(0, 10)) || 
+        const hasSimilarNames = names.some((name, i) =>
+          names.slice(i + 1).some(otherName =>
+            name.includes(otherName.substring(0, 10)) ||
             otherName.includes(name.substring(0, 10))
           )
         );
@@ -155,276 +209,305 @@ export default function IncompatibilityPage() {
     setShowDetails(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const getSeverityColor = (severity) => {
-    switch (severity) {
-      case 'high': return 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border-red-500';
-      case 'medium': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border-yellow-500';
-      case 'low': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border-blue-500';
-      default: return 'bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-300 border-slate-500';
-    }
-  };
+  const conflitsVisibles = selectedGame === "ALL"
+    ? conflicts
+    : conflicts.filter(c => c.cle === selectedGame);
 
-  const getSeverityIcon = (severity) => {
-    switch (severity) {
-      case 'high': return '🚨';
-      case 'medium': return '⚠️';
-      case 'low': return 'ℹ️';
-      default: return '📋';
-    }
+  const comptes = { high: 0, medium: 0, low: 0 };
+  for (const gc of conflitsVisibles) {
+    for (const c of listeDeConflits(gc)) comptes[c.severity] = (comptes[c.severity] || 0) + 1;
+  }
+
+  const comptePourJeu = (cle) => {
+    const gc = conflicts.find(c => c.cle === cle);
+    return gc ? listeDeConflits(gc).length : 0;
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 text-center">
-        <p className="text-slate-600 dark:text-slate-400">Analyse en cours…</p>
+      <div className="cr-enveloppe py-8">
+        <Entete />
+        <p style={{ color: "var(--cr-muted)" }}>Analyse en cours…</p>
       </div>
     );
   }
 
   if (error) {
-    if (error.includes("credentials") || error.includes("401")) {
-      return (
-        <div className="container mx-auto px-4 py-8">
-          <div className="pico-card p-6 border-yellow-500 dark:border-yellow-600">
-            <h4 className="text-xl font-bold text-yellow-800 dark:text-yellow-300 mb-2">
-              ⚠️ Configuration requise
-            </h4>
-            <p className="text-slate-700 dark:text-slate-300 mb-3">
-              Vous devez configurer vos identifiants Nexus Mods pour utiliser cette fonctionnalité.
-            </p>
-            <hr className="my-3 border-slate-200 dark:border-slate-700" />
-            <p className="text-slate-600 dark:text-slate-400 text-sm">
-              Cliquez sur le bouton <strong>⚙️ Config</strong> dans la barre de navigation pour configurer vos identifiants.
-            </p>
-          </div>
-        </div>
-      );
-    }
+    const configRequise = error.includes("credentials") || error.includes("401");
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="pico-card p-6 border-red-500 dark:border-red-600">
-          <h4 className="text-xl font-bold text-red-800 dark:text-red-300 mb-2">❌ Erreur</h4>
-          <p className="text-slate-700 dark:text-slate-300">{error}</p>
-        </div>
+      <div className="cr-enveloppe py-8">
+        <Entete />
+        <section
+          className="cr-depeche cr-lecture"
+          aria-labelledby="cr-erreur-titre"
+          style={configRequise ? undefined : {
+            background: "var(--cr-crit-soft)",
+            borderColor: "var(--cr-crit)",
+            borderInlineStartColor: "var(--cr-crit)",
+          }}
+        >
+          <p className="cr-depeche-marqueur m-0" style={configRequise ? undefined : { color: "var(--cr-crit)" }}>
+            {configRequise ? "À faire" : "Erreur"}
+          </p>
+          <div>
+            <h2 id="cr-erreur-titre" className="text-xl font-semibold m-0">
+              {configRequise ? "Configuration requise" : "L'analyse n'a pas pu aboutir"}
+            </h2>
+            {configRequise ? (
+              <p className="mt-2 mb-0">
+                Renseignez vos identifiants Nexus Mods pour utiliser cette page : le bouton{" "}
+                <strong>Config</strong> se trouve dans la barre de navigation.
+              </p>
+            ) : (
+              <p className="mt-2 mb-0">{error}</p>
+            )}
+          </div>
+        </section>
       </div>
     );
   }
 
   if (!games.length) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="pico-card p-6">
-            <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">
-              🔍 Vérificateur d'Incompatibilités
-            </h3>
-            <p className="text-slate-700 dark:text-slate-300 mb-4">
-              Cette page analyse vos mods suivis pour détecter d'éventuelles incompatibilités.
-            </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <p className="text-sm text-slate-700 dark:text-slate-300 mb-2">
-                <strong>🎯 Pour commencer :</strong>
-              </p>
-              <ol className="list-decimal list-inside space-y-1 text-sm text-slate-700 dark:text-slate-300 ml-2">
-                <li>Activez le suivi sur vos mods favoris sur Nexus Mods</li>
-                <li>Revenez ici pour voir l'analyse automatique</li>
-              </ol>
-            </div>
-          </div>
-        </div>
+      <div className="cr-enveloppe py-8">
+        <Entete />
+        <section className="cr-vide cr-lecture">
+          <h2 className="text-xl font-semibold m-0" style={{ color: "var(--cr-ink)" }}>
+            Aucun mod suivi pour l'instant
+          </h2>
+          <p className="mt-2">
+            L'analyse a besoin d'une liste de mods pour chercher des conflits. Deux étapes :
+          </p>
+          <ol className="list-decimal ml-5 space-y-1 m-0">
+            <li>activez le suivi sur vos mods favoris depuis Nexus Mods ;</li>
+            <li>revenez ici, l'analyse se lance toute seule.</li>
+          </ol>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold text-slate-800 dark:text-white mb-2">
-          🔍 Vérificateur d'Incompatibilités
-        </h2>
-        <p className="text-slate-600 dark:text-slate-400">
-          Analyse automatique des conflits potentiels entre vos mods
-        </p>
-      </div>
+    <div className="cr-enveloppe py-8">
+      <Entete />
 
-      <div className="mb-6 max-w-md">
-        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-          Filtrer par jeu
-        </label>
-        <select
-          className="pico-select"
-          value={selectedGame}
-          onChange={(e) => setSelectedGame(e.target.value)}
-        >
-          <option value="ALL">🎮 Tous les jeux</option>
-          {games.map((g) => (
-            <option key={g.key} value={g.domain || g.gameId || g.name}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {conflicts.length === 0 ? (
-        <div className="pico-card p-6 border-green-500 dark:border-green-600">
-          <h4 className="text-xl font-bold text-green-800 dark:text-green-300 mb-2">
-            ✅ Aucun conflit détecté
-          </h4>
-          <p className="text-slate-700 dark:text-slate-300">
-            Vos mods semblent compatibles entre eux. Bonne partie !
-          </p>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-            Note : Cette analyse est automatique et peut ne pas détecter tous les conflits possibles. 
-            Consultez toujours les pages de mods pour les incompatibilités connues.
-          </p>
+      {/* Les chiffres d'abord : ils disent en un coup d'œil s'il y a lieu de
+          s'inquiéter, avant d'avoir lu un seul conflit. */}
+      <dl className="grid gap-3 sm:grid-cols-3 m-0 mb-8">
+        <div className="cr-chiffre">
+          <dt>Conflits probables</dt>
+          <dd style={{ color: comptes.high ? "var(--cr-crit)" : undefined }}>{comptes.high}</dd>
+          <div className="cr-precision">à examiner en priorité</div>
         </div>
+        <div className="cr-chiffre">
+          <dt>Points d'attention</dt>
+          <dd style={{ color: comptes.medium ? "var(--cr-warn)" : undefined }}>{comptes.medium}</dd>
+          <div className="cr-precision">à vérifier si un problème survient</div>
+        </div>
+        <div className="cr-chiffre">
+          <dt>Informations</dt>
+          <dd>{comptes.low}</dd>
+          <div className="cr-precision">sans gravité connue</div>
+        </div>
+      </dl>
+
+      <section className="mb-8" aria-labelledby="cr-filtre-titre">
+        <h2 id="cr-filtre-titre" className="text-lg font-semibold mt-0 mb-3">Filtrer par jeu</h2>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <button
+            type="button"
+            className="cr-filtre"
+            aria-pressed={selectedGame === "ALL"}
+            onClick={() => setSelectedGame("ALL")}
+          >
+            <span>Tous les jeux</span>
+            <span className="cr-compte">
+              {conflicts.reduce((n, gc) => n + listeDeConflits(gc).length, 0)}
+              <span className="cr-visuellement-cache"> conflits</span>
+            </span>
+          </button>
+          {games.map((g) => {
+            const cle = g.domain || g.gameId || g.name;
+            return (
+              <button
+                key={g.key}
+                type="button"
+                className="cr-filtre"
+                aria-pressed={selectedGame === cle}
+                onClick={() => setSelectedGame(cle)}
+              >
+                <JeuIcone gameId={g.gameId} taille="cr-jeu-icone-sm" />
+                <span className="truncate">{g.name}</span>
+                <span className="cr-compte">
+                  {comptePourJeu(cle)}
+                  <span className="cr-visuellement-cache"> conflits</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
+      {conflitsVisibles.length === 0 ? (
+        <section className="cr-vide cr-lecture">
+          <p className="cr-etiquette cr-etiquette-ok m-0">Aucun conflit détecté</p>
+          <p className="mt-3" style={{ color: "var(--cr-ink)" }}>
+            Les mods {selectedGame === "ALL" ? "que vous suivez" : "de ce jeu"} ne présentent aucun
+            signe de conflit : pas de doublon dans une catégorie sensible, pas de variantes d'un même
+            auteur, pas d'écart de fraîcheur inquiétant. Rien à faire de votre côté.
+          </p>
+          <p className="mt-3 mb-0">
+            L'analyse reste automatique et ne lit pas les pages de mods. En cas de crash inexpliqué,
+            la section « Incompatibilities » sur Nexus Mods reste la référence.
+          </p>
+        </section>
       ) : (
-        <div className="space-y-6">
-          {conflicts.map((gameConflict, gameIndex) => (
-            <div key={gameIndex} className="pico-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <h3 className="text-2xl font-semibold text-slate-800 dark:text-white">
+        <div className="space-y-10">
+          {conflitsVisibles.map((gameConflict, gameIndex) => (
+            <section key={gameConflict.cle || gameIndex} aria-labelledby={`cr-jeu-${gameIndex}`}>
+              <div className="flex items-center gap-3 pb-3 mb-4 border-b" style={{ borderColor: "var(--cr-line)" }}>
+                <JeuIcone gameId={gameConflict.gameData?.gameId} taille="cr-jeu-icone-lg" />
+                <h2
+                  id={`cr-jeu-${gameIndex}`}
+                  className="text-2xl font-semibold m-0"
+                  style={{ fontFamily: "var(--cr-display)" }}
+                >
                   {gameConflict.game}
-                </h3>
-                {gameConflict.gameData?.gameId && (
-                  <img 
-                    src={`https://staticdelivery.nexusmods.com/Images/games/4_3/tile_${gameConflict.gameData.gameId}.jpg`}
-                    alt={`${gameConflict.game} icon`}
-                    className="w-10 h-10 rounded object-cover border-2 border-slate-300 dark:border-slate-600"
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                )}
+                </h2>
               </div>
 
               <div className="space-y-4">
-                {[...gameConflict.categoryConflicts, ...gameConflict.authorConflicts, ...gameConflict.outdatedVersions].map((conflict, conflictIndex) => {
+                {listeDeConflits(gameConflict).map((conflict, conflictIndex) => {
                   const key = `${gameIndex}-${conflictIndex}`;
-                  const isOpen = showDetails[key];
+                  const isOpen = Boolean(showDetails[key]);
+                  const g = gravite(conflict.severity);
 
                   return (
-                    <div key={conflictIndex} className={`border-2 rounded-lg p-4 ${getSeverityColor(conflict.severity)}`}>
-                      <div className="flex items-start justify-between gap-3">
+                    <article
+                      key={conflictIndex}
+                      className="p-4 sm:p-5"
+                      style={{
+                        background: "var(--cr-surface)",
+                        border: "1px solid var(--cr-line)",
+                        borderInlineStartWidth: "5px",
+                        borderInlineStartColor: g.trait,
+                        borderRadius: "var(--cr-radius)",
+                      }}
+                    >
+                      {/* Mobile d'abord : l'étiquette et le bouton s'empilent au lieu
+                          de se comprimer sur une seule ligne. */}
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-2xl">{getSeverityIcon(conflict.severity)}</span>
-                            <h4 className="text-lg font-semibold">
-                              {conflict.severity === 'high' ? 'Conflit probable' : 
-                               conflict.severity === 'medium' ? 'Attention recommandée' : 
-                               'Information'}
-                            </h4>
-                          </div>
-                          <p className="text-sm mb-2">{conflict.message}</p>
+                          <p className={`cr-etiquette ${g.etiquette} m-0`}>{g.mot}</p>
+                          <p className="cr-lecture mt-2 mb-0">{conflict.message}</p>
                         </div>
                         <button
+                          type="button"
+                          className="cr-bouton self-start"
+                          aria-expanded={isOpen}
+                          aria-controls={`cr-detail-${key}`}
                           onClick={() => toggleDetails(gameIndex, conflictIndex)}
-                          className="px-3 py-1 bg-white dark:bg-slate-800 rounded hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors text-sm font-medium"
                         >
-                          {isOpen ? '▼ Masquer' : '▶ Détails'}
+                          {isOpen ? "Masquer le détail" : "Afficher le détail"}
                         </button>
                       </div>
 
                       {isOpen && (
-                        <div className="mt-4 pt-4 border-t border-current/20">
+                        <div
+                          id={`cr-detail-${key}`}
+                          className="mt-4 pt-4 border-t"
+                          style={{ borderColor: "var(--cr-line)" }}
+                        >
                           {conflict.type === 'category' && (
-                            <div>
-                              <p className="text-sm font-medium mb-2">Mods concernés :</p>
-                              <ul className="space-y-2">
+                            <>
+                              <h3 className="text-base font-semibold mt-0 mb-2">Mods concernés</h3>
+                              <ul className="list-none p-0 m-0 space-y-2">
                                 {conflict.mods.map((mod, idx) => (
-                                  <li key={idx} className="flex items-center gap-2 text-sm">
-                                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                                    <a
-                                      href={mod.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="hover:underline font-medium"
-                                    >
-                                      {mod.name}
-                                    </a>
-                                    <span className="text-xs opacity-75">par {mod.author}</span>
+                                  <li key={idx}>
+                                    <LienMod mod={mod} />
+                                    <span className="cr-meta">
+                                      <span>par {mod.author}</span>
+                                    </span>
                                   </li>
                                 ))}
                               </ul>
-                            </div>
+                            </>
                           )}
 
                           {conflict.type === 'author' && (
-                            <div>
-                              <p className="text-sm font-medium mb-2">Mods du même auteur :</p>
-                              <ul className="space-y-2">
+                            <>
+                              <h3 className="text-base font-semibold mt-0 mb-2">Mods du même auteur</h3>
+                              <ul className="list-none p-0 m-0 space-y-2">
                                 {conflict.mods.map((mod, idx) => (
-                                  <li key={idx} className="flex items-center gap-2 text-sm">
-                                    <span className="w-2 h-2 bg-current rounded-full"></span>
-                                    <a
-                                      href={mod.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="hover:underline font-medium"
-                                    >
-                                      {mod.name}
-                                    </a>
-                                    <span className="text-xs opacity-75">v{mod.version}</span>
+                                  <li key={idx}>
+                                    <LienMod mod={mod} />
+                                    <span className="cr-meta">
+                                      <span className="cr-mono">v{mod.version}</span>
+                                    </span>
                                   </li>
                                 ))}
                               </ul>
-                              <p className="text-xs mt-2 opacity-75">
-                                💡 Vérifiez les descriptions pour savoir si ces mods sont des alternatives ou complémentaires.
+                              <p className="cr-lecture mt-3 mb-0" style={{ color: "var(--cr-muted)" }}>
+                                Vérifiez les descriptions : ces mods sont peut-être des alternatives
+                                entre lesquelles il faut choisir, ou au contraire des compléments.
                               </p>
-                            </div>
+                            </>
                           )}
 
                           {conflict.type === 'version' && (
-                            <div className="space-y-3">
-                              <div>
-                                <p className="text-sm font-medium mb-2">Mods anciens (&gt;1 an) :</p>
-                                <ul className="space-y-1">
-                                  {conflict.oldMods.slice(0, 5).map((mod, idx) => (
-                                    <li key={idx} className="text-sm flex items-center gap-2">
-                                      <span className="w-2 h-2 bg-current rounded-full"></span>
-                                      <a href={mod.url} target="_blank" rel="noreferrer" className="hover:underline">
-                                        {mod.name}
-                                      </a>
-                                      <span className="text-xs opacity-75">
-                                        ({new Date(Number(mod.updatedAt) * 1000).toLocaleDateString()})
-                                      </span>
-                                    </li>
-                                  ))}
-                                  {conflict.oldMods.length > 5 && (
-                                    <li className="text-xs opacity-75 ml-4">
-                                      ...et {conflict.oldMods.length - 5} autre(s)
-                                    </li>
-                                  )}
-                                </ul>
-                              </div>
-                              <p className="text-xs opacity-75">
-                                💡 Les mods anciens peuvent être incompatibles avec les versions récentes du jeu ou d'autres mods.
+                            <>
+                              <h3 className="text-base font-semibold mt-0 mb-2">
+                                Mods anciens (plus d'un an)
+                              </h3>
+                              <ul className="list-none p-0 m-0 space-y-2">
+                                {conflict.oldMods.slice(0, 5).map((mod, idx) => (
+                                  <li key={idx}>
+                                    <LienMod mod={mod} />
+                                    <span className="cr-meta">
+                                      <time dateTime={new Date(Number(mod.updatedAt) * 1000).toISOString()}>
+                                        mis à jour le {new Date(Number(mod.updatedAt) * 1000).toLocaleDateString("fr-FR")}
+                                      </time>
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                              {conflict.oldMods.length > 5 && (
+                                <p className="mt-2 mb-0 text-sm" style={{ color: "var(--cr-muted)" }}>
+                                  et {conflict.oldMods.length - 5} autre(s) non listé(s).
+                                </p>
+                              )}
+                              <p className="cr-lecture mt-3 mb-0" style={{ color: "var(--cr-muted)" }}>
+                                Un mod ancien peut viser une version du jeu que vous n'utilisez plus,
+                                ou dépendre d'une bibliothèque que les mods récents ont remplacée.
                               </p>
-                            </div>
+                            </>
                           )}
                         </div>
                       )}
-                    </div>
+                    </article>
                   );
                 })}
               </div>
-            </div>
+            </section>
           ))}
         </div>
       )}
 
-      <div className="mt-8 pico-card p-6 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-        <h4 className="text-lg font-bold text-blue-800 dark:text-blue-300 mb-2">
-          📝 Notes importantes
-        </h4>
-        <ul className="list-disc list-inside space-y-1 text-sm text-slate-700 dark:text-slate-300">
-          <li>Cette analyse est automatique et ne remplace pas la lecture des pages de mods</li>
-          <li>Consultez toujours la section "Requirements" et "Incompatibilities" sur Nexus Mods</li>
-          <li>Certains mods peuvent avoir des patches de compatibilité disponibles</li>
-          <li>L'ordre de chargement (load order) est crucial pour certains types de mods</li>
-          <li>Utilisez des outils comme LOOT (Skyrim/Fallout) pour gérer l'ordre de chargement</li>
+      <section
+        className="mt-12 pt-6 border-t"
+        style={{ borderColor: "var(--cr-line)" }}
+        aria-labelledby="cr-notes-titre"
+      >
+        <h2 id="cr-notes-titre" className="text-lg font-semibold mt-0 mb-3">
+          Ce que cette analyse ne fait pas
+        </h2>
+        <ul className="cr-lecture list-disc ml-5 space-y-2 m-0" style={{ color: "var(--cr-muted)" }}>
+          <li>Elle ne lit pas les pages de mods : les sections « Requirements » et « Incompatibilities » sur Nexus Mods restent à consulter.</li>
+          <li>Elle ignore les patches de compatibilité, qui résolvent une partie des conflits signalés ici.</li>
+          <li>Elle ne juge pas l'ordre de chargement, déterminant pour les mods de gameplay.</li>
+          <li>Pour Skyrim et Fallout, LOOT reste l'outil de référence pour cet ordre de chargement.</li>
         </ul>
-      </div>
+      </section>
     </div>
   );
 }
