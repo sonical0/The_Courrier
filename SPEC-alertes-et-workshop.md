@@ -52,7 +52,7 @@ Décidé le 2026-10-27 : une base **PostgreSQL hébergée sur le homelab** (anno
 - **Sources, dans cet ordre** : Steam Workshop (`GetPublishedFileDetails`), Steam jeux (builds et versions, déjà lus par `api/steam/game`), puis Nexus, **seulement après lecture des conditions de l'API Nexus** et avec une source non personnelle : les données récupérées avec la clé d'un utilisateur ne sont ni stockées ni servies aux autres. SteamDB est exclu.
 - **Schéma** : `source`, `jeu`, `mod` (identifiant par source, titre, catégorie, auteur), `version`, et une table d'événements de mise à jour **ajoutée au fil du temps, jamais écrasée** (sorties, builds, dates). Un identifiant de source et un horodatage de collecte sur chaque ligne.
 - **Collecte** : un collecteur tourne sur le homelab (planifié) et écrit dans PostgreSQL.
-- **Lecture par le Worker** : à trancher (voir « Questions ouvertes »). Quelle que soit l'option, un échec de lecture ne ressemble jamais à une donnée : `resolu: false` et repli sur valeur périmée (`X-Steam-Stale: 1`).
+- **Lecture par le Worker** (décidé le 2026-10-27) : le homelab publie des instantanés en lecture seule vers Cloudflare (KV ou R2, à choisir au démarrage du lot 0b selon la taille) par connexion sortante ; le Worker existant (`worker.mjs`, et `server.mjs` en local) lit ces instantanés. Aucun port ouvert, pas de domaine, pas d'accès SQL depuis le Worker. Si le homelab tombe, le Worker sert la dernière donnée, marquée périmée. Un échec de lecture ne ressemble jamais à une donnée : `resolu: false` et repli sur valeur périmée (`X-Steam-Stale: 1`).
 - **Hors de la base** : alertes, load orders et mods suivis d'un utilisateur restent dans son navigateur.
 - **Contraintes** : le homelab n'est joignable que par le LAN et Tailscale, jamais depuis un Worker directement ; aucun port ouvert sur Internet sans décision explicite. Sauvegarde de la base à prévoir (la sauvegarde du homelab est cassée depuis le 16/08, selon la mémoire du projet : à vérifier).
 - **Critère d'acceptation** : après une collecte, une requête SQL donne la date de dernière mise à jour d'un mod Workshop et l'historique de ses versions ; un redémarrage du collecteur ne crée ni doublon ni trou.
@@ -97,7 +97,8 @@ Décidé le 2026-10-27 : une base **PostgreSQL hébergée sur le homelab** (anno
 
 ## Questions ouvertes
 
-- Comment le Worker lit-il la base du homelab ? Option A : Cloudflare Tunnel + Hyperdrive (lecture directe, demande un domaine sur Cloudflare). Option B : le homelab publie un instantané en lecture seule vers Cloudflare (KV ou R2) par connexion sortante, sans port ouvert ni domaine ; si le homelab tombe, le Worker sert la dernière donnée marquée périmée.
+- KV ou R2 pour les instantanés publiés par le homelab : à trancher au lot 0b selon la taille des données.
+- Fréquence de collecte et de publication des instantanés : à fixer avec les limites de l'API Steam.
 - Conditions de l'API Nexus : que permettent-elles côté stockage et redistribution des données ?
 
 - Le MVP produit est-il convenable avec un stockage client seul ? À juger après le lot 2 (décision du 2026-10-27 : par utilisateur, côté navigateur).
