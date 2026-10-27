@@ -33,6 +33,9 @@ Ordre : lot 0, puis lot 1, puis lot 2. Le Workshop vient avant les alertes : san
 - Le push vers `dev` ou `main` est un fast-forward, jamais `--force`. Avant de pousser : `origin/<base>` n'a pas bougé, et `git log origin/<base>..HEAD` ne contient que les commits des branches fusionnées et les fusions.
 - `main` déclenche la mise en production Cloudflare : le push vers `main` n'a lieu qu'après validation explicite de l'utilisateur.
 - Ce fonctionnement reprend celui de l'intégrateur de la supervision Tandem (`SKILLS/supervision/integrateur.md`) : une file de branches prêtes, fusion `--no-ff` dans l'ordre, un seul check complet, une seule validation de l'utilisateur avant le push.
+- Contrôles décidés le 2026-10-27 : vers `dev`, check rapide (`test:ci`) sans validation de l'utilisateur ; vers `main`, check complet (`test:ci` + `build`) puis une seule validation de l'utilisateur avant le push.
+- L'implémentation des lots 0 à 2 se fait avec la supervision Tandem (`npm run supervision -- the-courrier`, base `dev`) : `worker.mjs` et `server.mjs`, fichiers communs du bloc `supervision:`, passent par l'intégrateur D.
+- Ce flux est aussi noté dans `README.md` (section « Branches »).
 - Avant de créer une branche `feat/<nom>`, vérifier que `dev` n'est pas derrière `main` (`git rev-list --count origin/dev..origin/main`). Le 2026-10-27, `dev` était 26 commits derrière et a été avancée par fast-forward.
 
 ## Lot 0 : quels jeux suivis ont un Workshop ?
