@@ -4,7 +4,7 @@ Statut : brouillon validé le 2026-10-27, aucune implémentation. Origine : audi
 
 ## Pourquoi
 
-- **Qui** : l'utilisateur seul, joueur-moddeur, qui suit des mods sur Nexus et gère aussi une collection de 144 mods Steam Workshop (Stellaris).
+- **Qui** : une communauté ouverte de joueurs-moddeurs, sans contrôle d'accès (décidé le 2026-10-27), dont l'auteur, qui suit des mods sur Nexus et gère aussi une collection de 144 mods Steam Workshop (Stellaris). Chaque utilisateur a ses propres mods, alertes et load orders : tout reste dans son navigateur.
 - **Comportement actuel** : `src/pages/IncompatibilityPage.jsx` recalcule les conflits à chaque ouverture (catégorie, auteur, âge) et ne mémorise rien. `src/components/useModTags.js` ne stocke qu'un tag par mod (`courrier_mod_tags`, clé `domaine:id`). Les mods ne viennent que de Nexus (`api/nexus/tracked.mjs`) ; aucune mention de Workshop dans `api/`, `src/`, `worker.mjs`, `server.mjs`. Steam ne sert qu'à la version du jeu (`api/steam/game/[appId].mjs`).
 - **Comportement voulu** : une alerte « à faire » porte une condition de fin lisible et se ferme d'elle-même quand la condition devient vraie ; des mods Steam Workshop apparaissent dans les mêmes listes que ceux de Nexus, avec leur source.
 - **Pourquoi maintenant** : l'audit Stellaris a montré que la valeur est dans les actions à faire avec condition de fin, et la collection Stellaris vit sur le Workshop.
@@ -48,7 +48,9 @@ Livrable : la liste des jeux suivis marquée « Workshop : oui / non / inconnu �
 
 - **Point d'accès** `GET /api/steam/workshop/:id`, appuyé sur `ISteamRemoteStorage/GetPublishedFileDetails` (POST amont, sans clé API). Renvoie : titre, dates de création et de mise à jour, taille, App ID du jeu, abonnés, auteur.
 - **Où** : `worker.mjs` **et** `server.mjs`, la même logique des deux côtés (voir `DEPLOYMENT-cloudflare.md` : `server.mjs` réimplémente les handlers). Dans la table `URLPattern`, l'ordre compte : la route la plus spécifique d'abord.
-- **Échecs** : jamais une 200 aux données dégradées. `resolu: false` et un statut honnête ; sur 403 ou 429, reprise ×3, repli sur valeur périmée (`X-Steam-Stale: 1`), puis 503. Cache serveur de 10 minutes (comme `TTL.mod` de Nexus).
+- **Échecs** : jamais une 200 aux données dégradées. `resolu: false` et un statut honnête ; sur 403 ou 429, reprise ×3, repli sur valeur périmée (`X-Steam-Stale: 1`), puis 503. Cache serveur de 10 minutes (comme `TTL.mod` de Nexus), partagé entre utilisateurs (Cache API de Cloudflare, comme pour les jeux).
+- **Exposition publique** : le point d'accès est ouvert à tous, sans compte. L'ID est validé (entier strictement numérique, longueur bornée) avant tout appel amont ; limite de débit par IP via `enforceRateLimit` (`api/utils/rateLimit.mjs`), plus stricte que celle de Nexus ; aucun en-tête ni donnée de l'utilisateur transmis à Steam ; seuls les champs utiles sont renvoyés.
+- **Quotas** : surveiller les requêtes Workers (quota gratuit) et le taux de 403 Steam après mise en ligne ; un taux qui monte est un signal pour agir, pas pour retenter plus.
 - **Stockage** : localStorage, clé `courrier_workshop_mods`, une entrée par mod `{id, appId, titre, maj, note}`. Pas de compte Steam, donc rien côté serveur.
 - **Interface** : champ « Ajouter un mod Workshop » (ID ou URL) ; étiquette de source (Nexus / Workshop) sur chaque mod des listes ; badge de mise à jour fondé sur la date de mise à jour et le `seen_mods` existant.
 - **Sauvegarde** : ajouter les nouvelles clés à `BACKUP_KEYS` de `useConfigBackup.js`, sinon elles sont perdues à l'export/import.
@@ -64,9 +66,12 @@ Livrable : la liste des jeux suivis marquée « Workshop : oui / non / inconnu �
 
 ## Échecs et retour arrière
 
+- Plusieurs utilisateurs partagent les mêmes IP de sortie de Cloudflare : le risque de 403 Steam augmente avec l'audience. Le cache partagé et le repli sur valeur périmée sont donc obligatoires, pas optionnels.
+- Aucune donnée personnelle côté serveur : alertes, load orders et mods Workshop restent dans le navigateur ; l'import d'un load order est analysé côté navigateur, sans envoi au serveur.
+- `main` est la production d'autres utilisateurs : une régression les touche, d'où la validation avant chaque push sur `main`.
 - Steam refuse déjà certaines IP de sortie de Cloudflare (~1 requête sur 3 en 403 observé). Reprises et repli sur valeur périmée sont à tester sur le nouveau point d'accès.
 - Un échec d'évaluation donne « indéterminée », jamais « terminée ».
-- Le stockage client n'est pas partagé entre appareils : l'export manuel existe, un stockage partagé est à reconsidérer après le MVP.
+- Le stockage client n'est pas partagé entre appareils ni entre utilisateurs : l'export/import JSON existe ; partager un load order ou des alertes par lien demanderait un stockage serveur (KV ou D1), hors MVP.
 - Retour arrière : nouvelles clés localStorage uniquement, aucune migration des clés existantes ; retirer la fonctionnalité ne touche pas aux données actuelles.
 - Un load order saisi ne reflète pas forcément l'ordre réel du jeu : `modBefore` vaut ce que vaut la liste saisie.
 
@@ -79,6 +84,7 @@ Livrable : la liste des jeux suivis marquée « Workshop : oui / non / inconnu �
 
 ## Questions ouvertes
 
-- Le MVP produit est-il convenable avec un stockage client seul ? À juger après le lot 2.
+- Le MVP produit est-il convenable avec un stockage client seul ? À juger après le lot 2 (décision du 2026-10-27 : par utilisateur, côté navigateur).
+- Partage d'un load order ou d'une liste d'alertes entre utilisateurs : hors MVP, à reconsidérer selon l'usage.
 - Import d'une collection Workshop entière : lot 3 ou pas ?
 - Génération automatique d'alertes (par exemple à partir de `known.json` de `stellaris-audit`) : à reconsidérer une fois la saisie manuelle éprouvée.
