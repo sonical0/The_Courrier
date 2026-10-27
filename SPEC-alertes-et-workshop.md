@@ -27,7 +27,12 @@ Ordre : lot 0, puis lot 1, puis lot 2. Le Workshop vient avant les alertes : san
 - `main` est stable ; on n'y travaille pas directement.
 - Chaque fonctionnalité vit sur une branche `feat/<nom>`, créée depuis `dev` (le `:` n'est pas permis dans un nom de branche Git ; une branche `dev/<nom>` est impossible tant que `dev` existe).
 - `feat/<nom>` est fusionnée dans `dev` quand elle est stable.
-- `dev` est fusionnée dans `main` quand elle est stable après fusion de toutes les branches `feat/<nom>` et des correctifs éventuels.
+- Un correctif vit sur une branche `fix/<nom>`, créée depuis `dev`, fusionnée comme une `feat/<nom>`.
+- `dev` est fusionnée dans `main` quand elle est stable après fusion de toutes les branches `feat/<nom>` et `fix/<nom>`.
+- Toutes les fusions se font avec `git merge --no-ff origin/<branche>`, message « Fusion de <branche> dans <base> ». Au moindre conflit : `git merge --abort`, la branche sort de la fusion et on le signale, sans résoudre à la place de son auteur.
+- Le push vers `dev` ou `main` est un fast-forward, jamais `--force`. Avant de pousser : `origin/<base>` n'a pas bougé, et `git log origin/<base>..HEAD` ne contient que les commits des branches fusionnées et les fusions.
+- `main` déclenche la mise en production Cloudflare : le push vers `main` n'a lieu qu'après validation explicite de l'utilisateur.
+- Ce fonctionnement reprend celui de l'intégrateur de la supervision Tandem (`SKILLS/supervision/integrateur.md`) : une file de branches prêtes, fusion `--no-ff` dans l'ordre, un seul check complet, une seule validation de l'utilisateur avant le push.
 - Avant de créer une branche `feat/<nom>`, vérifier que `dev` n'est pas derrière `main` (`git rev-list --count origin/dev..origin/main`). Le 2026-10-27, `dev` était 26 commits derrière et a été avancée par fast-forward.
 
 ## Lot 0 : quels jeux suivis ont un Workshop ?
