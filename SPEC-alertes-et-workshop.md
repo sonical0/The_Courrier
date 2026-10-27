@@ -15,12 +15,13 @@ Statut : brouillon validé le 2026-10-27, aucune implémentation. Origine : audi
 Hors périmètre :
 - lecture des fichiers de mods et conflits de fichiers (reste dans `stellaris-audit`) ;
 - import d'une collection Workshop entière (lot 3 possible plus tard) ;
-- création automatique d'alertes, base de données, autres plateformes (ModDB, CurseForge) ;
+- création automatique d'alertes, autres plateformes (ModDB, CurseForge), SteamDB (pas d'API officielle) ;
+- toute donnée personnelle côté serveur : la base du lot 0b ne contient que des métadonnées publiques de jeux et de mods ;
 - téléchargement ou installation de mods.
 
 Systèmes touchés : `src/components/useModTags.js`, `src/components/useConfigBackup.js` (`BACKUP_KEYS`), `src/pages/IncompatibilityPage.jsx`, `src/pages/DashboardPage.jsx`, `src/components/useSteamGames.js` (`NEXUS_TO_STEAM_MAP`, ligne 5), `api/steam/`, `worker.mjs` et `server.mjs`.
 
-Ordre : lot 0, puis lot 1, puis lot 2. Le Workshop vient avant les alertes : sans mods Steam, les conditions n'ont rien à évaluer sur Stellaris.
+Ordre : lot 0, puis lot 0b (socle de données), puis lot 1, puis lot 2. Le Workshop vient avant les alertes : sans mods Steam, les conditions n'ont rien à évaluer sur Stellaris.
 
 ## Flux de branches
 
@@ -43,6 +44,18 @@ Ordre : lot 0, puis lot 1, puis lot 2. Le Workshop vient avant les alertes : san
 `NEXUS_TO_STEAM_MAP` donne déjà l'App ID Steam des jeux suivis sur Nexus. Le point d'accès de jeu n'indique pas si le jeu a un Workshop : ajouter une détection (un test `GetPublishedFileDetails` ou une requête `QueryFiles` sur l'App ID, qui renvoie des éléments ou non).
 
 Livrable : la liste des jeux suivis marquée « Workshop : oui / non / inconnu », affichée dans l'interface. Elle décide où proposer le suivi d'un mod Workshop. Un échec de détection donne « inconnu », jamais « non ».
+
+## Lot 0b : socle de données (PostgreSQL sur le homelab)
+
+Décidé le 2026-10-27 : une base **PostgreSQL hébergée sur le homelab** (annoncé réparé par l'utilisateur ; état à confirmer avant de commencer) garde les données publiques des jeux et des mods, par source, pour une meilleure récolte et un historique.
+
+- **Sources, dans cet ordre** : Steam Workshop (`GetPublishedFileDetails`), Steam jeux (builds et versions, déjà lus par `api/steam/game`), puis Nexus, **seulement après lecture des conditions de l'API Nexus** et avec une source non personnelle : les données récupérées avec la clé d'un utilisateur ne sont ni stockées ni servies aux autres. SteamDB est exclu.
+- **Schéma** : `source`, `jeu`, `mod` (identifiant par source, titre, catégorie, auteur), `version`, et une table d'événements de mise à jour **ajoutée au fil du temps, jamais écrasée** (sorties, builds, dates). Un identifiant de source et un horodatage de collecte sur chaque ligne.
+- **Collecte** : un collecteur tourne sur le homelab (planifié) et écrit dans PostgreSQL.
+- **Lecture par le Worker** : à trancher (voir « Questions ouvertes »). Quelle que soit l'option, un échec de lecture ne ressemble jamais à une donnée : `resolu: false` et repli sur valeur périmée (`X-Steam-Stale: 1`).
+- **Hors de la base** : alertes, load orders et mods suivis d'un utilisateur restent dans son navigateur.
+- **Contraintes** : le homelab n'est joignable que par le LAN et Tailscale, jamais depuis un Worker directement ; aucun port ouvert sur Internet sans décision explicite. Sauvegarde de la base à prévoir (la sauvegarde du homelab est cassée depuis le 16/08, selon la mémoire du projet : à vérifier).
+- **Critère d'acceptation** : après une collecte, une requête SQL donne la date de dernière mise à jour d'un mod Workshop et l'historique de ses versions ; un redémarrage du collecteur ne crée ni doublon ni trou.
 
 ## Lot 1 : Steam Workshop (MVP)
 
@@ -83,6 +96,9 @@ Livrable : la liste des jeux suivis marquée « Workshop : oui / non / inconnu �
 - Tests unitaires verts (120 aujourd'hui) pour l'évaluation des conditions, le normaliseur Workshop et l'import. Grep sans `dark:`, `pico-card` ni couleur Tailwind littérale dans les pages.
 
 ## Questions ouvertes
+
+- Comment le Worker lit-il la base du homelab ? Option A : Cloudflare Tunnel + Hyperdrive (lecture directe, demande un domaine sur Cloudflare). Option B : le homelab publie un instantané en lecture seule vers Cloudflare (KV ou R2) par connexion sortante, sans port ouvert ni domaine ; si le homelab tombe, le Worker sert la dernière donnée marquée périmée.
+- Conditions de l'API Nexus : que permettent-elles côté stockage et redistribution des données ?
 
 - Le MVP produit est-il convenable avec un stockage client seul ? À juger après le lot 2 (décision du 2026-10-27 : par utilisateur, côté navigateur).
 - Partage d'un load order ou d'une liste d'alertes entre utilisateurs : hors MVP, à reconsidérer selon l'usage.
