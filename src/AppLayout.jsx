@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
 import CredentialsModal from "./components/CredentialsModal";
 import useNexusCredentials from "./components/useNexusCredentials";
@@ -6,6 +6,7 @@ import useNexusMods from "./components/useNexusMods";
 import useLastVisit from "./components/useLastVisit";
 import useTheme from "./components/useTheme";
 import useSteamGames from "./components/useSteamGames";
+import useWorkshopMods from "./components/useWorkshopMods";
 import GameUpdateAlert from "./components/GameUpdateAlert";
 import { exportConfig, importConfig } from "./components/useConfigBackup";
 import { exporter as exporterDiagnostics } from "./components/diagnostics";
@@ -32,7 +33,26 @@ const ICONE_THEME = { systeme: "◐", light: "☀", dark: "☾" };
 
 export default function AppLayout() {
   const { credentials, loading, saveCredentials, clearCredentials, hasCredentials, accounts, activeAccountId, switchAccount, removeAccount } = useNexusCredentials();
-  const { loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod } = useNexusMods(credentials, loading);
+  const workshop = useWorkshopMods();
+  const { loading: modsLoading, error: modsError, games, modsForGame, refresh: refreshNexus, untrackMod: untrackNexus } = useNexusMods(credentials, loading, workshop.mods);
+
+  // Un mod Workshop n'existe que dans le navigateur : le retirer ne passe pas
+  // par Nexus. Le domaine suffit à le reconnaître, l'ID est cherché parmi eux.
+  const { mods: modsWorkshop, retirer: retirerWorkshop, rafraichir: rafraichirWorkshop } = workshop;
+  const untrackMod = useCallback(
+    async (domain, modId) => {
+      if (modsWorkshop.some((m) => m.domain === domain && String(m.id) === String(modId))) {
+        retirerWorkshop(modId);
+        return { success: true };
+      }
+      return untrackNexus(domain, modId);
+    },
+    [modsWorkshop, retirerWorkshop, untrackNexus]
+  );
+  const refresh = useCallback(() => {
+    rafraichirWorkshop(true);
+    return refreshNexus();
+  }, [rafraichirWorkshop, refreshNexus]);
   const { countNew } = useLastVisit();
   const { supported: notifSupported, enabled: notifEnabled, permission: notifPermission, requestPermission, disableNotifications, notifyNewMods } = useNotifications();
   const [showModal, setShowModal] = useState(false);
@@ -373,7 +393,7 @@ export default function AppLayout() {
             buildId Steam. Un second mecanisme (useGameVersions) existait et ne
             se declenchait jamais — il attendait un champ `version` que les
             objets `games` ne portent pas. Supprime le 2026-09-18. */}
-        <Outlet context={{ credentials, getSteamInfo, loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod, steamAlerts, dismissAlert, dismissAllAlerts }} />
+        <Outlet context={{ credentials, getSteamInfo, loading: modsLoading, error: modsError, games, modsForGame, refresh, untrackMod, steamAlerts, dismissAlert, dismissAllAlerts, workshop }} />
       </main>
     </div>
   );

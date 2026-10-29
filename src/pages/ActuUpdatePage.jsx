@@ -370,6 +370,9 @@ export default function ActuUpdatePage() {
                           <h3 className="text-lg font-semibold m-0 flex-1 overflow-wrap-anywhere">
                             {m.name || `${m.domain}/${m.id}`}
                           </h3>
+                          <span className="cr-etiquette cr-etiquette-neutre">
+                            {m.source === "workshop" ? "Workshop" : "Nexus"}
+                          </span>
                           {nouveau && (
                             <>
                               <span className="cr-etiquette cr-etiquette-attention">Nouveau</span>
@@ -387,7 +390,20 @@ export default function ActuUpdatePage() {
                         <p className="cr-meta mt-1 mb-0">
                           <span>
                             par{" "}
-                            {m.author ? (
+                            {m.source === "workshop" ? (
+                              m.authorSteamId ? (
+                                <a
+                                  href={`https://steamcommunity.com/profiles/${m.authorSteamId}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  style={{ color: "var(--cr-accent)" }}
+                                >
+                                  profil Steam
+                                </a>
+                              ) : (
+                                "auteur inconnu"
+                              )
+                            ) : m.author ? (
                               <a
                                 href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ''}`}
                                 target="_blank"
@@ -409,20 +425,22 @@ export default function ActuUpdatePage() {
                           <span className="cr-mono">#{m.id}</span>
                         </p>
 
-                        <p className="cr-meta mt-1 mb-0">
-                          <span className="cr-visuellement-cache">Version</span>
-                          {m.previousVersion && m.previousVersion !== m.version && (
-                            <>
-                              <span className="cr-mono" style={{ textDecoration: "line-through" }}>
-                                {m.previousVersion}
-                              </span>
-                              <span aria-hidden="true">→</span>
-                            </>
-                          )}
-                          <span className="cr-mono" style={{ color: "var(--cr-ink)", fontWeight: 600 }}>
-                            {m.version || "inconnue"}
-                          </span>
-                        </p>
+                        {m.source !== "workshop" && (
+                          <p className="cr-meta mt-1 mb-0">
+                            <span className="cr-visuellement-cache">Version</span>
+                            {m.previousVersion && m.previousVersion !== m.version && (
+                              <>
+                                <span className="cr-mono" style={{ textDecoration: "line-through" }}>
+                                  {m.previousVersion}
+                                </span>
+                                <span aria-hidden="true">→</span>
+                              </>
+                            )}
+                            <span className="cr-mono" style={{ color: "var(--cr-ink)", fontWeight: 600 }}>
+                              {m.version || "inconnue"}
+                            </span>
+                          </p>
+                        )}
 
                         <div className="mt-2">
                           <EnhancedChangelog mod={m} maxLines={6} />
@@ -431,7 +449,7 @@ export default function ActuUpdatePage() {
                         {m.url && (
                           <p className="mt-3 mb-0">
                             <a href={m.url} target="_blank" rel="noreferrer" className="cr-bouton">
-                              Ouvrir sur Nexus
+                              {m.source === "workshop" ? "Ouvrir sur Steam" : "Ouvrir sur Nexus"}
                             </a>
                           </p>
                         )}
