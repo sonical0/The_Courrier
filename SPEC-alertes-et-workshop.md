@@ -21,7 +21,7 @@ Hors périmètre :
 
 Systèmes touchés : `src/components/useModTags.js`, `src/components/useConfigBackup.js` (`BACKUP_KEYS`), `src/pages/IncompatibilityPage.jsx`, `src/pages/DashboardPage.jsx`, `src/components/useSteamGames.js` (`NEXUS_TO_STEAM_MAP`, ligne 5), `api/steam/`, `worker.mjs` et `server.mjs`.
 
-Ordre : lot 0, puis lot 0b (socle de données), puis lot 1, puis lot 2. Le Workshop vient avant les alertes : sans mods Steam, les conditions n'ont rien à évaluer sur Stellaris.
+Ordre : lot 0, puis lot 0b (socle de données), puis lot 1, puis lot 2. Le lot S (connexion Nexus par SSO) est à part : sa demande de slug part tout de suite, son code dès que le slug est obtenu. Le Workshop vient avant les alertes : sans mods Steam, les conditions n'ont rien à évaluer sur Stellaris.
 
 ## Flux de branches
 
@@ -38,6 +38,23 @@ Ordre : lot 0, puis lot 0b (socle de données), puis lot 1, puis lot 2. Le Works
 - L'implémentation des lots 0 à 2 se fait avec la supervision Tandem (`npm run supervision -- the-courrier`, base `dev`) : `worker.mjs` et `server.mjs`, fichiers communs du bloc `supervision:`, passent par l'intégrateur D.
 - Ce flux est aussi noté dans `README.md` (section « Branches »).
 - Avant de créer une branche `feat/<nom>`, vérifier que `dev` n'est pas derrière `main` (`git rev-list --count origin/dev..origin/main`). Le 2026-10-27, `dev` était 26 commits derrière et a été avancée par fast-forward.
+
+## Lot S : connexion Nexus par SSO (ajouté le 2026-10-29)
+
+Aujourd'hui, `src/components/CredentialsModal.jsx` demande à l'utilisateur d'aller chercher sa clé API personnelle sur `nexusmods.com/users/myaccount?tab=api` puis de la coller avec son nom d'utilisateur. Pour une communauté ouverte, c'est la principale friction d'entrée, et cela habitue les gens à copier une clé secrète dans un formulaire.
+
+- **Comportement voulu** : un bouton « Se connecter avec Nexus Mods » ouvre la page d'autorisation de Nexus ; après accord, the-courrier reçoit la clé sans que l'utilisateur la voie ni la copie. La saisie manuelle reste en repli, repliée sous « Saisir une clé à la main ».
+- **Mécanisme** : le SSO de Nexus (WebSocket `wss://sso.nexusmods.com`, protocole 2) : le navigateur ouvre la socket, envoie `{id, token, protocol: 2}` avec un `id` UUID généré localement, ouvre `https://www.nexusmods.com/sso?id=<id>&application=<slug>` dans un nouvel onglet, puis reçoit la clé API sur la socket. Le `connection_token` renvoyé est gardé le temps de la session pour reprendre après une coupure. Si Nexus propose désormais l'OAuth 2.0 (PKCE) aux applications tierces, le préférer : à trancher en lisant la doc Nexus avant de coder.
+- **Prérequis bloquant, à lancer en premier** : le slug d'application (`application=<slug>`) est attribué par Nexus sur demande. Sans lui, rien ne marche ; la demande prend des jours, donc elle part avant le lot 0.
+- **Où** : tout côté navigateur. La socket est ouverte par le front, la clé va dans le même stockage que la saisie manuelle et repart dans `X-Nexus-Username` / `X-Nexus-ApiKey` comme aujourd'hui : aucun changement dans `worker.mjs`, `server.mjs` ni `api/`. Le nom d'utilisateur se lit ensuite par `GET /api/nexus/validate`.
+- **CSP** : `public/_headers` limite `connect-src` à `'self'` ; y ajouter `wss://sso.nexusmods.com`, et rien d'autre. Mettre à jour le commentaire « Verifie : les seuls appels sortants » du même fichier.
+- **Échecs** : socket fermée, délai dépassé (2 minutes sans réponse) ou refus de l'utilisateur → message clair et retour au formulaire manuel, jamais une connexion à moitié enregistrée. Fermer la socket dès la clé reçue.
+- **Déconnexion** : un bouton efface la clé du navigateur et renvoie vers la page Nexus où l'utilisateur peut révoquer l'autorisation.
+- **Hors périmètre** : comptes the-courrier, stockage de la clé côté serveur, connexion Steam (OpenID Steam n'apporte rien au lot 1, qui lit le Workshop sans clé).
+- **Clé d'exemple** : la clé API en clair dans `README.md` et `CHANGELOG.md` appartient à un compte Nexus d'exemple, publiée exprès pour les tests. Elle sert aussi à tester le repli manuel ; le SSO ne la remplace pas.
+- **Critère d'acceptation** : un utilisateur sans clé se connecte en un clic plus une autorisation sur Nexus, voit ses mods suivis, et retrouve sa connexion après un rechargement ; le refus côté Nexus ramène au formulaire sans erreur dans la console ; la CSP servie contient `wss://sso.nexusmods.com`.
+
+Ordre : le lot S est indépendant du Workshop et des alertes ; il peut se faire en parallèle du lot 0 dès que le slug est obtenu.
 
 ## Lot 0 : quels jeux suivis ont un Workshop ?
 
@@ -102,6 +119,7 @@ Décidé le 2026-10-27 : une base **PostgreSQL hébergée sur le homelab** (anno
 - Taille réelle des instantanés : si l'un dépasse 25 Mio, passer cette clé sur R2.
 - Fréquence de collecte (horaire par défaut) : à vérifier avec les limites de l'API Steam une fois la collecte en route.
 - Conditions de l'API Nexus : que permettent-elles côté stockage et redistribution des données ?
+- Lot S : SSO WebSocket ou OAuth 2.0 ? Dépend de ce que Nexus accorde aux applications tierces à la date de la demande de slug.
 
 - Le MVP produit est-il convenable avec un stockage client seul ? À juger après le lot 2 (décision du 2026-10-27 : par utilisateur, côté navigateur).
 - Partage d'un load order ou d'une liste d'alertes entre utilisateurs : hors MVP, à reconsidérer selon l'usage.
