@@ -7,6 +7,7 @@
  */
 
 import { enforceRateLimit, LIMITS } from "../../utils/rateLimit.mjs";
+import { aUnWorkshop } from "../../utils/steamWorkshop.mjs";
 
 const CACHE = new Map();
 const TTL = 2 * 60 * 60_000; // 2 hours
@@ -266,6 +267,7 @@ export default async function handler(req, res) {
       headerImage: gameData.header_image || null,
       developers: gameData.developers || [],
       publishers: gameData.publishers || [],
+      workshop: aUnWorkshop(gameData.categories),
     };
 
     cacheSet(ck, result, TTL);

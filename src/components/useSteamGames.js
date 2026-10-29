@@ -31,6 +31,7 @@ const NEXUS_TO_STEAM_MAP = {
   masseffect2: 24980,
   masseffect3: 1238020,
   starfield: 1716740,
+  stellaris: 281990,
 };
 
 // Clé de stockage localStorage
@@ -90,6 +91,8 @@ export default function useSteamGames(games = []) {
         buildId: data.buildId || null,
         lastUpdate: data.lastUpdate || Date.now(),
         version: data.version || "Unknown",
+        // true / false / null : null = Steam n'a rien dit, affiché « inconnu »
+        workshop: typeof data.workshop === "boolean" ? data.workshop : null,
         fetchedAt: Date.now(),
       };
     } catch (e) {
@@ -164,7 +167,9 @@ export default function useSteamGames(games = []) {
         const fresh =
           !forceRefresh &&
           entry?.fetchedAt &&
-          Date.now() - entry.fetchedAt < STEAM_TTL_MS;
+          Date.now() - entry.fetchedAt < STEAM_TTL_MS &&
+          // Entree anterieure a la detection du Workshop : rechargee une fois.
+          "workshop" in entry;
         if (fresh) {
           newData[domain] = entry;
         } else {

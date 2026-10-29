@@ -7,6 +7,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { toEpoch, getCategoryName, withPool, sortVersionsSemantic } from "./api/utils/NexusUtils.mjs";
 import { enforceRateLimit, LIMITS } from "./api/utils/rateLimit.mjs";
+import { aUnWorkshop } from "./api/utils/steamWorkshop.mjs";
 
 dotenv.config();
 
@@ -549,6 +550,7 @@ app.get("/api/steam/game/:appId", async (req, res) => {
       headerImage: gameData.header_image || null,
       developers: gameData.developers || [],
       publishers: gameData.publishers || [],
+      workshop: aUnWorkshop(gameData.categories),
     };
 
     cacheSet(ck, result, 2 * 60 * 60_000); // 2 hours cache (réduit de 6h)
