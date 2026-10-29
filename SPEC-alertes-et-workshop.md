@@ -51,7 +51,7 @@ Aujourd'hui, `src/components/CredentialsModal.jsx` demande à l'utilisateur d'al
 - **Échecs** : socket fermée, délai dépassé (2 minutes sans réponse) ou refus de l'utilisateur → message clair et retour au formulaire manuel, jamais une connexion à moitié enregistrée. Fermer la socket dès la clé reçue.
 - **Déconnexion** : un bouton efface la clé du navigateur et renvoie vers la page Nexus où l'utilisateur peut révoquer l'autorisation.
 - **Hors périmètre** : comptes the-courrier, stockage de la clé côté serveur, connexion Steam (OpenID Steam n'apporte rien au lot 1, qui lit le Workshop sans clé).
-- **Ménage lié** : `README.md` (ligne ~193) et `CHANGELOG.md` (ligne ~597) contiennent une clé API Nexus en clair. Si elle est réelle, la révoquer sur Nexus puis la retirer des deux fichiers ; elle reste dans l'historique Git, d'où la révocation d'abord.
+- **Clé d'exemple** : la clé API en clair dans `README.md` et `CHANGELOG.md` appartient à un compte Nexus d'exemple, publiée exprès pour les tests. Elle sert aussi à tester le repli manuel ; le SSO ne la remplace pas.
 - **Critère d'acceptation** : un utilisateur sans clé se connecte en un clic plus une autorisation sur Nexus, voit ses mods suivis, et retrouve sa connexion après un rechargement ; le refus côté Nexus ramène au formulaire sans erreur dans la console ; la CSP servie contient `wss://sso.nexusmods.com`.
 
 Ordre : le lot S est indépendant du Workshop et des alertes ; il peut se faire en parallèle du lot 0 dès que le slug est obtenu.
