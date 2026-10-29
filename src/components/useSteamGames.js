@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 
 // Mapping Nexus Mods domain -> Steam App ID
 // Source: https://store.steampowered.com/
-const NEXUS_TO_STEAM_MAP = {
+export const NEXUS_TO_STEAM_MAP = {
   skyrimspecialedition: 489830,
   skyrim: 72850,
   fallout4: 377160,

@@ -89,6 +89,14 @@ Décidé le 2026-10-27 : une base **PostgreSQL hébergée sur le homelab** (anno
 - **Interface** : champ « Ajouter un mod Workshop » (ID ou URL) ; étiquette de source (Nexus / Workshop) sur chaque mod des listes ; badge de mise à jour fondé sur la date de mise à jour et le `seen_mods` existant.
 - **Sauvegarde** : ajouter les nouvelles clés à `BACKUP_KEYS` de `useConfigBackup.js`, sinon elles sont perdues à l'export/import.
 
+Fait le 2026-10-29 (branche `feat/workshop-mvp`), avant le lot 0b, à la demande de l'utilisateur ; le MVP n'a pas besoin de la base. Écarts et précisions :
+- **Forme à liste en plus** : `GET /api/steam/workshop?ids=1,2,…` (50 ID au plus), même handler (`api/steam/workshop/index.mjs`). Avec un appel par mod, les 144 mods de la collection Stellaris dépasseraient la limite de débit à chaque rafraîchissement ; à 50 par appel, 3 requêtes suffisent.
+- **Limite de débit** : portée mémoire `workshop`, 20 par minute (`LIMITS.workshop`, `RATE_LIMIT_WORKSHOP`), plus stricte que Nexus (30). La barrière distribuée du Worker reste `RL_STEAM` (60) : pas de nouveau binding Cloudflare à créer.
+- **Cache** : 10 minutes par ID dans le handler, avec repli périmé (`X-Steam-Stale: 1`) seulement si tous les ID demandés en ont un ; cache partagé du Worker (`steamAvecCache`, généralisé) sur la liste d'ID triée. `fetchSteam` (reprises sur 403, 429 et 5xx) est sorti dans `api/utils/steamFetch.mjs`, partagé avec la fiche de jeu.
+- **Front** : `useWorkshopMods` (clé `courrier_workshop_mods`, entrée `{id, appId, titre, maj, note, jeu, image, auteur, fetchedAt}`), fusionné dans `useNexusMods` via son troisième paramètre : les mods Workshop entrent dans les mêmes jeux, listes, tags et « Nouveau ». Un mod devenu introuvable est marqué, pas effacé ; un échec de Steam garde les dernières valeurs et le signale sous le champ d'ajout.
+- **Vérifié** dans le navigateur, sur `server.mjs` et le build de production : ajout par URL, Stellaris rangé avec « Workshop : oui », étiquettes Nexus / Workshop, « Ouvrir sur Steam », « Ne plus suivre ». 156 tests, build CI vert.
+- **Restes** : l'application exige encore des identifiants Nexus pour s'ouvrir (un joueur Workshop seul ne peut pas l'utiliser ; le lot S n'y change rien) ; pas de lien vers le journal des modifications Steam sur la fiche (le composant ne l'affiche que s'il y a un changelog) ; le nom de l'auteur n'est pas lu (il demanderait une clé API Steam), la fiche renvoie vers son profil.
+
 ## Lot 2 : alertes avec condition de fin
 
 - **Modèle** : `{id, titre, creeLe, conditions: [...], etat}`. Saisie à la main pour le MVP.
