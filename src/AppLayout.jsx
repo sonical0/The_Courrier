@@ -22,6 +22,7 @@ const SECTIONS = [
   { to: "/actus", libelle: "Mises à jour" },
   { to: "/nexus-mods", libelle: "Mods suivis" },
   { to: "/incompatibility", libelle: "Incompatibilités" },
+  { to: "/a-faire", libelle: "À faire" },
 ];
 
 const LIBELLE_THEME = {

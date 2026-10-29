@@ -106,6 +106,13 @@ Fait le 2026-10-29 (branche `feat/workshop-mvp`), avant le lot 0b, à la demande
 - **Interface** : section « À faire », alertes triées par état, chacune avec sa condition en clair et la raison de son état. Respecter les jetons `cr-*` (voir README) : ni `dark:`, ni `pico-card`, ni couleur Tailwind littérale. Gravité : le mot passe avant la teinte (comme dans `IncompatibilityPage.jsx`).
 - **Sauvegarde** : les clés `courrier_alertes` et `courrier_loadorder` entrent aussi dans `BACKUP_KEYS`.
 
+Fait le 2026-10-29 (branche `feat/alertes`) : page « À faire » (`/a-faire`, `src/pages/AFairePage.jsx`), logique pure dans `src/utils/conditions.js` et `src/utils/loadOrder.js`, stockage dans `useAlertes` et `useLoadOrders`. Précisions :
+- **Conditions** : `modPresent` (version facultative, comparée à l'identique), `modAvant` (sur le load order d'un jeu choisi), `modMajDepuis` (« mis à jour depuis le… », retenue parce que simple). Un mod se désigne par la liste suivie (suggestions), une URL Nexus, une URL ou un ID Workshop, ou son nom exact, pour pouvoir viser un mod pas encore suivi.
+- **Règle d'état** : une condition fausse donne « en cours » (on sait que ce n'est pas fait), sinon une indéterminée donne « indéterminée », toutes vraies donnent « terminée ». Liste Nexus en chargement ou en échec, load order absent, mod absent du load order, Steam en échec pour une date Workshop : indéterminée. Le Workshop vit dans le navigateur, donc son absence reste un « non » sûr.
+- **Terminée** : mémorisée avec sa date dès qu'elle est atteinte. Pas de bouton « Rouvrir » : sur une alerte dont les conditions restent vraies, il la refermerait aussitôt.
+- **Import** : l'export d'Irony est le `exported.json` du zip ; ses `ModIds` sont souvent vides (copies locales), le nom fait alors foi. Vérifié sur la collection réelle « Big Mods 4.5 » : 144 entrées, aucune rejetée, ordre identique. Les lignes illisibles sont listées comme rejetées, les entrées qui ne correspondent à aucun mod suivi sont gardées mais listées.
+- **Vérifié** dans le navigateur : alerte `modPresent` en cours puis terminée d'elle-même après l'ajout du mod Workshop ; import TXT ; `modAvant` en cours puis terminée après un réordonnancement. 183 tests, build CI vert.
+
 ## Échecs et retour arrière
 
 - Plusieurs utilisateurs partagent les mêmes IP de sortie de Cloudflare : le risque de 403 Steam augmente avec l'audience. Le cache partagé et le repli sur valeur périmée sont donc obligatoires, pas optionnels.
