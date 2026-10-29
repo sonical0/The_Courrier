@@ -3,7 +3,6 @@ import { useOutletContext } from "react-router-dom";
 import useLastVisit from "../components/useLastVisit";
 import useModTags, { TAG_LABELS } from "../components/useModTags";
 import EnhancedChangelog from "../components/EnhancedChangelog";
-import AjoutWorkshop from "../components/AjoutWorkshop";
 import SteamGameInfo from "../components/SteamGameInfo";
 
 // Le statut d'un mod était porté par une couleur d'anneau autour de la carte :
@@ -42,7 +41,7 @@ function IconeJeu({ gameId, className }) {
 }
 
 export default function NexusModsPage() {
-  const { getSteamInfo, loading, error, games, modsForGame, refresh, untrackMod, workshop } = useOutletContext();
+  const { getSteamInfo, loading, error, games, modsForGame, refresh, untrackMod } = useOutletContext();
   const { isNew, updateLastVisit, markAsSeen, markAllAsSeen, countNew } = useLastVisit();
   const { getTag, toggleTag } = useModTags();
   const [gameKey, setGameKey] = useState("ALL");
@@ -279,8 +278,6 @@ export default function NexusModsPage() {
           illisibles avant de les rendre inutilisables. */}
       <div className="lg:grid lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-10 lg:items-start">
         <aside className="mb-8 lg:mb-0 lg:sticky lg:top-6 flex flex-col gap-6" aria-label="Filtres">
-          <AjoutWorkshop workshop={workshop} />
-
           <div>
             <label className="block font-semibold mb-2" htmlFor="recherche-mod">
               Rechercher
@@ -430,29 +427,13 @@ export default function NexusModsPage() {
                         {nouveau && (
                           <span className="cr-etiquette cr-etiquette-attention">Nouveau</span>
                         )}
-                        <span className="cr-etiquette cr-etiquette-neutre">
-                          {m.source === "workshop" ? "Workshop" : "Nexus"}
-                        </span>
                         <EtiquetteStatut statut={currentTag} />
                       </div>
 
                       <p className="cr-meta m-0 mb-2">
                         <span>
                           par{" "}
-                          {m.source === "workshop" ? (
-                            m.authorSteamId ? (
-                              <a
-                                href={`https://steamcommunity.com/profiles/${m.authorSteamId}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                style={{ color: "var(--cr-accent)" }}
-                              >
-                                profil Steam
-                              </a>
-                            ) : (
-                              "auteur inconnu"
-                            )
-                          ) : m.author ? (
+                          {m.author ? (
                             <a
                               href={`https://next.nexusmods.com/profile/${encodeURIComponent(m.author)}${m.gameId ? `?gameId=${m.gameId}` : ""}`}
                               target="_blank"
@@ -475,19 +456,17 @@ export default function NexusModsPage() {
                       {/* Le passage d'une version à l'autre est la donnée que
                           l'utilisateur vient chercher : elle se lit telle quelle
                           plutôt qu'en deux pastilles côte à côte. */}
-                      {m.source !== "workshop" && (
-                        <p className="cr-transition m-0 mb-2">
-                          {m.previousVersion && m.previousVersion !== m.version && (
-                            <>
-                              <span className="cr-transition-avant">{m.previousVersion}</span>
-                              <span aria-hidden="true" style={{ color: "var(--cr-muted)" }}>
-                                →
-                              </span>
-                            </>
-                          )}
-                          <span className="cr-transition-apres">version {m.version || "?"}</span>
-                        </p>
-                      )}
+                      <p className="cr-transition m-0 mb-2">
+                        {m.previousVersion && m.previousVersion !== m.version && (
+                          <>
+                            <span className="cr-transition-avant">{m.previousVersion}</span>
+                            <span aria-hidden="true" style={{ color: "var(--cr-muted)" }}>
+                              →
+                            </span>
+                          </>
+                        )}
+                        <span className="cr-transition-apres">version {m.version || "?"}</span>
+                      </p>
 
                       {m.summary && <p className="cr-lecture m-0 mb-2">{m.summary}</p>}
 
@@ -531,7 +510,7 @@ export default function NexusModsPage() {
                             rel="noreferrer"
                             className="cr-bouton cr-bouton-principal"
                           >
-                            {m.source === "workshop" ? "Ouvrir sur Steam" : "Ouvrir sur Nexus"}
+                            Ouvrir sur Nexus
                           </a>
                         )}
                         {nouveau && (

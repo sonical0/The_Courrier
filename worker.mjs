@@ -22,7 +22,6 @@ import nexusTracked from "./api/nexus/tracked.mjs";
 import nexusUntrack from "./api/nexus/untrack.mjs";
 import nexusValidate from "./api/nexus/validate.mjs";
 import steamGame from "./api/steam/game/[appId].mjs";
-import steamWorkshop from "./api/steam/workshop/index.mjs";
 
 /**
  * Table de routage. L'ordre compte : la premiere entree qui correspond gagne,
@@ -41,8 +40,6 @@ const ROUTES = [
   { pattern: "/api/nexus/tracked/:domain/:modId", handler: nexusUntrack },
 
   { pattern: "/api/steam/game/:appId", handler: steamGame },
-  { pattern: "/api/steam/workshop", handler: steamWorkshop },
-  { pattern: "/api/steam/workshop/:id", handler: steamWorkshop },
 ];
 
 const COMPILED = ROUTES.map((r) => ({
@@ -136,9 +133,7 @@ const avecEnTetes = (res, entetes) => {
 // Exportee pour etre testable : le chemin "repli sur valeur perimee" ne peut
 // pas etre declenche a la demande depuis l'exterieur, puisqu'il suppose que
 // Steam refuse pile au moment ou une entree perimee existe.
-export async function steamAvecCache(request, params, env, ctx, handler, options = {}) {
-  // Par defaut, les fiches de jeu. Le Workshop passe sa cle et sa fraicheur.
-  const { chemin = `/api/steam/game/${params.appId}`, fraisMs = STEAM_FRAIS_MS } = options;
+export async function steamAvecCache(request, params, env, ctx, handler) {
   // `caches` n'existe pas partout (dev local selon la configuration) : sans lui
   // on se contente du comportement d'origine plutot que d'echouer.
   if (typeof caches === "undefined" || !caches.default) return null;
@@ -147,12 +142,12 @@ export async function steamAvecCache(request, params, env, ctx, handler, options
   const origine = new URL(request.url).origin;
   // Cle normalisee : la query string est ignoree, sinon un `?cb=123` de test
   // fragmenterait le cache et le rendrait inutile.
-  const cle = new Request(`${origine}${chemin}`, { method: "GET" });
+  const cle = new Request(`${origine}/api/steam/game/${params.appId}`, { method: "GET" });
 
   const hit = await cache.match(cle);
   const age = hit ? Date.now() - Number(hit.headers.get("X-Cached-At") || 0) : Infinity;
 
-  if (hit && age < fraisMs) {
+  if (hit && age < STEAM_FRAIS_MS) {
     return avecEnTetes(hit, { "X-Steam-Cache": "hit", "X-Steam-Age": String(Math.round(age / 1000)) });
   }
 
@@ -183,21 +178,6 @@ export async function steamAvecCache(request, params, env, ctx, handler, options
   return avecEnTetes(frais, { "X-Steam-Cache": "miss" });
 }
 
-/**
- * Cle de cache d'une requete Workshop : la liste d'ID triee, pour que
- * « 2,1 » et « 1,2 » partagent l'entree. Fraicheur de 10 minutes, comme le
- * cache du handler. null si les ID sont invalides : le handler rendra la 400.
- */
-const WORKSHOP_FRAIS_MS = 10 * 60_000;
-
-export function cleWorkshop(url, params) {
-  if (!url.pathname.startsWith("/api/steam/workshop")) return null;
-  const brut = params.id ?? url.searchParams.get("ids");
-  if (typeof brut !== "string" || !/^\d{1,20}(,\d{1,20})*$/.test(brut)) return null;
-  const ids = [...new Set(brut.split(","))].sort();
-  return { chemin: `/api/steam/workshop?ids=${ids.join(",")}`, fraisMs: WORKSHOP_FRAIS_MS };
-}
-
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -218,10 +198,8 @@ export default {
       // Les fiches Steam passent par le cache partage ; tout le reste va
       // directement au handler.
       const cachable = request.method === "GET" && url.pathname.startsWith("/api/steam/game/");
-      const options = request.method === "GET" && cleWorkshop(url, params);
       const response =
         (cachable && (await steamAvecCache(request, params, env, ctx, route.handler))) ||
-        (options && (await steamAvecCache(request, params, env, ctx, route.handler, options))) ||
         (await toWorkerHandler(route.handler)({ request, params, env, ctx }));
 
       // Etat de la barriere distribuee, lisible sans acces au tableau de bord.

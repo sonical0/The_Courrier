@@ -629,15 +629,6 @@ Les contributions sont les bienvenues ! Pour contribuer :
 4. **Push** vers la branche (`git push origin feature/AmazingFeature`)
 5. Ouvrez une **Pull Request**
 
-### Branches
-
-`main` est stable et déployée en production (Cloudflare) : on n'y travaille pas directement.
-
-- Une fonctionnalité vit sur `feat/<nom>`, un correctif sur `fix/<nom>`, toutes deux créées depuis `dev`.
-- Elles sont fusionnées dans `dev` (`git merge --no-ff`) après un check rapide (`npm run test:ci`).
-- `dev` est fusionnée dans `main` (`--no-ff`) quand elle est stable, après un check complet (`test:ci` + `build`) et la validation explicite de l'utilisateur. Push en fast-forward, jamais `--force`.
-- Au moindre conflit de fusion : `git merge --abort` et on le signale, sans résoudre à la place de l'auteur.
-
 ### Guidelines
 
 - Respectez la structure de code existante

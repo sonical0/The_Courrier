@@ -2,9 +2,6 @@ const BACKUP_KEYS = [
   "courrier_mod_tags",
   "courrier_seen_mods",
   "courrier_last_visit",
-  "courrier_workshop_mods",
-  "courrier_alertes",
-  "courrier_loadorder",
   "theme",
 ];
 

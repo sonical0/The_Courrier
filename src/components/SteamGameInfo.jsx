@@ -58,12 +58,6 @@ export default function SteamGameInfo({ domain, steamInfo }) {
             )}
           </dd>
         </div>
-        <div className="flex flex-wrap justify-between gap-x-3">
-          <dt style={{ color: "var(--cr-muted)" }}>Steam Workshop</dt>
-          <dd className="m-0">
-            {steamInfo.workshop === true ? "oui" : steamInfo.workshop === false ? "non" : "inconnu"}
-          </dd>
-        </div>
       </dl>
 
       <p className="mt-2 mb-0" style={{ color: "var(--cr-muted)" }}>

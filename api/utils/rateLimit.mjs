@@ -99,10 +99,4 @@ export const LIMITS = {
     limit: Number(process.env.RATE_LIMIT_STEAM || 60),
     windowMs: 60_000,
   },
-  // Plus stricte que Nexus : point d'acces ouvert a tous, sans compte, et un
-  // appel couvre jusqu'a 50 mods. Un client sain en fait 3 par rafraichissement.
-  workshop: {
-    limit: Number(process.env.RATE_LIMIT_WORKSHOP || 20),
-    windowMs: 60_000,
-  },
 };

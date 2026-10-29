@@ -46,7 +46,6 @@ describe("useSteamGames — TTL du cache local", () => {
       buildId: "1000",
       version: "1000",
       fetchedAt: Date.now(),
-      workshop: true,
     });
     const fetchSpy = jest.spyOn(global, "fetch");
 
@@ -103,7 +102,6 @@ describe("useSteamGames — TTL du cache local", () => {
       buildId: "1000",
       version: "1000",
       fetchedAt: Date.now(),
-      workshop: true,
     });
     mockSteamOk("1001");
 
@@ -124,7 +122,6 @@ describe("useSteamGames — TTL du cache local", () => {
       buildId: "1000",
       version: "1000",
       fetchedAt: Date.now(),
-      workshop: true,
     });
     mockSteamOk();
 
@@ -142,43 +139,5 @@ describe("useSteamGames — TTL du cache local", () => {
 
     await waitFor(() => {});
     expect(fetchSpy).not.toHaveBeenCalled();
-  });
-});
-
-describe("useSteamGames — Steam Workshop", () => {
-  function mockSteamWorkshop(workshop) {
-    jest.spyOn(global, "fetch").mockResolvedValue({
-      ok: true,
-      json: async () => ({ success: true, name: "Jeu", buildId: "1", version: "1", workshop }),
-    });
-  }
-
-  it.each([
-    [true, true],
-    [false, false],
-    [undefined, null], // Steam muet → inconnu, jamais « non »
-  ])("workshop %p renvoye → %p", async (renvoye, attendu) => {
-    mockSteamWorkshop(renvoye);
-    const { result } = renderHook(() => useSteamGames(GAMES_SKYRIM));
-    await waitFor(() =>
-      expect(result.current.getSteamInfo("skyrimspecialedition")).not.toBeNull()
-    );
-    expect(result.current.getSteamInfo("skyrimspecialedition").workshop).toBe(attendu);
-  });
-
-  it("entree fraiche sans champ workshop (avant detection) → rechargee", async () => {
-    storeEntry("skyrimspecialedition", {
-      appId: 489830,
-      name: "Skyrim SE",
-      buildId: "1000",
-      version: "1000",
-      fetchedAt: Date.now(),
-    });
-    mockSteamWorkshop(true);
-    const { result } = renderHook(() => useSteamGames(GAMES_SKYRIM));
-    await waitFor(() =>
-      expect(result.current.getSteamInfo("skyrimspecialedition")?.workshop).toBe(true)
-    );
-    expect(global.fetch).toHaveBeenCalledTimes(1);
   });
 });
