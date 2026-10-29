@@ -30,3 +30,6 @@ yarn-error.log*
 logs/
 *.jsonl
 the-courrier-diagnostic-*.json
+
+# verrou du check de supervision Tandem
+.claude/
