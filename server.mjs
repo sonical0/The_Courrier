@@ -7,6 +7,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { toEpoch, getCategoryName, withPool, sortVersionsSemantic } from "./api/utils/NexusUtils.mjs";
 import { enforceRateLimit, LIMITS } from "./api/utils/rateLimit.mjs";
+import { aUnWorkshop } from "./api/utils/steamWorkshop.mjs";
+import steamWorkshop from "./api/steam/workshop/index.mjs";
 
 dotenv.config();
 
@@ -373,6 +375,15 @@ app.delete("/api/nexus/tracked/:domain/:modId", async (req, res) => {
 });
 
 // Steam API proxy endpoint
+// Workshop : meme handler que le Worker (api/steam/workshop/index.mjs), pas une
+// reimplementation. Express 4 laisse req.query assignable : l'ID de chemin y
+// est recopie, comme le fait l'adaptateur Worker.
+app.get("/api/steam/workshop/:id", (req, res) => {
+  req.query = { ...req.query, id: req.params.id };
+  return steamWorkshop(req, res);
+});
+app.get("/api/steam/workshop", (req, res) => steamWorkshop(req, res));
+
 app.get("/api/steam/game/:appId", async (req, res) => {
   const { appId } = req.params;
 
@@ -549,6 +560,7 @@ app.get("/api/steam/game/:appId", async (req, res) => {
       headerImage: gameData.header_image || null,
       developers: gameData.developers || [],
       publishers: gameData.publishers || [],
+      workshop: aUnWorkshop(gameData.categories),
     };
 
     cacheSet(ck, result, 2 * 60 * 60_000); // 2 hours cache (réduit de 6h)

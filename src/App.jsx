@@ -4,6 +4,7 @@ import DashboardPage from "./pages/DashboardPage";
 import ActuUpdatePage from "./pages/ActuUpdatePage";
 import NexusModsPage from "./pages/NexusModsPage";
 import IncompatibilityPage from "./pages/IncompatibilityPage";
+import AFairePage from "./pages/AFairePage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RouteErrorPage from "./pages/RouteErrorPage";
 
@@ -19,6 +20,7 @@ const router = createBrowserRouter([
       { path: "actus", element: <ActuUpdatePage /> },
       { path: "nexus-mods", element: <NexusModsPage /> },
       { path: "incompatibility", element: <IncompatibilityPage /> },
+      { path: "a-faire", element: <AFairePage /> },
       // Attrape-tout : garde l'en-tete et la navigation, donc l'utilisateur
       // n'est jamais bloque sur une impasse.
       { path: "*", element: <NotFoundPage /> },

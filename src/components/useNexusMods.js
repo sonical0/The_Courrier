@@ -15,7 +15,11 @@ function toEpoch(val) {
   return 0;
 }
 
-export default function useNexusMods(credentials = null, credentialsLoading = false) {
+const AUCUN = [];
+
+// `autresMods` : mods d'autres sources (Workshop), deja au meme format. Ils
+// entrent dans `games` et `modsForGame` comme ceux de Nexus.
+export default function useNexusMods(credentials = null, credentialsLoading = false, autresMods = AUCUN) {
   const [mods, setMods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -149,9 +153,14 @@ export default function useNexusMods(credentials = null, credentialsLoading = fa
 
   const refresh = useCallback(() => fetchTracked(true), [fetchTracked]);
 
+  const tous = useMemo(
+    () => (autresMods.length ? [...mods, ...autresMods] : mods),
+    [mods, autresMods]
+  );
+
   const games = useMemo(() => {
     const map = new Map();
-    for (const m of mods) {
+    for (const m of tous) {
       const key = m.domain || m.gameId || m.gameName;
       if (!key) continue;
       // L'entrée était figée sur le PREMIER mod rencontré : si celui-là
@@ -179,10 +188,10 @@ export default function useNexusMods(credentials = null, credentialsLoading = fa
     return Array.from(map.values()).sort((a, b) =>
       (a.name || "").localeCompare(b.name || "")
     );
-  }, [mods]);
+  }, [tous]);
 
   function modsForGame(gameKey) {
-    const filtered = mods.filter(
+    const filtered = tous.filter(
       (m) =>
         m.domain === gameKey ||
         String(m.gameId) === String(gameKey) ||
